@@ -103,26 +103,19 @@ calc (There e) = 1 + calc e
 resetR :: Elem f fs -> Parser ()
 resetR e = modifyState (dropWhile (>= calc e))
 
-chainL1 :: Functor f => Elem f fs -> Parser (Fix fs) -> Parser t -> (Fix fs -> Fix fs -> f (Fix fs)) -> Parser (Fix fs)
-chainL1 e p symbol ctr = do
+chainL1 :: Functor f => Elem f fs -> Parser (Fix fs) -> Parser t -> (Fix fs -> t -> f (Fix fs)) -> Parser (Fix fs)
+chainL1 e p parser ctr = do
   e1 <- checkR e p
-  xs <- many (symbol >> p)
-  resetR e
-  return $ foldl (\acc -> In e . ctr acc) e1 xs
-
-chainL2 :: Functor f => Elem f fs -> Parser (Fix fs) -> Parser t -> (Fix fs -> t -> f (Fix fs)) -> Parser (Fix fs)
-chainL2 e p parser ctr = do
-  e1 <- checkR e p
-  xs <- many parser
-  resetR e
-  return $ foldl (\acc -> In e . ctr acc) e1 xs
+  (do xs <- many1 parser
+      resetR e
+      return $ foldl (\acc -> In e . ctr acc) e1 xs) <|> do {resetR e; return e1}
 
 -- Arith
 
 data Arith r = Lit Int | Add r r deriving (Functor,Show)
 
 parseArith :: Elem Arith fs -> Parser (Fix fs) -> Parser (Fix fs)
-parseArith e p = chainL2 e p (char '+' >> p) Add <|> (pure (In e . Lit) <*> num)
+parseArith e p = chainL1 e p (char '+' >> p) Add <|> (pure (In e . Lit) <*> num)
 
 num :: Parser Int
 num = do n <- many1 digit
@@ -165,7 +158,7 @@ instance Syntax Lambda where
 data App e = App e e deriving (Functor, Show)
 
 parseApp :: Elem App fs -> Parser (Fix fs) -> Parser (Fix fs)
-parseApp e p = chainL2 e p (char ' ' >> p) App
+parseApp e p = chainL1 e p (char ' ' >> p) App
 
 instance Syntax App where
  parseF = parseApp
@@ -176,7 +169,7 @@ instance Syntax App where
 data Access e = AccPost e String | AccPre e String deriving (Functor, Show)
 
 parseAcc :: Elem Access fs -> Parser (Fix fs) -> Parser (Fix fs)
-parseAcc e p = chainL2 e p (char '_' >> parseVarName) AccPost
+parseAcc e p = chainL1 e p (char '_' >> parseVarName) AccPost
 
 instance Syntax Access where
  parseF = parseAcc
