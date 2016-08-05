@@ -9,11 +9,14 @@ import Text.Parsec.String hiding (Parser)
 import Text.PrettyPrint hiding (char, space, parens)
 import Text.Parsec.Combinator (between, sepBy1, chainr1)
 import Data.List (elemIndex, dropWhile)
+import Control.Monad (mzero)
+import Data.Maybe (fromMaybe)
+import qualified Data.Map as M
 import Debug.Trace (trace)
 
 -- GENERAL LIBRARY COMPONENTS --
 
-type BoundContext = [Int] -- Environment is currently not extensible.
+type BoundContext = ([(Int, Int)], M.Map Int Int) -- Environment is currently not extensible.
 
 type Parser = Parsec String BoundContext
 
@@ -69,14 +72,14 @@ parseLang srep o = parseL' srep srep o o
 parseL :: (fs :< fs) => Syntactic fs -> Parser (Fix fs)
 parseL = parseLang srep
 
-parseBase :: Parser (Fix fs) -> Parser (Fix fs) -- parsing parentheses
+parseBase :: Parser (Fix fs) -> Parser (Fix fs)
 parseBase p = do
   char '('
-  s <- getState -- Attention: state should be stored and restored
-  putState []
+  (s, _) <- getState
+  modifyState $ mapFst (\_ -> [])
   x <- p
   char ')'
-  putState s
+  modifyState $ mapFst (\_ -> s)
   return x
 
 prettyL' :: Elem g gs -> Syntactic gs -> Syntactic fs -> g (Fix fs) -> Doc
@@ -86,36 +89,60 @@ prettyL' (There e')  (CCons cs)  u  t = prettyL' e' cs u t
 prettyL :: Syntactic fs -> Fix fs -> Doc
 prettyL u s@(In e t)  = prettyL' e u u t
 
+mapFst :: (a -> c) -> (a, b) -> (c, b)
+mapFst f (x, y) = (f x, y)
+
+mapSnd :: (b -> c) -> (a, b) -> (a, c)
+mapSnd f (x, y) = (x, f y)
+
 -- LIBRARY FUNCTIONS
 
 type NewParser f fs = Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
 
-checkR :: Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
-checkR e p = let x = calc e in do
-  xs <- getState
-  if x `elem` xs then fail ""
-  else do {modifyState (x :); p}
+checkR :: Int -> NewParser f fs
+checkR x e p = let ex = calc e in do
+  (xs, _) <- getState
+  if (ex, x) `elem` xs then fail ""
+  else modifyState (mapFst ((ex, x) :)) >> p
 
 calc :: Elem f fs -> Int
 calc Here = 1
 calc (There e) = 1 + calc e
 
-resetR :: Elem f fs -> Parser ()
-resetR e = modifyState (dropWhile (>= calc e))
+resetR :: Int -> Elem f fs -> Parser ()
+resetR x e = modifyState . mapFst $ dropWhile f
+  where
+    ex = calc e
+    f = \(y1, y2) -> y1 > ex || (y1 == ex && y2 >= x)
 
-chainL1 :: Functor f => Elem f fs -> Parser (Fix fs) -> Parser t -> (Fix fs -> t -> f (Fix fs)) -> Parser (Fix fs)
-chainL1 e p parser ctr = do
-  e1 <- checkR e p
+getMark :: Elem f fs -> Parser Int
+getMark e = do
+  (_, map) <- getState
+  return . fromMaybe 1 $ M.lookup (calc e) map
+
+chainlR :: Functor f => Parser t -> (Fix fs -> t -> f (Fix fs)) -> NewParser f fs
+chainlR parser ctr e p = do
+  x <- getMark e
+  e1 <- checkR x e p
   (do xs <- many1 parser
-      resetR e
-      return $ foldl (\acc -> In e . ctr acc) e1 xs) <|> do {resetR e; return e1}
+      resetR x e 
+      return $ foldl (\acc -> In e . ctr acc) e1 xs) <|> (resetR x e >> pure e1)
+
+choiceR :: Elem f fs -> [Parser (Fix fs)] -> Parser (Fix fs)
+choiceR _ [] = mzero
+choiceR e xs = foldl1 (<|>) . zipWith (\i x -> f i >> x) [1..] $ xs
+  where f i = modifyState . mapSnd $ M.insert (calc e) i
 
 -- Arith
 
-data Arith r = Lit Int | Add r r deriving (Functor,Show)
+data Arith r = Lit Int | Add r r | Sub r r deriving (Functor,Show)
 
 parseArith :: Elem Arith fs -> Parser (Fix fs) -> Parser (Fix fs)
-parseArith e p = chainL1 e p (char '+' >> p) Add <|> (pure (In e . Lit) <*> num)
+parseArith e p = choiceR e [
+    chainlR (char '+' >> p) Add e p,
+    chainlR (char '-' >> p) Sub e p,
+    pure (In e . Lit) <*> num
+  ]
 
 num :: Parser Int
 num = do n <- many1 digit
@@ -158,7 +185,7 @@ instance Syntax Lambda where
 data App e = App e e deriving (Functor, Show)
 
 parseApp :: Elem App fs -> Parser (Fix fs) -> Parser (Fix fs)
-parseApp e p = chainL1 e p (char ' ' >> p) App
+parseApp e p = chainlR (char ' ' >> p) App e p
 
 instance Syntax App where
  parseF = parseApp
@@ -169,7 +196,7 @@ instance Syntax App where
 data Access e = AccPost e String | AccPre e String deriving (Functor, Show)
 
 parseAcc :: Elem Access fs -> Parser (Fix fs) -> Parser (Fix fs)
-parseAcc e p = chainL1 e p (char '_' >> parseVarName) AccPost
+parseAcc e p = chainlR (char '_' >> parseVarName) AccPost e p
 
 instance Syntax Access where
  parseF = parseAcc
@@ -182,7 +209,7 @@ s = CCons (CCons (CCons (CCons CVoid)))
 
 t = parseL s
 
-run p = putStrLn $ case runParser t [] "Test" p of
+run p = putStrLn $ case runParser t ([], M.empty) "Test" p of
          Left _ -> "WRONG"
          Right e -> show (prettyL s e)
 
