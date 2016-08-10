@@ -1,10 +1,9 @@
 {-# OPTIONS -XGADTs -XDataKinds -XKindSignatures -XTypeOperators -XMultiParamTypeClasses -XFlexibleInstances -XDeriveFunctor -XFlexibleContexts -XScopedTypeVariables -XOverlappingInstances -XConstraintKinds  #-}
 
-module Parser1 where
+module Arith where
 
 import Impl
-import Text.Parsec hiding (Parser, runP)
-import Text.Parsec.String hiding (Parser)
+import Text.Parsec hiding (runP)
 import Text.PrettyPrint hiding (char, space, parens)
 
 -- TmBool
@@ -22,23 +21,23 @@ parseTmBool e p =
 
 instance Syntax TmBool where
   parseF                    = parseTmBool
-  prettyF r TmTrue          = text "true"
-  prettyF r TmFalse         = text "false"
-  prettyF r (TmIf e1 e2 e3) = text "(if " <> r e1 <> text " then " <> r e2 <> text " else " <> r                            e3 <> text ")"
+  prettyF _ TmTrue          = text "true"
+  prettyF _ TmFalse         = text "false"
+  prettyF r (TmIf e1 e2 e3) = text "(if " <> r e1 <> text " then " <> r e2 <> text " else " <> r e3 <> text ")"
 
 -- TmNat
 
 data TmNat e = TmZero | TmSucc e | TmPred e deriving (Functor, Show)
 
 parseTmNat :: NewParser TmNat fs
-parseTmNat e p = 
+parseTmNat e p =
   (char '0' >> pure (In e TmZero)) <|>
   (keywordS "succ" >> (pure (In e . TmSucc) <*> p)) <|>
   (keywordS "pred" >> (pure (In e . TmPred) <*> p))
 
 instance Syntax TmNat where
   parseF               = parseTmNat
-  prettyF r TmZero     = text "0"
+  prettyF _ TmZero     = text "0"
   prettyF r (TmSucc e) = text "succ (" <> r e <> text ")"
   prettyF r (TmPred e) = text "pred (" <> r e <> text ")"
 
@@ -58,10 +57,10 @@ instance Syntax TmArith where
 s :: Syntactic '[TmBool, TmNat, TmArith]
 s = CCons (CCons (CCons CVoid))
 
-run = runP s
-r = sequence_ . map run $ [
+test :: IO ()
+test = mapM_ (runP s) [
   "true",
   "if false then true else false",
   "0",
   "succ (pred 0)",
-  "iszero (pred (succ (succ 0)))"] 
+  "iszero (pred (succ (succ 0)))"]
