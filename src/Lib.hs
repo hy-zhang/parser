@@ -1,6 +1,6 @@
 {-# OPTIONS -XGADTs -XDataKinds -XKindSignatures -XTypeOperators -XMultiParamTypeClasses -XFlexibleInstances -XDeriveFunctor -XFlexibleContexts -XScopedTypeVariables -XOverlappingInstances -XConstraintKinds  #-}
 
-module Impl (
+module Lib (
   Fix(..), Classy(..), Elem, Syntactic, Syntax(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
   NewParser, runP, num, keyword, keywordS,
@@ -44,7 +44,7 @@ data Matches (fs :: [* -> *]) (a :: *) (b :: *) where
  (:::) :: Functor f => (f a -> b) -> Matches fs a b -> Matches (f ': fs) a b
 
 data Classy (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
- CVoid :: Classy c '[] 
+ CVoid :: Classy c '[]
  CCons :: (fs :< fs, Functor f, c f) => Classy c fs -> Classy c (f ': fs)
 
 type Syntactic = Classy Syntax
@@ -69,10 +69,10 @@ class Functor f => Syntax f where
 
 parseL' :: Sub fs fs -> Sub gs fs -> Syntactic fs -> Syntactic gs -> Parser (Fix fs)
 parseL' r (SCons e SNil) o (CCons CVoid)  = parseF e (parseLang r o) <|> parseBase (parseLang r o)
-parseL' r (SCons e sub) o (CCons s)       = parseF e (parseLang r o) <|> parseL' r sub o s 
+parseL' r (SCons e sub) o (CCons s)       = parseF e (parseLang r o) <|> parseL' r sub o s
 
 parseLang :: Sub fs fs -> Syntactic fs -> Parser (Fix fs)
-parseLang srep o = parseL' srep srep o o   
+parseLang srep o = parseL' srep srep o o
 
 parseL :: (fs :< fs) => Syntactic fs -> Parser (Fix fs)
 parseL = parseLang srep
@@ -134,7 +134,7 @@ chainlR parser ctr e p = do
   x <- getMark e
   e1 <- checkR x e p
   (do xs <- many1 parser
-      resetR x e 
+      resetR x e
       return $ foldl (\acc -> In e . ctr acc) e1 xs) <|> (resetR x e >> pure e1)
 
 choiceR :: Elem f fs -> [Parser (Fix fs)] -> Parser (Fix fs)

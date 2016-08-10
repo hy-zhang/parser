@@ -2,7 +2,7 @@
 
 module Arith where
 
-import Impl
+import Lib
 import Text.Parsec hiding (runP)
 import Text.PrettyPrint hiding (char, space, parens)
 
