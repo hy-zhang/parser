@@ -1,10 +1,15 @@
 {-# OPTIONS -XGADTs -XDataKinds -XKindSignatures -XTypeOperators -XMultiParamTypeClasses -XFlexibleInstances -XDeriveFunctor -XFlexibleContexts -XScopedTypeVariables -XOverlappingInstances -XConstraintKinds  #-}
 
-module Impl where
+module Impl (
+  Fix(..), Classy(..), Elem, Syntactic, Syntax(..),
+  Parser, parseL, prettyL, mapFst, mapSnd,
+  NewParser, runP, num,
+  checkR, resetR, chainlR, choiceR
+) where
 
 import GHC.Exts (Constraint)
 
-import Text.Parsec hiding (Parser)
+import Text.Parsec hiding (Parser, runP)
 import Text.Parsec.String hiding (Parser)
 import Text.PrettyPrint hiding (char, space, parens)
 import Text.Parsec.Combinator (between, sepBy1, chainr1)
@@ -95,6 +100,10 @@ mapFst f (x, y) = (f x, y)
 mapSnd :: (b -> c) -> (a, b) -> (a, c)
 mapSnd f (x, y) = (x, f y)
 
+runP s0 p = putStrLn $ case runParser (parseL s0) ([], M.empty) "Test" p of
+         Left _ -> "WRONG"
+         Right e -> show (prettyL s0 e)
+
 -- LIBRARY FUNCTIONS
 
 type NewParser f fs = Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
@@ -133,6 +142,10 @@ choiceR _ [] = mzero
 choiceR e xs = foldl1 (<|>) . zipWith (\i x -> f i >> x) [1..] $ xs
   where f i = modifyState . mapSnd $ M.insert (calc e) i
 
+num :: Parser Int
+num = do n <- many1 digit
+         return $ read n
+
 -- Arith
 
 data Arith r = Lit Int | Add r r | Sub r r deriving (Functor,Show)
@@ -143,10 +156,6 @@ parseArith e p = choiceR e [
     chainlR (char '-' >> p) Sub e p,
     pure (In e . Lit) <*> num
   ]
-
-num :: Parser Int
-num = do n <- many1 digit
-         return $ read n
 
 instance Syntax Arith where
  parseF                 = parseArith
@@ -207,11 +216,7 @@ instance Syntax Access where
 s :: Syntactic '[App, Access, Arith, Lambda]
 s = CCons (CCons (CCons (CCons CVoid)))
 
-t = parseL s
-
-run p = putStrLn $ case runParser t ([], M.empty) "Test" p of
-         Left _ -> "WRONG"
-         Right e -> show (prettyL s e)
+run = runP s
 
 test1 = run "(1+2)+3"
 test2 = run "1+(2+3)"
