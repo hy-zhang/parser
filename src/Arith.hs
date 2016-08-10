@@ -1,10 +1,16 @@
-{-# OPTIONS -XGADTs -XDataKinds -XKindSignatures -XTypeOperators -XMultiParamTypeClasses -XFlexibleInstances -XDeriveFunctor -XFlexibleContexts -XScopedTypeVariables -XOverlappingInstances -XConstraintKinds  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 
 module Arith where
 
-import Lib
-import Text.Parsec hiding (runP)
-import Text.PrettyPrint hiding (char, space, parens)
+import           Lib
+import           Text.Parsec      hiding (runP)
+import           Text.PrettyPrint hiding (char, parens, space)
 
 -- TmBool
 

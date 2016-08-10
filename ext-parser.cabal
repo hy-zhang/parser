@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Lib
                        Arith
+                       Untyped
   build-depends:       base >= 4.7 && < 5
                      , parsec
                      , pretty

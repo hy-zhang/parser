@@ -1,4 +1,13 @@
-{-# OPTIONS -XGADTs -XDataKinds -XKindSignatures -XTypeOperators -XMultiParamTypeClasses -XFlexibleInstances -XDeriveFunctor -XFlexibleContexts -XScopedTypeVariables -XOverlappingInstances -XConstraintKinds  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeOperators         #-}
+
 
 module Lib (
   Fix(..), Classy(..), Elem, Syntactic, Syntax(..),
@@ -7,17 +16,14 @@ module Lib (
   checkR, resetR, chainlR, choiceR
 ) where
 
-import GHC.Exts (Constraint)
+import           GHC.Exts         (Constraint)
 
-import Text.Parsec hiding (Parser, runP)
-import Text.Parsec.String hiding (Parser)
-import Text.PrettyPrint hiding (char, space, parens)
-import Text.Parsec.Combinator (between, sepBy1, chainr1)
-import Data.List (elemIndex, dropWhile)
-import Control.Monad (mzero)
-import Data.Maybe (fromMaybe)
-import qualified Data.Map as M
-import Debug.Trace (trace)
+import           Control.Monad    (mzero)
+import qualified Data.Map         as M
+import           Data.Maybe       (fromMaybe)
+import           Debug.Trace      (trace)
+import           Text.Parsec      hiding (runP)
+import           Text.PrettyPrint hiding (char, parens, space)
 
 -- GENERAL LIBRARY COMPONENTS --
 
@@ -32,16 +38,22 @@ data Elem (f :: * -> *) (fs :: [* -> *]) where
  Here :: Elem f (f ': fs)
  There :: Elem f fs -> Elem f (g ': fs)
 
-class In f fs where witness :: Elem f fs
-instance In f (f ': fs) where witness = Here
-instance In f fs => In f (g ':fs) where witness = There witness
+class Belongs f fs where
+  witness :: Elem f fs
 
-inn :: (In f fs, Functor f) => f (Fix fs) -> Fix fs
+instance {-# OVERLAPS #-} Belongs f (f ': fs) where
+  witness = Here
+
+instance {-# OVERLAPS #-} Belongs f fs => Belongs f (g ':fs) where
+  witness = There witness
+
+inn :: (Belongs f fs, Functor f) => f (Fix fs) -> Fix fs
 inn = In witness
 
+
 data Matches (fs :: [* -> *]) (a :: *) (b :: *) where
- Void :: Matches '[] a b
- (:::) :: Functor f => (f a -> b) -> Matches fs a b -> Matches (f ': fs) a b
+  Void :: Matches '[] a b
+  (:::) :: Functor f => (f a -> b) -> Matches fs a b -> Matches (f ': fs) a b
 
 data Classy (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
  CVoid :: Classy c '[]
@@ -53,15 +65,14 @@ data Sub (fs :: [* -> *]) (gs::[* -> *]) where
   SNil :: Sub '[] gs
   SCons :: (Functor f) => Elem f gs -> Sub fs gs -> Sub (f ': fs) gs
 
-srefl :: (fs :< fs) => Sub fs fs
-srefl = srep
+class fs :< gs where
+  srep :: Sub fs gs
 
-class fs :< gs where srep :: Sub fs gs
-instance '[] :< gs where srep = SNil
-instance (Functor f,In f gs,fs :< gs) => (f ': fs) :< gs where srep = SCons witness srep
+instance '[] :< gs where
+  srep = SNil
 
-(<%>) :: Monad m => m a -> m b -> m a
-(<%>) ma mb = do {x <- ma; mb; return x}
+instance (Functor f, Belongs f gs, fs :< gs) => (f ': fs) :< gs where
+  srep = SCons witness srep
 
 class Functor f => Syntax f where
  parseF :: Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
@@ -79,12 +90,12 @@ parseL = parseLang srep
 
 parseBase :: Parser (Fix fs) -> Parser (Fix fs)
 parseBase p = do
-  char '('
+  _ <- char '('
   (s, _) <- getState
-  modifyState $ mapFst (\_ -> [])
+  modifyState $ mapFst (const [])
   x <- p
-  char ')'
-  modifyState $ mapFst (\_ -> s)
+  _ <- char ')'
+  modifyState $ mapFst (const s)
   return x
 
 prettyL' :: Elem g gs -> Syntactic gs -> Syntactic fs -> g (Fix fs) -> Doc
@@ -92,7 +103,7 @@ prettyL' Here        (CCons cs)  u  t = prettyF (prettyL u) t
 prettyL' (There e')  (CCons cs)  u  t = prettyL' e' cs u t
 
 prettyL :: Syntactic fs -> Fix fs -> Doc
-prettyL u s@(In e t)  = prettyL' e u u t
+prettyL u (In e t)  = prettyL' e u u t
 
 mapFst :: (a -> c) -> (a, b) -> (c, b)
 mapFst f (x, y) = (f x, y)
@@ -122,12 +133,12 @@ resetR :: Int -> Elem f fs -> Parser ()
 resetR x e = modifyState . mapFst $ dropWhile f
   where
     ex = calc e
-    f = \(y1, y2) -> y1 > ex || (y1 == ex && y2 >= x)
+    f (y1, y2) = y1 > ex || (y1 == ex && y2 >= x)
 
 getMark :: Elem f fs -> Parser Int
 getMark e = do
-  (_, map) <- getState
-  return . fromMaybe 1 $ M.lookup (calc e) map
+  (_, mp) <- getState
+  return . fromMaybe 1 $ M.lookup (calc e) mp
 
 chainlR :: Functor f => Parser t -> (Fix fs -> t -> f (Fix fs)) -> NewParser f fs
 chainlR parser ctr e p = do
@@ -149,6 +160,7 @@ num = do n <- many1 digit
 keywordS s = spaces >> string s >> space >> spaces
 keyword  s = space >> keywordS s
 
+{-
 -- Arith
 
 data Arith r = Lit Int | Add r r | Sub r r deriving (Functor,Show)
@@ -227,3 +239,4 @@ test3 = run "x+y+(z+w)"
 test4 = run "\\x.x+1 \\y.y"
 test5 = run "(1+2)+3 (4+(6 (7 8)) 8+9+10)"
 r = sequence_ [test1, test2, test3, test4, test5]
+-}
