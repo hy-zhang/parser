@@ -7,9 +7,6 @@ import Text.Parsec hiding (Parser, runP)
 import Text.Parsec.String hiding (Parser)
 import Text.PrettyPrint hiding (char, space, parens)
 
-keywordS s = spaces >> string s >> space >> spaces
-keyword  s = space >> keywordS s
-
 -- TmBool
 
 data TmBool e = TmTrue | TmFalse | TmIf e e e deriving (Functor, Show)
@@ -18,7 +15,7 @@ parseTmBool :: NewParser TmBool fs
 parseTmBool e p =
   (string "true" >> pure (In e TmTrue)) <|>
   (string "false" >> pure (In e TmFalse)) <|>
-  do { keywordS "if"; e1 <- p;
+  do { try (keywordS "if"); e1 <- p;
        keyword "then"; e2 <- p;
        keyword "else"; e3 <- p;
        return $ In e (TmIf e1 e2 e3)}
@@ -34,24 +31,37 @@ instance Syntax TmBool where
 data TmNat e = TmZero | TmSucc e | TmPred e deriving (Functor, Show)
 
 parseTmNat :: NewParser TmNat fs
-parseTmNat = undefined
+parseTmNat e p = 
+  (char '0' >> pure (In e TmZero)) <|>
+  (keywordS "succ" >> (pure (In e . TmSucc) <*> p)) <|>
+  (keywordS "pred" >> (pure (In e . TmPred) <*> p))
 
 instance Syntax TmNat where
-  parseF = parseTmNat
+  parseF               = parseTmNat
+  prettyF r TmZero     = text "0"
+  prettyF r (TmSucc e) = text "succ (" <> r e <> text ")"
+  prettyF r (TmPred e) = text "pred (" <> r e <> text ")"
 
 -- TmArith
 
 data TmArith e = TmIsZero e deriving (Functor, Show)
 
 parseTmArith :: NewParser TmArith fs
-parseTmArith = undefined
+parseTmArith e p = try (keywordS "iszero") >> (pure (In e . TmIsZero) <*> p)
 
 instance Syntax TmArith where
-  parseF = parseTmArith
+  parseF                 = parseTmArith
+  prettyF r (TmIsZero e) = text "iszero (" <> r e <> text ")"
 
 -- Test
 
-s :: Syntactic '[TmBool]
-s = CCons CVoid
+s :: Syntactic '[TmBool, TmNat, TmArith]
+s = CCons (CCons (CCons CVoid))
 
 run = runP s
+r = sequence_ . map run $ [
+  "true",
+  "if false then true else false",
+  "0",
+  "succ (pred 0)",
+  "iszero (pred (succ (succ 0)))"] 

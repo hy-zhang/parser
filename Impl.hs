@@ -3,7 +3,7 @@
 module Impl (
   Fix(..), Classy(..), Elem, Syntactic, Syntax(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
-  NewParser, runP, num,
+  NewParser, runP, num, keyword, keywordS,
   checkR, resetR, chainlR, choiceR
 ) where
 
@@ -145,6 +145,9 @@ choiceR e xs = foldl1 (<|>) . zipWith (\i x -> f i >> x) [1..] $ xs
 num :: Parser Int
 num = do n <- many1 digit
          return $ read n
+
+keywordS s = spaces >> string s >> space >> spaces
+keyword  s = space >> keywordS s
 
 -- Arith
 
