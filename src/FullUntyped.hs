@@ -76,14 +76,33 @@ instance Syntax TmString where
   parseF = parseTmString
   prettyF _ (TmString str) = text $ show str
 
-s :: Syntactic '[TmBool, TmNat, TmArith, TmLamApp, TmVar, TmRecord, TmFloat, TmString]
-s = CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons CVoid
+-- Let
+
+data TmLet e = TmLet String e e deriving (Functor, Show)
+
+parseTmLet :: NewParser TmLet fs
+parseTmLet e p = do
+  keyword "let"
+  x <- parseWord
+  keyword "="
+  expr <- p
+  keyword "in"
+  body <- p
+  return $ In e (TmLet x expr body)
+
+instance Syntax TmLet where
+  parseF = parseTmLet
+  prettyF r (TmLet x e body) = text "let" <+> text x <+> text "=" <+> r e <+> text "in" <+> r body
+
+-- Test
+
+s :: Syntactic '[TmBool, TmNat, TmArith, TmLamApp, TmLet, TmRecord, TmFloat, TmString, TmVar]
+s = CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons CVoid
 
 test :: IO ()
 test = mapM_ (runP s) [
   "x",
   "y'",
-  -- "x=true",
   "if x then false else x",
   "\\x.x",
   "(\\x.x)   \\x.x",
@@ -96,4 +115,5 @@ test = mapM_ (runP s) [
   "\"hello\"",
   "0",
   "succ (pred 0)",
-  "iszero (pred (succ (succ 0)))"]
+  "iszero (pred (succ (succ 0)))",
+  "let x=true in x"]
