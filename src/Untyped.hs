@@ -6,14 +6,11 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module Untyped where
+module Untyped (TmVar(..), TmLamApp(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
 import           Text.PrettyPrint hiding (char, space)
-
-
-parseWord = many1 (letter <|> char '\'')
 
 -- Var
 

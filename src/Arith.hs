@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module Arith where
+module Arith (TmBool(..), TmNat(..), TmArith(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)

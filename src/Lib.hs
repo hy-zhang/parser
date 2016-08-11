@@ -12,7 +12,7 @@
 module Lib (
   Fix(..), Classy(..), Elem, Syntactic, Syntax(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
-  NewParser, runP, num, keyword,
+  NewParser, runP, num, keyword, parseWord,
   checkR, resetR, chainlR, choiceR
 ) where
 
@@ -160,6 +160,9 @@ num = do n <- many1 digit
          return $ read n
 
 keyword s = spaces >> string s >> spaces
+
+parseWord :: Parsec String u String
+parseWord = many1 (letter <|> char '\'')
 
 {-
 -- Arith
