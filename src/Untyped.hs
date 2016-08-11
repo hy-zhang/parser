@@ -46,11 +46,11 @@ parseTmLamApp e p = choiceR e [parseApp, parseLam]
 instance Syntax TmLamApp where
   parseF                   = parseTmLamApp
   prettyF r (TmLam x body) = text "\\" <> text x <> text "." <> r body
-  prettyF r (TmApp e1 e2)  = parens (r e1) <+> parens (r e2)
+  prettyF r (TmApp e1 e2)  = parens (r e1 <+> r e2)
 
 -- Test
 
-s :: Syntactic '[TmVar, TmLamApp]
+s :: Syntactic '[TmLamApp, TmVar]
 s = CCons (CCons CVoid)
 
 test :: IO ()
@@ -60,6 +60,5 @@ test = mapM_ (runP s) [
   "\\x.x",
   "(\\x.x)   \\x.x",
   "\\x.(x)",
-  -- Wrong
   "\\x.(x x)",
   "\\x.x \\x.x"]

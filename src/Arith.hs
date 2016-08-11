@@ -20,7 +20,7 @@ parseTmBool :: NewParser TmBool fs
 parseTmBool e p =
   (string "true" >> pure (In e TmTrue)) <|>
   (string "false" >> pure (In e TmFalse)) <|>
-  do { try (keywordS "if"); e1 <- p;
+  do { try (keyword "if"); e1 <- p;
        keyword "then"; e2 <- p;
        keyword "else"; e3 <- p;
        return $ In e (TmIf e1 e2 e3)}
@@ -38,8 +38,8 @@ data TmNat e = TmZero | TmSucc e | TmPred e deriving (Functor, Show)
 parseTmNat :: NewParser TmNat fs
 parseTmNat e p =
   (char '0' >> pure (In e TmZero)) <|>
-  (keywordS "succ" >> (pure (In e . TmSucc) <*> p)) <|>
-  (keywordS "pred" >> (pure (In e . TmPred) <*> p))
+  (keyword "succ" >> (pure (In e . TmSucc) <*> p)) <|>
+  (keyword "pred" >> (pure (In e . TmPred) <*> p))
 
 instance Syntax TmNat where
   parseF               = parseTmNat
@@ -52,7 +52,7 @@ instance Syntax TmNat where
 data TmArith e = TmIsZero e deriving (Functor, Show)
 
 parseTmArith :: NewParser TmArith fs
-parseTmArith e p = try (keywordS "iszero") >> (pure (In e . TmIsZero) <*> p)
+parseTmArith e p = try (keyword "iszero") >> (pure (In e . TmIsZero) <*> p)
 
 instance Syntax TmArith where
   parseF                 = parseTmArith
