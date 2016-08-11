@@ -79,8 +79,8 @@ class Functor f => Syntax f where
  prettyF :: (r -> Doc) -> f r -> Doc
 
 parseL' :: Sub fs fs -> Sub gs fs -> Syntactic fs -> Syntactic gs -> Parser (Fix fs)
-parseL' r (SCons e SNil) o (CCons CVoid)  = parseF e (parseLang r o) <|> parseBase (parseLang r o)
-parseL' r (SCons e sub) o (CCons s)       = parseF e (parseLang r o) <|> parseL' r sub o s
+parseL' r (SCons e SNil) o (CCons CVoid)  = try (parseF e (parseLang r o)) <|> try (parseBase (parseLang r o))
+parseL' r (SCons e sub) o (CCons s)       = try (parseF e (parseLang r o)) <|> parseL' r sub o s
 
 parseLang :: Sub fs fs -> Syntactic fs -> Parser (Fix fs)
 parseLang srep o = parseL' srep srep o o
@@ -159,7 +159,7 @@ num :: Parser Int
 num = do n <- many1 digit
          return $ read n
 
-keyword s = spaces >> string s >> spaces
+keyword s = try $ spaces >> string s >> spaces
 
 parseWord :: Parsec String u String
 parseWord = many1 (letter <|> char '\'')
