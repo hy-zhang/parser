@@ -117,6 +117,6 @@ test = mapM_ (runP s) [
   "succ (pred 0)",
   "iszero (pred (succ (succ 0)))",
   "let x=true in x",
-  "{x=lambda x.x, y=(lambda x.x)(lambda x.x)}",
-  -- wrong
-  "{x=lambda x.x, y=(lambda x.x)(lambda x.x)}.x"]
+  "{x=\\x.x, y=(\\x.x)(\\x.x)}",
+  "{x=\\x.x, y=(\\x.x)(\\x.x)}.x",
+  "{x=1.0}.t"]
