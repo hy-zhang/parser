@@ -27,7 +27,7 @@ type Tag = String
 data TmRecord e = TmRecord [(Tag, e)] | TmProj e Tag deriving (Functor, Show)
 
 parseTmRecord :: NewParser TmRecord fs
-parseTmRecord e p = choiceR e [parseRec, parseProj]
+parseTmRecord e p = choiceR e [parseProj, parseRec]
   where
     parseRec = between (keyword "{") (keyword "}") ((In e . TmRecord) <$> parseFields)
     parseFields = parseField `sepBy` keyword ","
@@ -116,4 +116,7 @@ test = mapM_ (runP s) [
   "0",
   "succ (pred 0)",
   "iszero (pred (succ (succ 0)))",
-  "let x=true in x"]
+  "let x=true in x",
+  "{x=lambda x.x, y=(lambda x.x)(lambda x.x)}",
+  -- wrong
+  "{x=lambda x.x, y=(lambda x.x)(lambda x.x)}.x"]
