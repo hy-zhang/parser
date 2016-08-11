@@ -111,9 +111,11 @@ mapFst f (x, y) = (f x, y)
 mapSnd :: (b -> c) -> (a, b) -> (a, c)
 mapSnd f (x, y) = (x, f y)
 
-runP s0 p = putStrLn $ case runParser (parseL s0) ([], M.empty) "Test" p of
-         Left _ -> "WRONG"
-         Right e -> show (prettyL s0 e)
+runP s0 p = putStrLn $ p ++ "\t => \t" ++ p'
+  where
+    p' = case runParser (parseL s0) ([], M.empty) "Test" p of
+           Left _ -> "WRONG"
+           Right e -> show (prettyL s0 e)
 
 -- LIBRARY FUNCTIONS
 

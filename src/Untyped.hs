@@ -26,14 +26,14 @@ parseTmVar e _ = (In e . TmVar) <$> parseWord
 
 instance Syntax TmVar where
   parseF                    = parseTmVar
-  prettyF _ (TmVar v)       = text $ show v
+  prettyF _ (TmVar v)       = text v
 
 -- Lam & App
 
 data TmLamApp e = TmLam VarId e | TmApp e e deriving (Functor, Show)
 
 parseTmLamApp :: NewParser TmLamApp fs
-parseTmLamApp e p = parseLam <|> parseApp
+parseTmLamApp e p = choiceR e [parseApp, parseLam]
   where
     parseLam = do
       _ <- char '\\'
@@ -41,15 +41,11 @@ parseTmLamApp e p = parseLam <|> parseApp
       _ <- char '.'
       body <- p
       return $ In e (TmLam x body)
-    parseApp = do
-      e1 <- p
-      spaces
-      e2 <- p
-      return $ In e (TmApp e1 e2)
+    parseApp = chainlR (spaces >> p) TmApp e p
 
 instance Syntax TmLamApp where
   parseF                   = parseTmLamApp
-  prettyF r (TmLam x body) = text "\\" <> text (show x) <> text "." <> r body
+  prettyF r (TmLam x body) = text "\\" <> text x <> text "." <> r body
   prettyF r (TmApp e1 e2)  = parens (r e1) <+> parens (r e2)
 
 -- Test
@@ -62,5 +58,8 @@ test = mapM_ (runP s) [
   "x",
   "y'",
   "\\x.x",
+  "(\\x.x)   \\x.x",
+  "\\x.(x)",
   -- Wrong
+  "\\x.(x x)",
   "\\x.x \\x.x"]
