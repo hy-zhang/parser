@@ -7,10 +7,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
-
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Lib (
-  Fix(..), Classy(..), Elem, Syntactic, Syntax(..),
+  Fix(..), Classy(..), Elem, Syntactic, Syntax(..), Gen(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
   NewParser, runP, num, keyword, parseWord,
   checkR, resetR, chainlR, choiceR
@@ -60,6 +60,15 @@ data Classy (c :: (* -> *) -> Constraint) (fs :: [* -> *]) where
  CCons :: (fs :< fs, Functor f, c f) => Classy c fs -> Classy c (f ': fs)
 
 type Syntactic = Classy Syntax
+
+class Gen fs where
+ crep :: Syntactic fs
+
+instance Gen '[] where
+ crep = CVoid
+
+instance (fs :< fs, Syntax f, Gen fs) => Gen (f ': fs) where
+ crep = CCons crep
 
 data Sub (fs :: [* -> *]) (gs::[* -> *]) where
   SNil :: Sub '[] gs

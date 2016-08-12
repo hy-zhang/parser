@@ -61,7 +61,7 @@ instance Syntax TmArith where
 -- Test
 
 s :: Syntactic '[TmBool, TmNat, TmArith]
-s = CCons (CCons (CCons CVoid))
+s = crep
 
 test :: IO ()
 test = mapM_ (runP s) [

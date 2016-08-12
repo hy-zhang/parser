@@ -97,7 +97,7 @@ instance Syntax TmLet where
 -- Test
 
 s :: Syntactic '[TmBool, TmNat, TmArith, TmLamApp, TmLet, TmRecord, TmFloat, TmString, TmVar]
-s = CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons $ CCons CVoid
+s = crep
 
 test :: IO ()
 test = mapM_ (runP s) [

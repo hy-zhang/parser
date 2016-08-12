@@ -48,7 +48,7 @@ instance Syntax TmLamApp where
 -- Test
 
 s :: Syntactic '[TmLamApp, TmVar]
-s = CCons (CCons CVoid)
+s = crep
 
 test :: IO ()
 test = mapM_ (runP s) [
