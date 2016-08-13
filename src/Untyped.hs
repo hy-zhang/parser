@@ -31,9 +31,9 @@ data TmLam e = TmLam VarId e deriving (Functor, Show)
 
 parseTmLam :: NewParser TmLam fs
 parseTmLam e p = do
-  _ <- char '\\'
+  keyword "\\"
   x <- parseWord
-  _ <- char '.'
+  keyword "."
   body <- p
   return $ In e (TmLam x body)
 

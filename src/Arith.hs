@@ -37,7 +37,7 @@ data TmNat e = TmZero | TmSucc e | TmPred e deriving (Functor, Show)
 
 parseTmNat :: NewParser TmNat fs
 parseTmNat e p =
-  (char '0' >> pure (In e TmZero)) <|>
+  (keyword "0" >> pure (In e TmZero)) <|>
   (keyword "succ" >> (In e . TmSucc) <$> p) <|>
   (keyword "pred" >> (In e . TmPred) <$> p)
 
