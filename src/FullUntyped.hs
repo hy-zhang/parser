@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module FullUntyped where
+module FullUntyped (TmRecord(..), TmFloat(..), TmString(..), TmLet(..)) where
 
 import           Lib
 import           Text.Parsec          hiding (runP)
@@ -96,7 +96,7 @@ instance Syntax TmLet where
 
 -- Test
 
-s :: Syntactic '[TmBool, TmNat, TmArith, TmLamApp, TmLet, TmRecord, TmFloat, TmString, TmVar]
+s :: Syntactic '[TmBool, TmNat, TmArith, TmApp, TmLam, TmLet, TmRecord, TmFloat, TmString, TmVar]
 s = crep
 
 test :: IO ()

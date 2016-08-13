@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module Untyped (TmVar(..), TmLamApp(..)) where
+module Untyped (TmVar(..), TmLam(..), TmApp(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
@@ -25,29 +25,36 @@ instance Syntax TmVar where
   parseF                    = parseTmVar
   prettyF _ (TmVar v)       = text v
 
--- Lam & App
+-- Lam
 
-data TmLamApp e = TmLam VarId e | TmApp e e deriving (Functor, Show)
+data TmLam e = TmLam VarId e deriving (Functor, Show)
 
-parseTmLamApp :: NewParser TmLamApp fs
-parseTmLamApp e p = choiceR e [parseApp, parseLam]
-  where
-    parseLam = do
-      _ <- char '\\'
-      x <- parseWord
-      _ <- char '.'
-      body <- p
-      return $ In e (TmLam x body)
-    parseApp = chainlR (spaces >> p) TmApp e p
+parseTmLam :: NewParser TmLam fs
+parseTmLam e p = do
+  _ <- char '\\'
+  x <- parseWord
+  _ <- char '.'
+  body <- p
+  return $ In e (TmLam x body)
 
-instance Syntax TmLamApp where
-  parseF                   = parseTmLamApp
+instance Syntax TmLam where
+  parseF                   = parseTmLam
   prettyF r (TmLam x body) = text "\\" <> text x <> text "." <> r body
+
+-- App
+
+data TmApp e = TmApp e e deriving (Functor, Show)
+
+parseTmApp :: NewParser TmApp fs
+parseTmApp e p = chainlR (spaces >> p) TmApp e p
+
+instance Syntax TmApp where
+  parseF = parseTmApp
   prettyF r (TmApp e1 e2)  = parens (r e1 <+> r e2)
 
 -- Test
 
-s :: Syntactic '[TmLamApp, TmVar]
+s :: Syntactic '[TmApp, TmLam, TmVar]
 s = crep
 
 test :: IO ()
