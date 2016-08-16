@@ -13,23 +13,31 @@ module Lib (
   Fix(..), Classy(..), Elem, Syntactic, Syntax(..), Gen(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
   NewParser, runP, num, keyword, parseWord,
-  checkR, resetR, chainlR, choiceR
+  checkR, resetR, chainlR, choiceR,
+  identifier, reserved
 ) where
 
-import           GHC.Exts         (Constraint)
-
-import           Control.Monad    (mzero)
-import qualified Data.Map         as M
-import           Data.Maybe       (fromMaybe)
-import           Debug.Trace      (trace)
-import           Text.Parsec      hiding (runP)
-import           Text.PrettyPrint hiding (char, parens, space)
+import           Control.Monad        (mzero)
+import qualified Data.Map             as M
+import           Data.Maybe           (fromMaybe)
+import           Debug.Trace          (trace)
+import           GHC.Exts             (Constraint)
+import           Text.Parsec          hiding (runP)
+import           Text.Parsec.Language (emptyDef)
+import qualified Text.Parsec.Token    as T
+import           Text.PrettyPrint     hiding (char, parens, space)
 
 -- GENERAL LIBRARY COMPONENTS --
 
-type BoundContext = ([(Int, Int)], M.Map Int Int) -- Environment is currently not extensible.
+data ParserContext = ParserContext
+                       { stk :: [(Int, Int)]
+                       , mp  :: M.Map Int Int
+                       , kws :: [String]
+                       }
 
-type Parser = Parsec String BoundContext
+-- type BoundContext = ([(Int, Int)], M.Map Int Int, [String]) -- Environment is currently not extensible.
+
+type Parser = Parsec String ParserContext
 
 data Fix (fs :: [* -> *]) where
  In :: Functor f => Elem f fs -> f (Fix fs) -> Fix fs
@@ -83,9 +91,12 @@ instance '[] :< gs where
 instance (Functor f, Belongs f gs, fs :< gs) => (f ': fs) :< gs where
   srep = SCons witness srep
 
+
 class Functor f => Syntax f where
- parseF :: Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
- prettyF :: (r -> Doc) -> f r -> Doc
+  keywords :: Elem f fs -> [String]
+  keywords = const []
+  parseF :: Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
+  prettyF :: (r -> Doc) -> f r -> Doc
 
 parseL' :: Sub fs fs -> Sub gs fs -> Syntactic fs -> Syntactic gs -> Parser (Fix fs)
 parseL' r (SCons e SNil) o (CCons CVoid)  = try (parseF e (parseLang r o)) <|> try (parseBase (parseLang r o))
@@ -100,11 +111,13 @@ parseL = parseLang srep
 parseBase :: Parser (Fix fs) -> Parser (Fix fs)
 parseBase p = do
   _ <- char '('
-  (s, _) <- getState
-  modifyState $ mapFst (const [])
+  state <- getState
+  modifyState $ \s -> s {stk = []}
+  -- modifyState $ mapFst (const [])
   x <- p
   _ <- char ')'
-  modifyState $ mapFst (const s)
+  modifyState $ \s -> s {stk = stk state}
+  -- modifyState $ mapFst (const s)
   return x
 
 prettyL' :: Elem g gs -> Syntactic gs -> Syntactic fs -> g (Fix fs) -> Doc
@@ -120,11 +133,20 @@ mapFst f (x, y) = (f x, y)
 mapSnd :: (b -> c) -> (a, b) -> (a, c)
 mapSnd f (x, y) = (x, f y)
 
+runP :: (fs :< fs) => Syntactic fs -> String -> IO ()
 runP s0 p = putStrLn $ p ++ "\t => \t" ++ p'
   where
-    p' = case runParser (parseL s0) ([], M.empty) "Test" p of
+    p' = case runParser (parseL s0) initState "Test" p of
            Left _ -> "WRONG"
            Right e -> show (prettyL s0 e)
+    initState = ParserContext [] M.empty (getKeywords s0)
+
+getKeywords :: (fs :< fs) => Syntactic fs -> [String]
+getKeywords o = ttt srep o o
+  where
+    ttt :: Sub gs fs -> Syntactic fs -> Syntactic gs -> [String]
+    ttt SNil          o CVoid      = []
+    ttt (SCons e sub) o (CCons cs) = keywords e ++ ttt sub o cs
 
 -- LIBRARY FUNCTIONS
 
@@ -132,24 +154,26 @@ type NewParser f fs = Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
 
 checkR :: Int -> NewParser f fs
 checkR x e p = let ex = calc e in do
-  (xs, _) <- getState
-  if (ex, x) `elem` xs then fail ""
-  else modifyState (mapFst ((ex, x) :)) >> p
+  -- (xs, _) <- getState
+  state <- getState
+  if (ex, x) `elem` stk state
+    then fail ""
+    else modifyState (\s -> let t = stk s in s {stk = (ex, x) : t}) >> p
 
 calc :: Elem f fs -> Int
 calc Here = 1
 calc (There e) = 1 + calc e
 
 resetR :: Int -> Elem f fs -> Parser ()
-resetR x e = modifyState . mapFst $ dropWhile f
+resetR x e = modifyState (\s -> let t = stk s in s {stk = dropWhile f t})
   where
     ex = calc e
     f (y1, y2) = y1 > ex || (y1 == ex && y2 >= x)
 
 getMark :: Elem f fs -> Parser Int
 getMark e = do
-  (_, mp) <- getState
-  return . fromMaybe 1 $ M.lookup (calc e) mp
+  state <- getState
+  return . fromMaybe 1 $ M.lookup (calc e) (mp state)
 
 chainlR :: Functor f => Parser t -> (Fix fs -> t -> f (Fix fs)) -> NewParser f fs
 chainlR parser ctr e p = do
@@ -162,7 +186,7 @@ chainlR parser ctr e p = do
 choiceR :: Elem f fs -> [Parser (Fix fs)] -> Parser (Fix fs)
 choiceR _ [] = mzero
 choiceR e xs = foldl1 (<|>) . zipWith (\i x -> f i >> x) [1..] $ xs
-  where f i = modifyState . mapSnd $ M.insert (calc e) i
+  where f i = modifyState (\s -> let m = mp s in s {mp = M.insert (calc e) i m})
 
 num :: Parser Int
 num = do n <- many1 digit
@@ -172,6 +196,19 @@ keyword s = try $ spaces >> string s >> spaces
 
 parseWord :: Parsec String u String
 parseWord = many1 (letter <|> char '\'')
+
+
+identifier :: Parsec String ParserContext String
+identifier = do
+  s <- getState
+  let lexer = T.makeTokenParser (emptyDef {T.reservedNames = kws s})
+  T.identifier lexer
+
+
+reserved name = do
+  s <- getState
+  let lexer = T.makeTokenParser (emptyDef {T.reservedNames = kws s})
+  T.reserved lexer name
 
 {-
 -- Arith
