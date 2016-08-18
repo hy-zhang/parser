@@ -21,6 +21,7 @@ library
                        FullUntyped
                        TyArith
                        SimpleBool
+                       FullSimple
   build-depends:       base >= 4.7 && < 5
                      , parsec
                      , pretty
