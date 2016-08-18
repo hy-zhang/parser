@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module SimpleBool where
+module SimpleBool (TyArr(..), TmLam2(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
@@ -55,8 +55,9 @@ test :: IO ()
 test = mapM_ (runP s) [
   "true",
   "if false then true else false",
+  "if (x) then true else false",
   "Bool",
   "\\x:Bool.x",
   "Bool->Bool",
   "(\\x:Bool->Bool.x)",
-  "(\\x:Bool->Bool.if (x false) then true else false) (\\x:Bool.if x then false else true)"]
+  "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)"]

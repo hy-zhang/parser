@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module Arith (TmBool(..), TmNat(..), TmArith(..), test) where
+module Arith (TmBool(..), TmNat(..), TmArith(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
@@ -18,11 +18,11 @@ data TmBool e = TmTrue | TmFalse | TmIf e e e deriving (Functor, Show)
 
 parseTmBool :: NewParser TmBool fs
 parseTmBool e p =
-  (reserved "true" >> pure (In e TmTrue)) <|>
-  (reserved "false" >> pure (In e TmFalse)) <|>
-  do { reserved "if"; e1 <- p;
-       reserved "then"; e2 <- p;
-       reserved "else"; e3 <- p;
+  (keyword "true" >> pure (In e TmTrue)) <|>
+  (keyword "false" >> pure (In e TmFalse)) <|>
+  do { keyword "if"; e1 <- p;
+       keyword "then"; e2 <- p;
+       keyword "else"; e3 <- p;
        return $ In e (TmIf e1 e2 e3)}
 
 instance Syntax TmBool where
@@ -38,9 +38,9 @@ data TmNat e = TmZero | TmSucc e | TmPred e deriving (Functor, Show)
 
 parseTmNat :: NewParser TmNat fs
 parseTmNat e p =
-  (reserved "0" >> pure (In e TmZero)) <|>
-  (reserved "succ" >> (In e . TmSucc) <$> p) <|>
-  (reserved "pred" >> (In e . TmPred) <$> p)
+  (keyword "0" >> pure (In e TmZero)) <|>
+  (keyword "succ" >> (In e . TmSucc) <$> p) <|>
+  (keyword "pred" >> (In e . TmPred) <$> p)
 
 instance Syntax TmNat where
   keywords _           = ["0", "succ", "pred"]
@@ -54,7 +54,7 @@ instance Syntax TmNat where
 data TmArith e = TmIsZero e deriving (Functor, Show)
 
 parseTmArith :: NewParser TmArith fs
-parseTmArith e p = reserved "iszero" >> (In e . TmIsZero <$> p)
+parseTmArith e p = keyword "iszero" >> (In e . TmIsZero <$> p)
 
 instance Syntax TmArith where
   keywords _             = ["iszero"]

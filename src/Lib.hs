@@ -14,7 +14,6 @@ module Lib (
   Parser, parseL, prettyL, mapFst, mapSnd,
   NewParser, runP, num, keyword, parseWord,
   checkR, resetR, chainlR, choiceR,
-  identifier, reserved
 ) where
 
 import           Control.Monad        (mzero)
@@ -137,7 +136,7 @@ runP :: (fs :< fs) => Syntactic fs -> String -> IO ()
 runP s0 p = putStrLn $ p ++ "\t => \t" ++ p'
   where
     p' = case runParser (parseL s0) initState "Test" p of
-           Left _ -> "WRONG"
+           Left t -> show t
            Right e -> show (prettyL s0 e)
     initState = ParserContext [] M.empty (getKeywords s0)
 
@@ -192,23 +191,16 @@ num :: Parser Int
 num = do n <- many1 digit
          return $ read n
 
+keyword :: String -> Parsec String ParserContext ()
 keyword s = try $ spaces >> string s >> spaces
 
-parseWord :: Parsec String u String
-parseWord = many1 (letter <|> char '\'')
-
-
-identifier :: Parsec String ParserContext String
-identifier = do
-  s <- getState
-  let lexer = T.makeTokenParser (emptyDef {T.reservedNames = kws s})
-  T.identifier lexer
-
-
-reserved name = do
-  s <- getState
-  let lexer = T.makeTokenParser (emptyDef {T.reservedNames = kws s})
-  T.reserved lexer name
+parseWord :: Parsec String ParserContext String
+parseWord = do
+  w <- many1 (letter <|> char '\'')
+  state <- getState
+  if w `elem` kws state
+    then unexpected $ show w ++ "; It cannot be used as a var because it's a predefined keyword."
+    else return w
 
 {-
 -- Arith
