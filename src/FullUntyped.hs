@@ -61,6 +61,7 @@ parseTmFloat e p = parseFloat <|> parseTimesFloat
       return $ In e $ TmTimesFloat e1 e2
 
 instance Syntax TmFloat where
+  keywords _ = ["timesfloat"]
   parseF = parseTmFloat
   prettyF _ (TmFloat val) = text $ show val
   prettyF r (TmTimesFloat e1 e2) = text "timesfloat" <+> parens (r e1) <+> parens (r e2)
@@ -91,6 +92,7 @@ parseTmLet e p = do
   return $ In e (TmLet x expr body)
 
 instance Syntax TmLet where
+  keywords _ = ["let", "in"]
   parseF = parseTmLet
   prettyF r (TmLet x e body) = text "let" <+> text x <+> text "=" <+> r e <+> text "in" <+> r body
 
