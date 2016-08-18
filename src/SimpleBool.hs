@@ -45,19 +45,3 @@ parseTmLam2 e p = do
 instance Syntax TmLam2 where
   parseF = parseTmLam2
   prettyF r (TmLam2 x t e) = text "\\" <> text x <> colon <> r t <> text "." <> r e
-
--- Test
-
-s :: Syntactic '[TyArr, TmBool, TyBool, TmApp, TmLam2, TmVar]
-s = crep
-
-test :: IO ()
-test = mapM_ (runP s) [
-  "true",
-  "if false then true else false",
-  "if (x) then true else false",
-  "Bool",
-  "\\x:Bool.x",
-  "Bool->Bool",
-  "(\\x:Bool->Bool.x)",
-  "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)"]

@@ -51,18 +51,3 @@ parseTmApp e p = chainlR (spaces >> p) TmApp e p
 instance Syntax TmApp where
   parseF = parseTmApp
   prettyF r (TmApp e1 e2)  = parens (r e1 <+> r e2)
-
--- Test
-
-s :: Syntactic '[TmApp, TmLam, TmVar]
-s = crep
-
-test :: IO ()
-test = mapM_ (runP s) [
-  "x",
-  "y'",
-  "\\x.x",
-  "(\\x.x)   \\x.x",
-  "\\x.(x)",
-  "\\x.(x x)",
-  "\\x.x \\x.x"]

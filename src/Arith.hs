@@ -60,16 +60,3 @@ instance Syntax TmArith where
   keywords _             = ["iszero"]
   parseF                 = parseTmArith
   prettyF r (TmIsZero e) = text "iszero" <+> parens (r e)
-
--- Test
-
-s :: Syntactic '[TmBool, TmNat, TmArith]
-s = crep
-
-test :: IO ()
-test = mapM_ (runP s) [
-  "true",
-  "if false then true else false",
-  "0",
-  "succ (pred 0)",
-  "iszero (pred (succ (succ 0)))"]

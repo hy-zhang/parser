@@ -10,9 +10,9 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 module Lib (
-  Fix(..), Classy(..), Elem, Syntactic, Syntax(..), Gen(..),
+  Fix(..), Classy(..), Elem, Syntactic, Syntax(..), Gen(..), (:<)(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
-  NewParser, runP, num, keyword, parseWord,
+  NewParser, runP, runP', num, keyword, parseWord,
   checkR, resetR, chainlR, choiceR,
 ) where
 
@@ -140,6 +140,13 @@ runP s0 p = putStrLn $ p ++ "\t => \t" ++ p'
            Right e -> show (prettyL s0 e)
     initState = ParserContext [] M.empty (getKeywords s0)
 
+runP' s p =
+  case runParser (parseL s) initState "Test" p of
+    Left t -> show t
+    Right e -> show (prettyL s e)
+  where
+    initState = ParserContext [] M.empty (getKeywords s)
+
 getKeywords :: (fs :< fs) => Syntactic fs -> [String]
 getKeywords o = ttt srep o o
   where
@@ -151,9 +158,9 @@ getKeywords o = ttt srep o o
 
 type NewParser f fs = Elem f fs -> Parser (Fix fs) -> Parser (Fix fs)
 
-checkR :: Int -> NewParser f fs
-checkR x e p = let ex = calc e in do
-  -- (xs, _) <- getState
+checkR :: NewParser f fs
+checkR e p = let ex = calc e in do
+  x <- getMark e
   state <- getState
   if (ex, x) `elem` stk state
     then fail ""
@@ -163,11 +170,12 @@ calc :: Elem f fs -> Int
 calc Here = 1
 calc (There e) = 1 + calc e
 
-resetR :: Int -> Elem f fs -> Parser ()
-resetR x e = modifyState (\s -> let t = stk s in s {stk = dropWhile f t})
-  where
-    ex = calc e
-    f (y1, y2) = y1 > ex || (y1 == ex && y2 >= x)
+resetR :: Elem f fs -> Parser ()
+resetR e = do
+  x <- getMark e
+  let ex = calc e
+      f (y1, y2) = y1 > ex || (y1 == ex && y2 >= x)
+  modifyState (\s -> let t = stk s in s {stk = dropWhile f t})
 
 getMark :: Elem f fs -> Parser Int
 getMark e = do
@@ -176,11 +184,10 @@ getMark e = do
 
 chainlR :: Functor f => Parser t -> (Fix fs -> t -> f (Fix fs)) -> NewParser f fs
 chainlR parser ctr e p = do
-  x <- getMark e
-  e1 <- checkR x e p
+  e1 <- checkR e p
   (do xs <- many1 parser
-      resetR x e
-      return $ foldl (\acc -> In e . ctr acc) e1 xs) <|> (resetR x e >> pure e1)
+      resetR e
+      return $ foldl (\acc -> In e . ctr acc) e1 xs) <|> (resetR e >> pure e1)
 
 choiceR :: Elem f fs -> [Parser (Fix fs)] -> Parser (Fix fs)
 choiceR _ [] = mzero

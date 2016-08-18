@@ -36,18 +36,3 @@ instance Syntax TyNat where
   keywords _               = ["Nat"]
   parseF                   = parseTyNat
   prettyF _ TyNat          = text "Nat"
-
--- Test
-
-s :: Syntactic '[TmBool, TmNat, TmArith, TyNat, TyBool]
-s = crep
-
-test :: IO ()
-test = mapM_ (runP s) [
-  "true",
-  "if false then true else false",
-  "0",
-  "succ (pred 0)",
-  "iszero (pred (succ (succ 0)))",
-  "Nat",
-  "Bool"]

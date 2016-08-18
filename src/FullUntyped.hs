@@ -95,30 +95,3 @@ instance Syntax TmLet where
   keywords _ = ["let", "in"]
   parseF = parseTmLet
   prettyF r (TmLet x e body) = text "let" <+> text x <+> text "=" <+> r e <+> text "in" <+> r body
-
--- Test
-
-s :: Syntactic '[TmBool, TmNat, TmArith, TmApp, TmLam, TmLet, TmRecord, TmFloat, TmString, TmVar]
-s = crep
-
-test :: IO ()
-test = mapM_ (runP s) [
-  "x",
-  "y'",
-  "if x then false else x",
-  "\\x.x",
-  "(\\x.x)   \\x.x",
-  "\\x.(x)",
-  "\\x.(x x)",
-  "\\x.x \\x.x",
-  "2.0",
-  "timesfloat 2.0 3.0",
-  "timesfloat (timesfloat 2.0 3.0) (timesfloat 4.0 5.0)",
-  "\"hello\"",
-  "0",
-  "succ (pred 0)",
-  "iszero (pred (succ (succ 0)))",
-  "let x=true in x",
-  "{x=\\x.x, y=(\\x.x)(\\x.x)}",
-  "{x=\\x.x, y=(\\x.x)(\\x.x)}.x",
-  "{x=1.0}.t"]
