@@ -10,6 +10,7 @@ import           Lib
 import           SimpleBool
 import           TyArith
 import           Untyped
+import           FullSimple
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -154,6 +155,64 @@ testSimpleBool = test s "SimpleBool" input output
       "\\x:Bool->Bool.x",
       "(\\x:Bool->Bool.(if (x false) then true else false) \\x:Bool.(if x then false else true))"]
 
+testFullSimple :: SpecWith ()
+testFullSimple = test s "FullSimple" input output
+  where
+    s :: Syntactic '[TmApp, TyArr, TmRecord, TmFloat, TmLet, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TmVar]
+    s = crep
+    input = [
+      "x",
+      "if x then false else x",
+      "\\x:A.x",
+      "timesfloat 2.0 3.0",
+      "\"hello\"",
+      "0",
+      "succ (pred 0)",
+      "iszero (pred (succ (succ 0)))",
+      "true",
+      "if false then true else false",
+      "if (x) then true else false",
+      "Bool",
+      "\\x:Bool.x",
+      "Bool->Bool",
+      "(\\x:Bool->Bool.x)",
+      "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)",
+      "\\x:Nat.succ x",
+      "(\\x:Nat. succ (succ x)) (succ 0)",
+      "\\f:T. \\x:Nat. f (f x)",
+      "let x=true in x",
+      "{x=1.0}.t",
+      "Unit",
+      "unit",
+      "unit as Unit",
+      "<l=unit> as <l:Unit, r:Unit>"]
+    output = [
+      "x",
+      "(if x then false else x)",
+      "\\x:A.x",
+      "timesfloat (2.0) (3.0)",
+      "\"hello\"",
+      "0",
+      "succ (pred (0))",
+      "iszero (pred (succ (succ (0))))",
+      "true",
+      "(if false then true else false)",
+      "(if x then true else false)",
+      "Bool",
+      "\\x:Bool.x",
+      "Bool->Bool",
+      "\\x:Bool->Bool.x",
+      "(\\x:Bool->Bool.(if (x false) then true else false) \\x:Bool.(if x then false else true))",
+      "\\x:Nat.succ (x)",
+      "(\\x:Nat.succ (succ (x)) succ (0))",
+      "(\\f:T.\\x:Nat.f (f x))",
+      "let x = true in x",
+      "{x=1.0}.t",
+      "Unit",
+      "unit",
+      "(unit as Unit)",
+      "(<l=unit> as <l:Unit, r:Unit>)"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -162,3 +221,4 @@ main = hspec $ do
   testFullUntyped
   testTyArith
   testSimpleBool
+  testFullSimple

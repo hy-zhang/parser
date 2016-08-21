@@ -9,12 +9,7 @@
 module SimpleBool (TyArr(..), TmLam2(..)) where
 
 import           Lib
-import           Text.Parsec      hiding (runP)
 import           Text.PrettyPrint hiding (char, space)
-
-import           Arith
-import           TyArith
-import           Untyped
 
 -- TyArr
 

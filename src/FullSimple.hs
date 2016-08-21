@@ -10,10 +10,8 @@
 module FullSimple where
 
 import           Lib
-import           Text.Parsec          hiding (runP)
-import           Text.Parsec.Language
-import qualified Text.Parsec.Token    as Token
-import           Text.PrettyPrint     hiding (char, space)
+import           Text.Parsec      hiding (runP)
+import           Text.PrettyPrint hiding (char, space)
 
 -- TmUnit
 
@@ -95,13 +93,17 @@ instance Syntax TyVariant where
     let gs = map (\(l, t) -> text l <> colon <> r t) fs in
       "<" <> foldl1 (\a b -> a <> comma <+> b) gs <> ">"
 
+-- TmFix
 
+data TmFix e = TmFix e deriving (Functor, Show)
 
-s :: Syntactic '[TmAscribe, TyVariant, TmTag, TmUnit, TyUnit]
-s = crep
+parseTmFix :: NewParser TmFix fs
+parseTmFix e p = do
+  keyword "fix"
+  expr <- p
+  return $ In e (TmFix expr)
 
-test = mapM_ (runP s) [
-  "Unit",
-  "unit",
-  "unit as Unit",
-  "<l=unit> as <l:Unit, r:Unit>"]
+instance Syntax TmFix where
+  keywords _ = ["fix"]
+  parseF = parseTmFix
+  prettyF r (TmFix e) = "fix" <+> parens (r e)

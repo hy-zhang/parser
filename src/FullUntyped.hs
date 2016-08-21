@@ -14,9 +14,6 @@ import           Text.Parsec.Language
 import qualified Text.Parsec.Token    as Token
 import           Text.PrettyPrint     hiding (char, space)
 
-import           Arith
-import           Untyped
-
 
 emptyTokenParser = Token.makeTokenParser emptyDef
 

@@ -11,8 +11,6 @@ module TyArith (TyBool(..), TyNat(..)) where
 import           Lib
 import           Text.PrettyPrint hiding (char, space)
 
-import           Arith
-
 -- TyBool
 
 data TyBool e = TyBool deriving (Functor, Show)
