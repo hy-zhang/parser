@@ -107,3 +107,33 @@ instance Syntax TmFix where
   keywords _ = ["fix"]
   parseF = parseTmFix
   prettyF r (TmFix e) = "fix" <+> parens (r e)
+
+-- TmCase
+
+data TmCase e = TmCase e [(String, String, e)] deriving (Functor, Show)
+
+parseTmCase :: NewParser TmCase fs
+parseTmCase e p = do
+  keyword "case"
+  expr <- p
+  keyword "of"
+  cs <- pCases
+  return $ In e (TmCase expr cs)
+  where
+    pCases = pCase `sepBy1` keyword "|"
+    pCase = do
+      keyword "<"
+      l <- parseWord
+      keyword "="
+      x <- parseWord
+      keyword ">"
+      keyword "=>"
+      r <- p
+      return (l, x, r)
+
+instance Syntax TmCase where
+  keywords _ = ["case", "of"]
+  parseF = parseTmCase
+  prettyF r (TmCase expr cs) =
+    let gs = map (\(l, x, e) -> "<" <> text l <> "=" <> text x <> ">" <+> "=>" <+> r e) cs in
+      "case" <+> r expr <+> "of" <+> foldl1 (\x y -> x <+> "|" <+> y) gs

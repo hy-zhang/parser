@@ -158,7 +158,7 @@ testSimpleBool = test s "SimpleBool" input output
 testFullSimple :: SpecWith ()
 testFullSimple = test s "FullSimple" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmRecord, TmFloat, TmLet, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TmFloat, TmLet, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TmVar]
     s = crep
     input = [
       "x",
@@ -185,7 +185,8 @@ testFullSimple = test s "FullSimple" input output
       "Unit",
       "unit",
       "unit as Unit",
-      "<l=unit> as <l:Unit, r:Unit>"]
+      "<l=unit> as <l:Unit, r:Unit>",
+      "case a of <phy=x> => x.first | <vir=y> => y.name"]
     output = [
       "x",
       "(if x then false else x)",
@@ -211,7 +212,8 @@ testFullSimple = test s "FullSimple" input output
       "Unit",
       "unit",
       "(unit as Unit)",
-      "(<l=unit> as <l:Unit, r:Unit>)"]
+      "(<l=unit> as <l:Unit, r:Unit>)",
+      "case a of <phy=x> => x.first | <vir=y> => y.name"]
 
 
 main :: IO ()
