@@ -11,6 +11,7 @@ import           SimpleBool
 import           TyArith
 import           Untyped
 import           FullSimple
+import           FullRef
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -215,6 +216,26 @@ testFullSimple = test s "FullSimple" input output
       "(<l=unit> as <l:Unit, r:Unit>)",
       "case a of <phy=x> => x.first | <vir=y> => y.name"]
 
+testFullRef :: SpecWith ()
+testFullRef = test s "FullRef" input output
+  where
+    s :: Syntactic '[TmApp, TmAssign, TyArr, TmLet, TmLam2, TmRef, TmBool, TmDeref, TyRef, TySink, TySource, TmNat, TyNat, TyUnit, TmVar]
+    s = crep
+    input = [
+      "\\a:Ref (Nat->Nat).\\n:Nat.(!a n)",
+      "\\a:Unit.ref (\\n:Nat.0)",
+      "\\a:Ref (Nat->Nat).\\m:Nat.\\n:Nat.let oldf = !a in a := (\\n:Nat.if true then v else (oldf n))",
+      "\\x:Top.x",
+      "let t = Source Nat in \\x:t.unit",
+      "\\x:Sink t.unit"]
+    output = [
+      "\\a:Ref Nat->Nat.\\n:Nat.((!a) n)",
+      "\\a:Unit.ref \\n:Nat.0",
+      "\\a:Ref Nat->Nat.\\m:Nat.\\n:Nat.let oldf = (!a) in a := \\n:Nat.(if true then v else (oldf n))",
+      "\\x:Top.x",
+      "let t = Source Nat in \\x:t.unit",
+      "\\x:Sink t.unit"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -224,3 +245,4 @@ main = hspec $ do
   testTyArith
   testSimpleBool
   testFullSimple
+  testFullRef

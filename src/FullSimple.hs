@@ -7,7 +7,13 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
-module FullSimple where
+module FullSimple (TmUnit(..),
+                   TyUnit(..),
+                   TmAscribe(..),
+                   TmTag(..),
+                   TyVariant(..),
+                   TmFix(..),
+                   TmCase(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
