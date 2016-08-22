@@ -15,7 +15,7 @@
 - ~~bot~~ (chapter 16)
 - ~~fullequirec~~ (chapter 20).
 - ~~fullisorec~~ (chapter 20).
-- `equirec` (chapter 21)
+- ~~equirec~~ (chapter 21)
 - `recon` (chapter 22).
 - `fullrecon` (chapter 22)
 - `fullpoly` (chapters 23, 24)
