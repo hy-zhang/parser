@@ -13,6 +13,7 @@ import           Untyped
 import           FullSimple
 import           FullRef
 import           FullError
+import           RcdSubBot
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -250,6 +251,20 @@ testFullError = test s "FullError" input output
       "(error true)",
       "(\\x:Bool.x error)"]
 
+testRcdSubBot :: SpecWith ()
+testRcdSubBot = test s "RcdSubBot" input output
+  where
+    s :: Syntactic '[TmApp, TyArr, TmBool, TmLam2, TyRecord, TmRecord, TyTop, TyBot, TmVar]
+    s = crep
+    input = [
+      "\\x:Top.x",
+      "(\\r:{x:Top->Top}. r.x r.x) {x=\\z:Top.z, y=\\z:Top.z}",
+      "\\x:Bot. x x"]
+    output = [
+      "\\x:Top.x",
+      "((\\r:{x:Top->Top}.r.x r.x) {x=\\z:Top.z, y=\\z:Top.z})",
+      "(\\x:Bot.x x)"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -261,3 +276,4 @@ main = hspec $ do
   testFullSimple
   testFullRef
   testFullError
+  testRcdSubBot
