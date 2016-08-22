@@ -16,7 +16,7 @@ import           GHC.TypeLits
 import qualified Data.Map         as M
 import           Text.Parsec
 import           Data.Typeable
-import           Data.Maybe       (fromJust)
+import           Data.Maybe       (fromJust, fromMaybe)
 import           Data.List        (findIndex)
 
 -- High-order functors
@@ -45,35 +45,20 @@ instance {-# OVERLAPS #-} Belongs f (f ': fs) where
 instance {-# OVERLAPS #-} Belongs f fs => Belongs f (g ': fs) where
   witness = There witness
 
--- Sub: list of h-functors
+-- Sub: list of h-functors & typelits
 
-data Sub (fs :: [(Nat -> *) -> (Nat -> *)]) (gs :: [(Nat -> *) -> (Nat -> *)]) where
-  SNil :: Sub '[] gs
-  SCons :: (HFunctor f) => Elem f gs -> Sub fs gs -> Sub (f ': fs) gs
+data Sub (fs :: [(Nat -> *) -> (Nat -> *)]) (gs :: [(Nat -> *) -> (Nat -> *)]) (ms :: [Nat]) (ns :: [Nat]) where
+  SNil :: Sub '[] gs '[] ns
+  SCons :: (HFunctor f, KnownNat m, Typeable m) => Elem f gs -> Proxy m -> Sub fs gs ms ns -> Sub (f ': fs) gs (m ': ms) ns
 
-class fs :< gs where
-  srep :: Sub fs gs
+class Subrep fs gs ms ns where
+  srep :: Sub fs gs ms ns
 
-instance '[] :< gs where
+instance Subrep '[] gs '[] ns where
   srep = SNil
 
-instance (HFunctor f, Belongs f gs, fs :< gs) => (f ': fs) :< gs where
-  srep = SCons witness srep
-
--- NSub :: list of typelits
-
-data NSub (ms :: [Nat]) (ns :: [Nat]) where
-  NNil :: NSub '[] ns
-  NCons :: KnownNat m => Proxy m -> NSub ms ns -> NSub (m ': ms) ns
-
-class ms :> ns where
-  nrep :: NSub ms ns
-
-instance '[] :> ns where
-  nrep = NNil
-
-instance (ms :> ns, KnownNat m) => (m ': ms) :> ns where
-  nrep = NCons Proxy nrep
+instance (HFunctor f, Belongs f gs, KnownNat m, Typeable m, Subrep fs gs ms ns) => Subrep (f ': fs) gs (m ': ms) ns where
+  srep = SCons witness Proxy srep
 
 -- Classy, Syntax, Syntactic, Parser: features of the parser
 
@@ -90,15 +75,15 @@ type BoundContext = ([(Int, Int)], M.Map Int Int)
 
 type Parser = Parsec String BoundContext
 
-parseL' :: Sub fs fs -> Sub gs fs -> NSub ms ms -> NSub ns ms -> Syntactic fs ms -> Syntactic gs ns -> TList fs
-parseL' r (SCons e SNil) n (NCons p NNil) o (CCons CVoid) = parseF p e (parseLang r n o) ::: TNil
-parseL' r (SCons e sub) n (NCons p nsub) o (CCons s) = tAddParser (parseF p e (parseLang r n o)) (parseL' r sub n nsub o s)
+parseL' :: Sub fs fs ms ms -> Sub gs fs ns ms -> Syntactic fs ms -> Syntactic gs ns -> TList' fs
+parseL' r (SCons e p SNil) o (CCons CVoid) = [parseF p e (parseLang r o)] :::: TNil'
+parseL' r (SCons e p sub) o (CCons s) = tAddParser (parseF p e (parseLang r o)) (parseL' r sub o s)
 
-parseLang :: Sub fs fs -> NSub ms ms -> Syntactic fs ms -> TList fs
-parseLang srep nrep o = parseL' srep srep nrep nrep o o
+parseLang :: Sub fs fs ms ms -> Syntactic fs ms -> TList fs
+parseLang srep o = trans $ parseL' srep srep o o
 
-parseL :: (fs :< fs, ms :> ms) => Syntactic fs ms -> TList fs
-parseL = parseLang srep nrep
+parseL :: Subrep fs fs ms ms => Syntactic fs ms -> TList fs
+parseL = parseLang srep
 
 -- Typed lists
 
@@ -106,58 +91,43 @@ data TList fs where
   TNil  :: TList fs
   (:::) :: (Typeable t, KnownNat t) => Parser (Fix fs t) -> TList fs -> TList fs
 
+data TList' fs where
+  TNil'  :: TList' fs
+  (::::) :: (Typeable t, KnownNat t) => [Parser (Fix fs t)] -> TList' fs -> TList' fs
+
+infixr 7 ::::
 infixr 7 :::
 infixl 9 !!!
 
+trans :: TList' fs -> TList fs
+trans TNil' = TNil
+trans (xs :::: xss) = foldl1 (<|>) xs ::: trans xss
+
+tAddParser :: (Typeable t, KnownNat t) => Parser (Fix fs t) -> TList' fs -> TList' fs
+tAddParser p TNil' = [p] :::: TNil'
+tAddParser p (xs :::: xss) =
+  let mb = myCast p (head xs) in
+  case mb of
+    Nothing -> xs :::: tAddParser p xss
+    Just _  -> (map (fromJust . myCast p) xs) :::: xss
+
 -- Library functions for typed lists
 
-zipTList :: TList fs -> TList fs -> TList fs
-zipTList TNil TNil = TNil
-zipTList a@(x ::: xs) b@(y ::: ys) = (x <|> (tGet b (0, getProxy x))) ::: (zipTList xs ys)
-
 (!!!) :: (Typeable t, KnownNat t) => TList fs -> Proxy t -> Parser (Fix fs t)
-l !!! t = tGet l (nat2Int t, t) -- '[0, 2, 4, 7]: use find instead (TODO)
-
-tGet :: Typeable t => TList fs -> (Int, Proxy t) -> Parser (Fix fs t)
-tGet TNil _ = undefined
-tGet (x ::: xs) (i, t)
-  | i < 0 = undefined
-  | i == 0 = fromJust $ myCast (fail "" :: Parser (Fix fs t)) x
-  | otherwise = tGet xs (i - 1, t)
-
-tInsert :: KnownNat t => Int -> Parser (Fix fs t) -> TList fs -> TList fs
-tInsert _ p TNil = p ::: TNil
-tInsert 0 p xs = p ::: xs
-tInsert i p (x ::: xs) = x ::: tInsert (i - 1) p xs
-
-tReplace :: KnownNat t => Int -> Parser (Fix fs t) -> TList fs -> TList fs
-tReplace _ _ TNil = TNil
-tReplace 0 p (x ::: xs) = p ::: xs
-tReplace i p (x ::: xs) = x ::: tReplace (i - 1) p xs
-
-tAddParser :: (Typeable t, KnownNat t) => Parser (Fix fs t) -> TList fs -> TList fs
-tAddParser p xs = case b of
-  True -> tReplace k (p <|> (tGet xs (k, Proxy :: Proxy t))) xs
-  False -> tInsert k p xs
-  where (k, b) = tAddParserAux p xs
-
-tAddParserAux :: KnownNat t => Parser (Fix fs t) -> TList fs -> (Int, Bool)
-tAddParserAux p xs = case m of
-  Just k -> (k, ns !! k == n)
-  Nothing -> (length ns, False)
-  where
-    n = parser2Int p
-    ns = getNums xs
-    m = findIndex (>= n) ns
+TNil !!! t = error $ "Parser " ++ show (nat2Int t) ++ " not found."
+(x ::: xs) !!! t =
+  let mb = myCast (fail "" :: Parser (Fix fs t)) x in
+  case mb of
+    Just p  -> p
+    Nothing -> xs !!! t
   
 myCast :: (Typeable a, Typeable b) => Parser (Fix fs a) -> Parser (Fix fs b) -> Maybe (Parser (Fix fs a))
 myCast x y = help x (myGCast y)
-
-myGCast :: forall fs a b c. (Typeable a, Typeable b) => Parser (Fix fs a) -> Maybe (Parser (Fix fs b))
-myGCast x = fmap (\Refl -> x) (eqT :: Maybe (a :~: b))
-
-help :: a -> Maybe a -> Maybe a
-help x y = y
+  where
+    myGCast :: forall fs a1 b1 c1. (Typeable a1, Typeable b1) => Parser (Fix fs a1) -> Maybe (Parser (Fix fs b1))
+    myGCast x = fmap (\Refl -> x) (eqT :: Maybe (a1 :~: b1))
+    help :: e -> Maybe e -> Maybe e
+    help x y = y
 
 getProxy :: Parser (Fix fs t) -> Proxy t
 getProxy _ = Proxy
@@ -167,13 +137,9 @@ nat2Int = fromIntegral . natVal
 
 parser2Int :: KnownNat n => Parser (Fix fs n) -> Int
 parser2Int p = parser2IntAux p Proxy
-
-parser2IntAux :: KnownNat n => Parser (Fix fs n) -> Proxy n -> Int
-parser2IntAux _ p = fromIntegral (natVal p)
-
-getNums :: TList fs -> [Int]
-getNums TNil = []
-getNums (x ::: xs) = parser2Int x : getNums xs
+  where
+    parser2IntAux :: KnownNat m => Parser (Fix fs m) -> Proxy m -> Int
+    parser2IntAux _ q = fromIntegral (natVal q)
 
 -- CLIENT CODE BELOW
 
@@ -253,3 +219,6 @@ run2 p = putStrLn $ p ++ "\t => \t" ++ p'
     p' = case runParser t2 ([], M.empty) "Test" p of
            Left _ -> "run2 WRONG"
            Right e -> "run2 RIGHT"
+
+                              
+
