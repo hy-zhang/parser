@@ -12,6 +12,7 @@ import           TyArith
 import           Untyped
 import           FullSimple
 import           FullRef
+import           FullError
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -236,6 +237,19 @@ testFullRef = test s "FullRef" input output
       "let t = Source Nat in \\x:t.unit",
       "\\x:Sink t.unit"]
 
+testFullError :: SpecWith ()
+testFullError = test s "FullError" input output
+  where
+    s :: Syntactic '[TmApp, TmBool, TmLam2, TyTop, TyBot, TmError, TmTry, TyBool, TmVar]
+    s = crep
+    input = [
+      "\\x:Top.if error then (try x with true) else false",
+      "error true",
+      "(\\x:Bool.x) error"]
+    output = ["\\x:Top.(if error then try x with true else false)",
+      "(error true)",
+      "(\\x:Bool.x error)"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -246,3 +260,4 @@ main = hspec $ do
   testSimpleBool
   testFullSimple
   testFullRef
+  testFullError
