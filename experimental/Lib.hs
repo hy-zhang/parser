@@ -12,10 +12,10 @@
 {-# LANGUAGE PolyKinds             #-}
 
 module Lib (
-  Fix(..), Elem, Syntactic, Syntax(..), Gen(..),
+  HFunctor(..), Fix(..), Elem, Syntactic, Syntax(..), Gen(..),
   TList, (!!!), Parser, parseL, mapFst, mapSnd,
   NewParser, OneParser, num, keyword, parseWord,
-  checkR, resetR, chainlR, choiceR
+  checkR, resetR, chainlR, choiceR, runP
 ) where
 
 import           GHC.Exts             (Constraint)
@@ -250,6 +250,14 @@ parseBase p = do
   _ <- char ')'
   modifyState $ \s -> s {stk = stk state}
   return x
+
+runP :: (Subrep fs fs ms ms, KnownNat n) => Syntactic fs ms -> Proxy n -> String -> IO ()
+runP syn n s = putStrLn $ s ++ "\t => \t" ++ s'
+  where
+    s' = case runParser (parseL syn !!! n) initState "Test" s of
+           Left t -> show t
+           Right e -> "RIGHT"
+    initState = ParserContext [] M.empty (getKeywords syn)
 
 mapFst :: (a -> c) -> (a, b) -> (c, b)
 mapFst f (x, y) = (f x, y)
