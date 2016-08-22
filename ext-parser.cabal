@@ -22,6 +22,9 @@ library
                        TyArith
                        SimpleBool
                        FullSimple
+                       FullRef
+                       FullError
+                       RcdSubBot
   build-depends:       base >= 4.7 && < 5
                      , parsec
                      , pretty
