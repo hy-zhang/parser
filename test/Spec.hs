@@ -14,6 +14,7 @@ import           FullSimple
 import           FullRef
 import           FullError
 import           RcdSubBot
+import           FullEquiRec
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -161,7 +162,7 @@ testSimpleBool = test s "SimpleBool" input output
 testFullSimple :: SpecWith ()
 testFullSimple = test s "FullSimple" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TmFloat, TmLet, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TmVar]
     s = crep
     input = [
       "x",
@@ -189,7 +190,8 @@ testFullSimple = test s "FullSimple" input output
       "unit",
       "unit as Unit",
       "<l=unit> as <l:Unit, r:Unit>",
-      "case a of <phy=x> => x.first | <vir=y> => y.name"]
+      "case a of <phy=x> => x.first | <vir=y> => y.name",
+      "\\a:Unit.fix (\\x:T.x)"]
     output = [
       "x",
       "(if x then false else x)",
@@ -216,7 +218,8 @@ testFullSimple = test s "FullSimple" input output
       "unit",
       "(unit as Unit)",
       "(<l=unit> as <l:Unit, r:Unit>)",
-      "case a of <phy=x> => x.first | <vir=y> => y.name"]
+      "case a of <phy=x> => x.first | <vir=y> => y.name",
+      "\\a:Unit.fix (\\x:T.x)"]
 
 testFullRef :: SpecWith ()
 testFullRef = test s "FullRef" input output
@@ -269,7 +272,7 @@ testRcdSubBot = test s "RcdSubBot" input output
 testFullSub :: SpecWith ()
 testFullSub = test s "FullSub" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
     s = crep
     input = [
       "x",
@@ -348,6 +351,28 @@ testFullSub = test s "FullSub" input output
       "(error true)",
       "(\\x:Bool.x error)"]
 
+testFullEquiRec :: SpecWith ()
+testFullEquiRec = test s "FullEquiRec" input output
+  where
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
+    s = crep
+    input = [
+      "\\f:(Rec X.A->A).\\x:A.f x",
+      "\\x:<a:Bool, b:Bool>.x",
+      "Rec P.{get:Nat, inc:Unit->P}",
+      "Rec A.Nat->A",
+      "let g = fix (\\f:Nat->(Rec A.Nat->A).\\n:Nat.f) in unit",
+      "\\l:NList.case l of <nil=u> => true | <cons=p> => false",
+      "fix (\\p:Nat->Nat->Nat.\\m:Nat.\\n:Nat.if iszero m then n else succ (p (pred m) n))"]
+    output = [
+      "(\\f:Rec X.A->A.\\x:A.f x)",
+      "\\x:<a:Bool, b:Bool>.x",
+      "Rec P.{get:Nat, inc:Unit->P}",
+      "Rec A.Nat->A",
+      "let g = fix (\\f:Nat->Rec A.Nat->A.\\n:Nat.f) in unit",
+      "\\l:NList.case l of <nil=u> => true | <cons=p> => false",
+      "fix (\\p:Nat->Nat->Nat.\\m:Nat.\\n:Nat.(if iszero (m) then n else succ (((p pred (m)) n))))"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -361,3 +386,4 @@ main = hspec $ do
   testFullError
   testRcdSubBot
   testFullSub
+  testFullEquiRec
