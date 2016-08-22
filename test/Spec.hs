@@ -15,6 +15,7 @@ import           FullRef
 import           FullError
 import           RcdSubBot
 import           FullEquiRec
+import           FullIsoRec
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -373,6 +374,18 @@ testFullEquiRec = test s "FullEquiRec" input output
       "\\l:NList.case l of <nil=u> => true | <cons=p> => false",
       "fix (\\p:Nat->Nat->Nat.\\m:Nat.\\n:Nat.(if iszero (m) then n else succ (((p pred (m)) n))))"]
 
+testFullIsoRec :: SpecWith ()
+testFullIsoRec = test s "FullIsoRec" input output
+  where
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmFold, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
+    s = crep
+    input = [
+      "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
+      "(unfold [Counter] p).get"]
+    output = [
+      "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
+      "unfold [Counter] p.get"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -387,3 +400,4 @@ main = hspec $ do
   testRcdSubBot
   testFullSub
   testFullEquiRec
+  testFullIsoRec

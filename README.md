@@ -13,8 +13,8 @@
 - ~~rcdsubbot~~ (chapter 15)
 - ~~fullsub~~ (chapters 15 - 17)
 - ~~bot~~ (chapter 16)
-- `fullequirec` (chapter 20).
-- `fullisorec` (chapter 20).
+- ~~fullequirec~~ (chapter 20).
+- ~~fullisorec~~ (chapter 20).
 - `equirec` (chapter 21)
 - `recon` (chapter 22).
 - `fullrecon` (chapter 22)
