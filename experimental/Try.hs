@@ -66,7 +66,9 @@ data Classy (c :: ((Nat -> *) -> (Nat -> *)) -> Nat -> Constraint) (fs :: [(Nat 
   CVoid :: Classy c fs ns
   CCons :: (HFunctor f, c f n) => Classy c fs ns -> Classy c (f ': fs) (n ': ns)
 
-class HFunctor f => Syntax f (n :: Nat) where -- n not needed? (TODO)
+class HFunctor f => Syntax f (n :: Nat) where
+  level :: Proxy n -> Elem f fs -> Int
+  level _ _ = 0
   parseF :: Proxy n -> Elem f fs -> TList fs -> Parser (Fix fs n)
 
 type Syntactic = Classy Syntax
@@ -76,8 +78,8 @@ type BoundContext = ([(Int, Int)], M.Map Int Int)
 type Parser = Parsec String BoundContext
 
 parseL' :: Sub fs fs ms ms -> Sub gs fs ns ms -> Syntactic fs ms -> Syntactic gs ns -> TList' fs
-parseL' r (SCons e p SNil) o (CCons CVoid) = [parseF p e (parseLang r o)] :::: TNil'
-parseL' r (SCons e p sub) o (CCons s) = tAddParser (parseF p e (parseLang r o)) (parseL' r sub o s)
+parseL' r (SCons e p SNil) o (CCons CVoid) = [(parseF p e (parseLang r o), level p e)] :::: TNil'
+parseL' r (SCons e p sub) o (CCons s) = tAddParser (parseF p e (parseLang r o), level p e) (parseL' r sub o s)
 
 parseLang :: Sub fs fs ms ms -> Syntactic fs ms -> TList fs
 parseLang srep o = trans $ parseL' srep srep o o
@@ -93,7 +95,7 @@ data TList fs where
 
 data TList' fs where
   TNil'  :: TList' fs
-  (::::) :: (Typeable t, KnownNat t) => [Parser (Fix fs t)] -> TList' fs -> TList' fs
+  (::::) :: (Typeable t, KnownNat t) => [(Parser (Fix fs t), Int)] -> TList' fs -> TList' fs
 
 infixr 7 ::::
 infixr 7 :::
@@ -101,15 +103,21 @@ infixl 9 !!!
 
 trans :: TList' fs -> TList fs
 trans TNil' = TNil
-trans (xs :::: xss) = foldl1 (<|>) xs ::: trans xss
+trans (xs :::: xss) = f xs ::: trans xss
+  where
+    sort [] = []
+    sort (p : ps) = insert p (sort ps)
+    insert p [] = [p]
+    insert p (q : qs) = if snd p > snd q then p : q : qs else q : insert p qs
+    f = foldl1 (<|>) . map fst . sort
 
-tAddParser :: (Typeable t, KnownNat t) => Parser (Fix fs t) -> TList' fs -> TList' fs
-tAddParser p TNil' = [p] :::: TNil'
-tAddParser p (xs :::: xss) =
-  let mb = myCast p (head xs) in
+tAddParser :: (Typeable t, KnownNat t) => (Parser (Fix fs t), Int) -> TList' fs -> TList' fs
+tAddParser q TNil' = [q] :::: TNil'
+tAddParser q@(p, n) (xs :::: xss) =
+  let mb = myCast p (fst $ head xs) in
   case mb of
-    Nothing -> xs :::: tAddParser p xss
-    Just _  -> (map (fromJust . myCast p) xs) :::: xss
+    Nothing -> xs :::: tAddParser q xss
+    Just _  -> (q : map (mapFst (fromJust . myCast p)) xs) :::: xss
 
 -- Library functions for typed lists
 
@@ -140,6 +148,12 @@ parser2Int p = parser2IntAux p Proxy
   where
     parser2IntAux :: KnownNat m => Parser (Fix fs m) -> Proxy m -> Int
     parser2IntAux _ q = fromIntegral (natVal q)
+
+mapFst :: (a -> c) -> (a, b) -> (c, b)
+mapFst f (x, y) = (f x, y)
+
+mapSnd :: (b -> c) -> (a, b) -> (a, c)
+mapSnd f (x, y) = (x, f y)
 
 -- CLIENT CODE BELOW
 
@@ -173,7 +187,8 @@ num e = do
 
 -- 4. Syntax instance
 instance Syntax ISig 0 where
-  parseF _ = parseISig
+  parseF _  = parseISig
+  level _ _ = 10
 
 -- Datatype: PSig
 
@@ -197,7 +212,8 @@ parsePSig e ps = do
 
 -- 4. Syntax instance
 instance Syntax PSig 1 where
-  parseF _ = parsePSig
+  parseF _  = parsePSig
+  level _ _ = 5
 
 -- Testing
 
@@ -220,5 +236,6 @@ run2 p = putStrLn $ p ++ "\t => \t" ++ p'
            Left _ -> "run2 WRONG"
            Right e -> "run2 RIGHT"
 
+r = sequence_ [run1 "123", run1 "(12,4)", run1 "fst (12,34)", run2 "123", run2 "(12,4)", run2 "fst (12,34)"]
                               
 
