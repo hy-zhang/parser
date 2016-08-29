@@ -16,6 +16,7 @@ import           FullError
 import           RcdSubBot
 import           FullEquiRec
 import           FullIsoRec
+import           FullPoly
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -386,6 +387,38 @@ testFullIsoRec = test s "FullIsoRec" input output
       "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
       "unfold [Counter] p.get"]
 
+testFullPoly :: SpecWith ()
+testFullPoly = test s "FullPoly" input output
+  where
+    s :: Syntactic '[TmTApp, TmApp, TyArr, TmCase, TmRecord, TyRecord, TmPack, TmUnpack, TyAll, TySome, TmFloat, TmLet, TmFix, TmString, TmTAbs, TmLam2, TmBool, TmFold, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TyString, TyVar, TmVar]
+    s = crep
+    input = [
+      "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
+      "(unfold [Counter] p).get",
+      "x",
+      "if x then false else x",
+      "\\x:A.x",
+      "timesfloat 2.0 3.0",
+      "\"hello\"",
+      "(\\X.\\x:X.x) [All X.X->X]",
+      "{Some X, {c:X, f:X->Nat}}",
+      "{*All Y.Y, \\x:(All Y.Y).x} as {Some X, X->X}",
+      "{*Nat, {c=0, f=\\x:Nat. succ x}} as {Some X, {c:X, f:X->Nat}}",
+      "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ x}} as {Some X, {c:X, f:X->Nat}} in (ops.f ops.c)"]
+    output = [
+      "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
+      "unfold [Counter] p.get",
+      "x",
+      "(if x then false else x)",
+      "\\x:A.x",
+      "timesfloat (2.0) (3.0)",
+      "\"hello\"",
+      "(\\X.\\x:X.x [All X.X->X])",
+      "{Some X, {c:X, f:X->Nat}}",
+      "{*All Y.Y, \\x:All Y.Y.x} as {Some X, X->X}",
+      "{*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X, {c:X, f:X->Nat}}",
+      "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X, {c:X, f:X->Nat}} in (ops.f ops.c)"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -401,3 +434,4 @@ main = hspec $ do
   testFullSub
   testFullEquiRec
   testFullIsoRec
+  testFullPoly
