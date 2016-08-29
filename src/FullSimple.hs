@@ -13,7 +13,9 @@ module FullSimple (TmUnit(..),
                    TmTag(..),
                    TyVariant(..),
                    TmFix(..),
-                   TmCase(..)) where
+                   TmCase(..),
+                   TyVar(..),
+                   TyString) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
@@ -143,3 +145,28 @@ instance Syntax TmCase where
   prettyF r (TmCase expr cs) =
     let gs = map (\(l, x, e) -> "<" <> text l <> "=" <> text x <> ">" <+> "=>" <+> r e) cs in
       "case" <+> r expr <+> "of" <+> foldl1 (\x y -> x <+> "|" <+> y) gs
+
+-- TyVar
+
+data TyVar e = TyVar String deriving (Functor, Show)
+
+parseTyVar :: NewParser TyVar fs
+parseTyVar e _ = do
+  w <- parseWordUpper
+  return $ In e (TyVar w)
+
+instance Syntax TyVar where
+  parseF = parseTyVar
+  prettyF _ (TyVar v) = text v
+
+-- TyString
+
+data TyString e = TyString deriving (Functor, Show)
+
+parseTyString :: NewParser TyString fs
+parseTyString e _ = keyword "String" >> return (In e TyString)
+
+instance Syntax TyString where
+  keywords _ = ["String"]
+  parseF = parseTyString
+  prettyF _ TyString = "String"

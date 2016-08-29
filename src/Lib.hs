@@ -12,7 +12,7 @@
 module Lib (
   Fix(..), Classy(..), Elem, Syntactic, Syntax(..), Gen(..), (:<)(..),
   Parser, parseL, prettyL, mapFst, mapSnd,
-  NewParser, runP, runP', num, keyword, parseWord,
+  NewParser, runP, runP', num, keyword, parseWord, parseWordUpper,
   checkR, resetR, chainlR, choiceR,
 ) where
 
@@ -204,11 +204,19 @@ keyword s = try $ spaces >> string s >> spaces
 parseWord :: Parsec String ParserContext String
 parseWord = do
   w <- many1 (letter <|> char '\'')
+  pwCheck w
+
+parseWordUpper :: Parsec String ParserContext String
+parseWordUpper = do
+  c <- upper
+  w <- many (letter <|> char '\'')
+  pwCheck (c:w)
+
+pwCheck w = do
   state <- getState
   if w `elem` kws state
     then unexpected $ show w ++ "; It cannot be used as a var because it's a predefined keyword."
     else return w
-
 {-
 -- Arith
 

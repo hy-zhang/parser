@@ -163,7 +163,7 @@ testSimpleBool = test s "SimpleBool" input output
 testFullSimple :: SpecWith ()
 testFullSimple = test s "FullSimple" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TyVariant, TmTag, TmUnit, TyUnit, TyBool, TyNat, TyString, TyVar, TmVar]
     s = crep
     input = [
       "x",
@@ -273,7 +273,7 @@ testRcdSubBot = test s "RcdSubBot" input output
 testFullSub :: SpecWith ()
 testFullSub = test s "FullSub" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TyString, TyVar, TmVar]
     s = crep
     input = [
       "x",
@@ -355,7 +355,7 @@ testFullSub = test s "FullSub" input output
 testFullEquiRec :: SpecWith ()
 testFullEquiRec = test s "FullEquiRec" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TyString, TyVar, TmVar]
     s = crep
     input = [
       "\\f:(Rec X.A->A).\\x:A.f x",
@@ -377,7 +377,7 @@ testFullEquiRec = test s "FullEquiRec" input output
 testFullIsoRec :: SpecWith ()
 testFullIsoRec = test s "FullIsoRec" input output
   where
-    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmFold, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TmVar]
+    s :: Syntactic '[TmApp, TyArr, TmCase, TmRecord, TyRecord, TmFloat, TmLet, TmFix, TmString, TmLam2, TmBool, TmFold, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TyString, TyVar, TmVar]
     s = crep
     input = [
       "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
