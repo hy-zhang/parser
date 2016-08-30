@@ -17,6 +17,7 @@ import           RcdSubBot
 import           FullEquiRec
 import           FullIsoRec
 import           FullPoly
+import           FullOmega
 
 
 test :: (fs :< fs) => Syntactic fs -> String -> [String] -> [String] -> SpecWith ()
@@ -419,6 +420,44 @@ testFullPoly = test s "FullPoly" input output
       "{*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X, {c:X, f:X->Nat}}",
       "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X, {c:X, f:X->Nat}} in (ops.f ops.c)"]
 
+testFullOmega :: SpecWith ()
+testFullOmega = test s "FullOmega" input output
+  where
+    s :: Syntactic '[TmTApp, TmApp, TyArr, KnArr, TmCase, TmRecord, TyRecord, TmPack, TmUnpack, TyAll2, TySome2, TmFloat, TmLet, TmFix, TmString, TmTAbs2, TmLam2, TmBool, TmFold, TmNat, TmArith, TmAscribe, TmAssign, TyVariant, TmTag, TmTry, TmError, TyRec, TyRef, TmRef, TmDeref, TySource ,TySink, TmUnit, TyUnit, TyBool, TyNat, TyTop, TyBot, TyString, KnStar, TyVar, TmVar]
+    s = crep
+    input = [
+      "\\X:Star.X",
+      "\\X:Star=>Star.X",
+      "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
+      "unfold [Counter] p.get",
+      "x",
+      "(if x then false else x)",
+      "\\x:A.x",
+      "timesfloat (2.0) (3.0)",
+      "\"hello\"",
+      "All X:Star.X",
+      "(\\X:Star.\\x:X.x) [All X:Star.X->X]",
+      "{Some X:Star, {c:X, f:X->Nat}}",
+      "{*All Y:Star.Y, \\x:All Y:Star.Y.x} as {Some X:Star, X->X}",
+      "{*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}}",
+      "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}} in (ops.f ops.c)"]
+    output = [
+      "\\X:Star.X",
+      "\\X:Star=>Star.X",
+      "let Counter = Rec P.{get:Nat, inc:Unit->P} in fold [Counter] {get=unit, inc=unit}",
+      "unfold [Counter] p.get",
+      "x",
+      "(if x then false else x)",
+      "\\x:A.x",
+      "timesfloat (2.0) (3.0)",
+      "\"hello\"",
+      "All X:Star.X",
+      "(\\X:Star.\\x:X.x [All X:Star.X->X])",
+      "{Some X:Star, {c:X, f:X->Nat}}",
+      "{*All Y:Star.Y, \\x:All Y:Star.Y.x} as {Some X:Star, X->X}",
+      "{*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}}",
+      "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}} in (ops.f ops.c)"]
+
 
 main :: IO ()
 main = hspec $ do
@@ -435,3 +474,4 @@ main = hspec $ do
   testFullEquiRec
   testFullIsoRec
   testFullPoly
+  testFullOmega

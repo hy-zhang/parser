@@ -19,6 +19,6 @@
 - ~~recon~~ (chapter 22).
 - ~~fullrecon~~ (chapter 22)
 - ~~fullpoly~~ (chapters 23, 24)
-- `fullomega` (chapters 23, 29, 30)
+- ~~fullomega~~ (chapters 23, 29, 30)
 - `fullfsub` (chapters 26, 28)
 - `fullfomsub` (chapters 26, 31)
