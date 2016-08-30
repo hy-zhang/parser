@@ -12,10 +12,10 @@
 {-# LANGUAGE PolyKinds             #-}
 
 module Lib (
-  HFunctor(..), Fix(..), Elem, Syntactic, Syntax(..), Classy(..), -- Gen(..),
+  HFunctor(..), Fix(..), Elem, Syntactic, Syntax(..), Gen(..),
   TList, (!!!), Parser, parseL, mapFst, mapSnd,
   NewParser, OneParser, num, keyword, parseWord,
-  checkR, resetR, chainlR, choiceR, runP, MyShow(..), test, testRun
+  checkR, resetR, chainlR, choiceR, runP
 ) where
 
 import           GHC.Exts             (Constraint)
@@ -28,7 +28,7 @@ import           Text.PrettyPrint     hiding (char, parens, space)
 import           Text.Parsec.Language (emptyDef)
 import           Data.Typeable
 import           Data.Maybe           (fromJust, fromMaybe)
-import           Data.List            (findIndex, permutations, all)
+import           Data.List            (findIndex)
 
 
 -- High-order functors
@@ -37,14 +37,11 @@ type f ==> g = (forall (n :: Nat). f n -> g n)
 
 class HFunctor (h :: (Nat -> *) -> (Nat -> *)) where
   hfmap :: f ==> g -> h f ==> h g
-
-class MyShow (f :: (Nat -> *) -> (Nat -> *)) where
-  showMe :: f (Fix fs) n -> String
   
 -- MRM code: Fix, Elem 
 
 data Fix (fs :: [(Nat -> *) -> (Nat -> *)]) (l :: Nat) where
- In :: (HFunctor f, MyShow f) => Elem f fs -> f (Fix fs) l -> Fix fs l
+ In :: HFunctor f => Elem f fs -> f (Fix fs) l -> Fix fs l
  deriving Typeable
 
 data Elem (f :: (Nat -> *) -> (Nat -> *)) (fs :: [(Nat -> *) -> (Nat -> *)]) where
@@ -79,16 +76,16 @@ instance (HFunctor f, Belongs f gs, KnownNat m, Typeable m, Subrep fs gs ms ns) 
 
 data Classy (c :: ((Nat -> *) -> (Nat -> *)) -> Nat -> Constraint) (fs :: [(Nat -> *) -> (Nat -> *)]) (ns :: [Nat]) where
   CVoid :: Classy c fs ns
-  CCons :: (HFunctor f, c f n) => (Int, Bool) -> Classy c fs ns -> Classy c (f ': fs) (n ': ns) -- Subrep needed?
+  CCons :: (HFunctor f, c f n) => Classy c fs ns -> Classy c (f ': fs) (n ': ns) -- Subrep needed?
 
--- class Gen fs ms where
- -- crep :: Syntactic fs ms
+class Gen fs ms where
+ crep :: Syntactic fs ms
 
--- instance Gen '[] '[] where
- -- crep = CVoid
+instance Gen '[] '[] where
+ crep = CVoid
 
--- instance (Syntax f m, Gen fs ms) => Gen (f ': fs) (m ': ms) where
- -- crep = CCons crep
+instance (Syntax f m, Gen fs ms) => Gen (f ': fs) (m ': ms) where
+ crep = CCons crep
 
 class HFunctor f => Syntax f (n :: Nat) where
   level :: Proxy n -> Elem f fs -> Int
@@ -108,10 +105,8 @@ data ParserContext = ParserContext
 type Parser = Parsec String ParserContext
 
 parseL' :: Sub fs fs ms ms -> Sub gs fs ns ms -> Syntactic fs ms -> Syntactic gs ns -> TList' fs
-parseL' r (SCons p e SNil) o (CCons (x, b) CVoid) = tAddParser (parseBase p (parseLang r o), 0) $ [(f $ parseF p e (parseLang r o), x)] :::: TNil'
-  where f a = if b then try a else a
-parseL' r (SCons p e sub) o (CCons (x, b) s) = tAddParser (f $ parseF p e (parseLang r o), x) (parseL' r sub o s)
-  where f a = if b then try a else a
+parseL' r (SCons p e SNil) o (CCons CVoid) = [(try $ parseF p e (parseLang r o), level p e)] :::: TNil'
+parseL' r (SCons p e sub) o (CCons s) = tAddParser (try $ parseF p e (parseLang r o), level p e) (parseL' r sub o s)
 
 parseLang :: Sub fs fs ms ms -> Syntactic fs ms -> TList fs
 parseLang srep o = trans $ parseL' srep srep o o
@@ -124,7 +119,7 @@ getKeywords o = ttt srep o o
   where
     ttt :: Sub gs fs ns ms -> Syntactic fs ms -> Syntactic gs ns -> [String]
     ttt SNil          o CVoid      = []
-    ttt (SCons p e sub) o (CCons _ cs) = keywords p e ++ ttt sub o cs
+    ttt (SCons p e sub) o (CCons cs) = keywords p e ++ ttt sub o cs
 
 -- Typed lists
 
@@ -209,7 +204,7 @@ resetR e = do
       f (y1, y2) = y1 > ex || (y1 == ex && y2 >= x)
   modifyState (\s -> let t = stk s in s {stk = dropWhile f t})
 
-chainlR :: (HFunctor f, MyShow f) => Parser t -> (Fix fs n -> t -> f (Fix fs) n) -> OneParser f fs n
+chainlR :: HFunctor f => Parser t -> (Fix fs n -> t -> f (Fix fs) n) -> OneParser f fs n
 chainlR parser ctr e p = do
   e1 <- checkR e p
   (do xs <- many1 parser
@@ -246,42 +241,23 @@ parseWord = do
     else return w
 
 -- Parentheses are no longer implicitly supported.
-parseBase :: KnownNat n => Proxy n -> TList fs -> Parser (Fix fs n)
-parseBase p ps = do
+parseBase :: Parser (Fix fs n) -> Parser (Fix fs n)
+parseBase p = do
   _ <- char '('
   state <- getState
   modifyState $ \s -> s {stk = []}
-  x <- ps !!! p
+  x <- p
   _ <- char ')'
   modifyState $ \s -> s {stk = stk state}
   return x
 
-runP :: (Subrep fs fs ms ms, KnownNat n) => Syntactic fs ms -> Proxy n -> String -> Maybe (Fix fs n)
-runP syn n s = s'
+runP :: (Subrep fs fs ms ms, KnownNat n) => Syntactic fs ms -> Proxy n -> String -> IO ()
+runP syn n s = putStrLn $ s ++ "\t => \t" ++ s'
   where
     s' = case runParser (parseL syn !!! n) initState "Test" s of
-           Left t -> Nothing
-           Right e -> Just e -- s ++ "\t => \t" ++ printer e
+           Left t -> show t
+           Right e -> "RIGHT"
     initState = ParserContext [] M.empty (getKeywords syn)
-    
-test :: (Subrep fs fs ms ms, KnownNat n) => Syntactic fs ms -> Proxy n -> [(String, String)] -> Bool
-test s proxy inout = f
-  where
-    f = let e = runP s proxy in and (map (g e) inout)
-    g = \e -> \(input, output) -> case e input of
-                                Nothing -> False
-                                Just k  -> printer k == output
-
-testRun :: (Subrep fs fs ms ms, KnownNat n) => Syntactic fs ms -> Proxy n -> String -> String
-testRun s proxy input = f
-  where
-    f = let e = runP s proxy input in
-              case e of
-                Nothing -> ""
-                Just k  -> printer k
-
-printer :: Fix fs n -> String
-printer (In e k) = showMe k   
 
 mapFst :: (a -> c) -> (a, b) -> (c, b)
 mapFst f (x, y) = (f x, y)
@@ -306,9 +282,6 @@ instance HFunctor ISig where
   hfmap f (Mult x y) = Mult (f x) (f y)
   hfmap f (Fst x) = Fst (f x)
   hfmap f (Snd x) = Snd (f x)
-
-instance MyShow ISig where
-  showMe _ = "ISig"
 
 -- 3. Parser implementation
 parseISig :: NewParser ISig fs 0
@@ -337,9 +310,6 @@ data PSig e l where
 instance HFunctor PSig where
   hfmap f (Pair x y) = Pair (f x) (f y)
 
-instance MyShow PSig where
-  showMe _ = "PSig"
-
 -- 3. Parser implementation
 parsePSig :: NewParser PSig fs 1
 parsePSig e ps = do
@@ -358,7 +328,7 @@ instance Syntax PSig 1 where
 -- Testing
 
 s :: Syntactic '[ISig, PSig] '[0, 1]
-s = CCons (5, False) (CCons (7, False) CVoid)
+s = crep
 
 t1 = (parseL s) !!! (Proxy :: Proxy 0)
 t2 = (parseL s) !!! (Proxy :: Proxy 1)

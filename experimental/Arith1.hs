@@ -11,13 +11,14 @@
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE PolyKinds             #-}
 
-module Arith (TmBool(..), TmNat(..), TmArith(..)) where
+module Arith1 (TmBool(..), TmNat(..), TmArith(..)) where
 
 import           Lib
 import           Text.Parsec      hiding (runP)
 import           Text.PrettyPrint hiding (char, space)
 import           Data.Typeable
 import           GHC.TypeLits
+import qualified Data.Map         as M
 
 -- TmBool
 
@@ -31,6 +32,12 @@ instance HFunctor TmBool where
   hfmap _ TmFalse = TmFalse
   hfmap f (TmIf e1 e2 e3) = TmIf (f e1) (f e2) (f e3)
 
+instance MyShow TmBool where
+  showMe TmTrue = "true"
+  showMe TmFalse = "false"
+  showMe (TmIf (In _ e1) (In _ e2) (In _ e3)) =
+    "if (" ++ showMe e1 ++ ") then (" ++ showMe e2 ++ ") else (" ++ showMe e3 ++ ")"
+
 parseTmBool :: NewParser TmBool fs 0
 parseTmBool e p =
   (keyword "true" >> pure (In e TmTrue)) <|>
@@ -43,9 +50,6 @@ parseTmBool e p =
 instance Syntax TmBool 0 where
   keywords _ _ = ["true", "false", "if", "then", "else"]
   parseF   _   = parseTmBool
-  -- prettyF _ TmTrue          = text "true"
-  -- prettyF _ TmFalse         = text "false"
-  -- prettyF r (TmIf e1 e2 e3) = parens $ text "if " <> r e1 <> text " then " <> r e2 <> text " else " <> r e3
 
 -- TmNat
 
@@ -58,6 +62,11 @@ instance HFunctor TmNat where
   hfmap _ TmZero = TmZero
   hfmap f (TmSucc e) = TmSucc (f e)
   hfmap f (TmPred e) = TmPred (f e)
+
+instance MyShow TmNat where
+  showMe TmZero = "0"
+  showMe (TmSucc (In _ e)) = "succ (" ++ showMe e ++ ")"
+  showMe (TmPred (In _ e)) = "pred (" ++ showMe e ++ ")"
   
 parseTmNat :: NewParser TmNat fs 0
 parseTmNat e p =
@@ -68,9 +77,6 @@ parseTmNat e p =
 instance Syntax TmNat 0 where
   keywords _ _ = ["0", "succ", "pred"]
   parseF   _   = parseTmNat
-  -- prettyF _ TmZero     = text "0"
-  -- prettyF r (TmSucc e) = text "succ" <+> parens (r e)
-  -- prettyF r (TmPred e) = text "pred" <+> parens (r e)
 
 -- TmArith
 
@@ -80,15 +86,21 @@ data TmArith e l where
 instance HFunctor TmArith where
   hfmap f (TmIsZero e) = TmIsZero (f e)
 
+instance MyShow TmArith where
+  showMe (TmIsZero (In _ e)) = "iszero (" ++ showMe e ++ ")"
+
 parseTmArith :: NewParser TmArith fs 0
 parseTmArith e p = keyword "iszero" >> (In e . TmIsZero <$> (p !!! (Proxy :: Proxy 0)))
 
 instance Syntax TmArith 0 where
   keywords _ _ = ["iszero"]
   parseF   _   = parseTmArith
-  -- prettyF r (TmIsZero e) = text "iszero" <+> parens (r e)
 
-s :: Syntactic '[TmBool, TmNat, TmArith] '[0, 0, 0]
-s = crep
+-- s :: [Int] -> Syntactic '[TmBool, TmNat, TmArith] '[0, 0, 0]
+-- s (x : y : z : zs) = CCons x $ CCons y $ CCons z $ CVoid
 
-r = runP s (Proxy :: Proxy 0)
+-- r = testRun s 3 (Proxy :: Proxy 0)
+-- r' = test (s [1,2,3]) (Proxy :: Proxy 0)
+  -- [("0", "0"),
+   -- ("succ (pred 0)", "succ (pred (0))"),
+   -- ("iszero (pred (succ (succ 0)))", "iszero (pred (succ (succ (0))))")]
