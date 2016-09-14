@@ -1,3 +1,5 @@
+package Test
+
 import scala.util.parsing.combinator._
 
 object OAParser extends RegexParsers {
