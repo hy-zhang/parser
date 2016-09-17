@@ -4,12 +4,11 @@ import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.syntactical._
 import scala.collection.immutable.HashSet
 
-trait Arith extends StandardTokenParsers with PackratParsers {
-  lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
-  lexical.delimiters += ("(", ")")
-  
-  trait List[E] {
-    val pE : PackratParser[E]
+object Arith {
+  import Util._
+  trait Lexer {
+    lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
+    lexical.delimiters += ("(", ")")
   }
   
   trait ArithAlg[E] {
@@ -32,33 +31,36 @@ trait Arith extends StandardTokenParsers with PackratParsers {
     def isZero(e : String) = "iszero (" + e + ")"
   }
   
-  trait Parser[E] {
-    val pE : ArithAlg[E] => (=> List[E]) => List[E] = alg => l => new List[E]() {
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+    val pE : ArithAlg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       def num(x : Int) : E = x match {
         case 0 => alg.zero()
         case _ => alg.succ(num(x - 1))
       }
-      override val pE : PackratParser[E] = "true" ^^ { _ => alg.trueV() } |
-        "false" ^^ { _ => alg.falseV() } |
-        ("if" ~> e) ~ ("then" ~> e) ~ ("else" ~> e) ^^ { case e1 ~ e2 ~ e3 => alg.ifS(e1, e2, e3) } |
-        numericLit ^^ { x => num(x.toInt) } |
-        "succ" ~> e ^^ alg.succ |
-        "pred" ~> e ^^ alg.pred |
-        "iszero" ~> e ^^ alg.isZero |
-        "(" ~> e <~ ")"
-    }
-   }
-}
-
-object TestArith extends Arith {
-  def parse(in : String) : Unit = {
-    val p = new Parser[String](){}.pE(new Pretty(){})
-    phrase(Util.fix(p).pE)(new lexical.Scanner(in)) match {
-      case t if t.successful => println(t.get)
-      case t                 => scala.sys.error(t.toString)
+      "true" ^^ { _ => alg.trueV() } |||
+      "false" ^^ { _ => alg.falseV() } |
+      ("if" ~> e) ~ ("then" ~> e) ~ ("else" ~> e) ^^ { case e1 ~ e2 ~ e3 => alg.ifS(e1, e2, e3) } |||
+      numericLit ^^ { x => num(x.toInt) } |||
+      "succ" ~> e ^^ alg.succ |||
+      "pred" ~> e ^^ alg.pred |||
+      "iszero" ~> e ^^ alg.isZero |||
+      "(" ~> e <~ ")"
     }
   }
+}
+
+
+object TestArith extends Arith.Lexer {
+  import Util._
+  trait List[E] { val pE : PackratParser[E] }
+  val pArith = new Arith.Parser[String, List[String]](){}.pE(new Arith.Pretty(){})
+  val pp : (=> List[String]) => PackratParser[String] = l => pArith(l)
+  val p : (=> List[String]) => List[String] = l => new List[String]() {
+    override val pE = pp(l)
+  }
+  val parse = runParser(fix(p).pE)
+  
   def main(args : Array[String]) = {
     parse("true")
     parse("if false then true else false")
