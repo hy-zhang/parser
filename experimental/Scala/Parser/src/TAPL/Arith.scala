@@ -31,8 +31,8 @@ object Arith {
     def isZero(e : String) = "iszero (" + e + ")"
   }
   
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    val pE : ArithAlg[E] => (=> F) => PackratParser[E] = alg => l => {
+  trait Parser[E, F[E] <: {val pE : PackratParser[E]}] {
+    lazy val pE : ArithAlg[E] => (=> F[E]) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       def num(x : Int) : E = x match {
         case 0 => alg.zero()
@@ -48,18 +48,22 @@ object Arith {
       "(" ~> e <~ ")"
     }
   }
+  
+  def pE[F[String] <: {val pE : PackratParser[String]}] = {
+    new Parser[String, F](){}.pE(new Pretty(){})
+  }
 }
 
 
 object TestArith extends Arith.Lexer {
   import Util._
   trait List[E] { val pE : PackratParser[E] }
-  val pArith = new Arith.Parser[String, List[String]](){}.pE(new Arith.Pretty(){})
-  val pp : (=> List[String]) => PackratParser[String] = l => pArith(l)
-  val p : (=> List[String]) => List[String] = l => new List[String]() {
-    override val pE = pp(l)
+  
+  lazy val pArith = Arith.pE[List]
+  lazy val p : (=> List[String]) => List[String] = l => new List[String]() {
+    override lazy val pE = pArith(l)
   }
-  val parse = runParser(fix(p).pE)
+  lazy val parse = runParser(fix(p).pE)
   
   def main(args : Array[String]) = {
     parse("true")
