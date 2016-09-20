@@ -1,14 +1,14 @@
 package TAPL
 
-import scala.util.parsing.combinator._
-import scala.util.parsing.combinator.syntactical._
-
+/* <2> */
 object Untyped {
   import Util._
   trait Lexer {
     lexical.delimiters += ("\\", ".", "(", ")")
   }
   
+  type ParserT[E] = {val pE : PackratParser[E]}
+
   trait UntypedAlg[E] {
     def id(x : String) : E
     def lam(x : String, e : E) : E
@@ -21,8 +21,8 @@ object Untyped {
     def app(e1 : String, e2 : String) = "[" + e1 + " " + e2 + "]"
   }
   
-  trait Parser[E, F[E] <: {val pE : PackratParser[E]}] {
-    lazy val pE : UntypedAlg[E] => (=> F[E]) => PackratParser[E] = alg => l => {
+  trait Parser[E, F <: ParserT[E]] {
+    lazy val pE : UntypedAlg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       ident ^^ alg.id |||
       ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.lam(x, e0) } |||
@@ -31,7 +31,7 @@ object Untyped {
     }
   }
   
-  def pE[F[String] <: {val pE : PackratParser[String]}] = {
+  def pE[F <: ParserT[String]] = {
     new Parser[String, F](){}.pE(new Pretty(){})
   }
 }
@@ -39,13 +39,23 @@ object Untyped {
 object TestUntyped extends Arith.Lexer with Untyped.Lexer {
   import Util._
   trait List[E] { val pE : PackratParser[E] }
+  type L = List[String]
   
-  lazy val pArith = Arith.pE[List]
-  lazy val pUntyped = Untyped.pE[List]
-  lazy val p : (=> List[String]) => List[String] = l => new List[String]() {
-    override lazy val pE = List(pArith, pUntyped).reduce(alt[String, List])(l)
+  trait Parse[E] {
+    type L = List[E]
+    type PE = (=> L) => PackratParser[E]
+    val pArithE : PE
+    val pUntypedE : PE
+    val p : (=> L) => L = l => new L() {
+      override lazy val pE = List(pArithE, pUntypedE).reduce(alt[E, L])(l)
+    }
   }
-  lazy val parse = runParser(fix(p).pE)
+  
+  lazy val parser = new Parse[String]() {
+    lazy val pArithE = Arith.pE[L]
+    lazy val pUntypedE = Untyped.pE[L]
+  }
+  lazy val parse = runParser(fix(parser.p).pE)
  
   def main(args : Array[String]) = {
     parse("\\x.x (x \\x.x)")

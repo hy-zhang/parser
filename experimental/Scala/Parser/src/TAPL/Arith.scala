@@ -1,15 +1,16 @@
 package TAPL
 
-import scala.util.parsing.combinator._
-import scala.util.parsing.combinator.syntactical._
 import scala.collection.immutable.HashSet
 
+/* <1> */
 object Arith {
   import Util._
   trait Lexer {
     lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
     lexical.delimiters += ("(", ")")
   }
+  
+  type ParserT[E] = {val pE : PackratParser[E]}
   
   trait ArithAlg[E] {
     def trueV() : E
@@ -31,15 +32,15 @@ object Arith {
     def isZero(e : String) = "iszero (" + e + ")"
   }
   
-  trait Parser[E, F[E] <: {val pE : PackratParser[E]}] {
-    lazy val pE : ArithAlg[E] => (=> F[E]) => PackratParser[E] = alg => l => {
+  trait Parser[E, F <: ParserT[E]] {
+    lazy val pE : ArithAlg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       def num(x : Int) : E = x match {
         case 0 => alg.zero()
         case _ => alg.succ(num(x - 1))
       }
       "true" ^^ { _ => alg.trueV() } |||
-      "false" ^^ { _ => alg.falseV() } |
+      "false" ^^ { _ => alg.falseV() } |||
       ("if" ~> e) ~ ("then" ~> e) ~ ("else" ~> e) ^^ { case e1 ~ e2 ~ e3 => alg.ifS(e1, e2, e3) } |||
       numericLit ^^ { x => num(x.toInt) } |||
       "succ" ~> e ^^ alg.succ |||
@@ -49,7 +50,7 @@ object Arith {
     }
   }
   
-  def pE[F[String] <: {val pE : PackratParser[String]}] = {
+  def pE[F <: ParserT[String]] = {
     new Parser[String, F](){}.pE(new Pretty(){})
   }
 }
@@ -58,12 +59,21 @@ object Arith {
 object TestArith extends Arith.Lexer {
   import Util._
   trait List[E] { val pE : PackratParser[E] }
+  type L = List[String]
   
-  lazy val pArith = Arith.pE[List]
-  lazy val p : (=> List[String]) => List[String] = l => new List[String]() {
-    override lazy val pE = pArith(l)
+  trait Parse[E] {
+    type L = List[E]
+    type PE = (=> L) => PackratParser[E]
+    val pArithE : PE
+    val p : (=> L) => L = l => new L() {
+      override lazy val pE = pArithE(l)
+    }
   }
-  lazy val parse = runParser(fix(p).pE)
+  
+  lazy val parser = new Parse[String]() {
+    lazy val pArithE = Arith.pE[L]
+  }
+  lazy val parse = runParser(fix(parser.p).pE)
   
   def main(args : Array[String]) = {
     parse("true")
