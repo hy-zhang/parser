@@ -71,16 +71,20 @@ object FullRef {
       List(
         "Top" ^^ { _ => alg.TyTop() },
         "Bot" ^^ { _ => alg.TyBot() },
-        "Ref" ~> t ^^ (t => alg.TyRef(t)),
-        "Source" ~> t ^^ { t => alg.TySource(t) },
-        "Sink" ~> t ^^ { t => alg.TySink(t) },
+        "Ref" ~> t ^^ alg.TyRef,
+        "Source" ~> t ^^ alg.TySource,
+        "Sink" ~> t ^^ alg.TySink,
         "(" ~> t <~ ")"
       ).reduce((a, b) => a ||| b)
     }
   }
 
-  def pET[F <: ParserSig[String, String]] = {
-    (new Parser[String, String, F]() {}.pE(new PrettyPrint() {}), new Parser[String, String, F]() {}.pT(new PrettyPrint() {}))
+  def pE[F <: ParserSig[String, String]] = {
+    new Parser[String, String, F]() {}.pE(new PrettyPrint() {})
+  }
+
+  def pT[F <: ParserSig[String, String]] = {
+    new Parser[String, String, F]() {}.pT(new PrettyPrint() {})
   }
 }
 
@@ -93,33 +97,21 @@ object TestFullRef extends Arith.Lexer with FullUntyped.Lexer with TyArith.Lexer
     val pT: PackratParser[T]
   }
 
-  trait Parse[E, T] {
-    type L = ParserSig[E, T]
-    type PE = (=> L) => PackratParser[E]
-    type PT = (=> L) => PackratParser[T]
-
-    val pArithE: PE
-    val pFullUntypedE: PE
-    val pTyArithT: PT
-    val pSimpleBoolET: (PE, PT)
-    val pFullSimpleET: (PE, PT)
-    val pFullRefET: (PE, PT)
-
-    val p: (=> L) => L = l => new L() {
-      override lazy val pE = List(pArithE, pFullUntypedE, pSimpleBoolET._1, pFullSimpleET._1, pFullRefET._1).reduce(alt[E, L])(l)
-      override lazy val pT = List(pTyArithT, pSimpleBoolET._2, pFullSimpleET._2, pFullRefET._2).reduce(alt[T, L])(l)
-    }
-  }
-
-  lazy val parser = new Parse[String, String]() {
+  object parser {
     type R = ParserSig[String, String]
 
-    lazy val pArithE = Arith.pE[R]
-    lazy val pFullUntypedE = FullUntyped.pE[R]
-    lazy val pTyArithT = TyArith.pT[R]
     lazy val pSimpleBoolET = SimpleBool.pET[R]
     lazy val pFullSimpleET = FullSimple.pET[R]
-    lazy val pFullRefET = FullRef.pET[R]
+
+    val p: (=> R) => R = l => new R() {
+      override lazy val pE = List(
+        Arith.pE[R], FullUntyped.pE[R], pSimpleBoolET._1, pFullSimpleET._1, FullRef.pE[R]
+      ).reduce(alt[String, R])(l)
+
+      override lazy val pT = List(
+        TyArith.pT[R], pSimpleBoolET._2, pFullSimpleET._2, FullRef.pT[R]
+      ).reduce(alt[String, R])(l)
+    }
   }
 
   lazy val parse = runParser(fix(parser.p).pE)
