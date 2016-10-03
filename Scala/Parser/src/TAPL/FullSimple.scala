@@ -2,9 +2,7 @@ package TAPL
 
 /* <6> */
 object FullSimple {
-
   import Util._
-
   trait Lexer {
     lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String")
     lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>")
@@ -14,41 +12,25 @@ object FullSimple {
 
   trait FullSimpleAlg[E, T] {
     def unit(): E
-
     def as(e: E, t: T): E
-
     def tag(x: String, e: E, t: T): E
-
     def fix(e: E): E
-
     def caseS(e: E, l: List[(String, String, E)]): E
-
     def unitT(): T
-
     def stringT(): T
-
     def idT(x: String): T
-
     def variant(l: List[(String, T)]): T
   }
 
   trait Pretty extends FullSimpleAlg[String, String] {
     def unit() = "unit"
-
     def as(e: String, t: String) = "(" + e + ") as " + t
-
     def tag(x: String, e: String, t: String) = "<" + x + "=" + e + "> as " + t
-
     def fix(e: String) = "fix (" + e + ")"
-
     def caseS(e: String, l: List[(String, String, String)]) = "[case " + e + " of " + l.map(x => "<" + x._1 + "=" + x._2 + "> => " + x._3).reduce((x, y) => x + " | " + y) + "]"
-
     def unitT() = "Unit"
-
     def stringT() = "String"
-
     def idT(x: String) = x
-
     def variant(l: List[(String, String)]) = "<" + l.map(x => x._1 + ":" + x._2).reduce((x, y) => x + ", " + y) + ">"
   }
 
@@ -72,25 +54,11 @@ object FullSimple {
     }
   }
 
-  def pET[F <: ParserT[String, String]] = {
-    (new Parser[String, String, F]() {}.pE(new Pretty() {}),
-      new Parser[String, String, F]() {}.pT(new Pretty() {}))
-  }
-
-  def pE[F <: ParserT[String, String]] = {
-    new Parser[String, String, F]() {}.pE(new Pretty() {})
-  }
-
-  def pT[F <: ParserT[String, String]] = {
-    new Parser[String, String, F]() {}.pT(new Pretty() {})
-  }
+  def pET[E, T, F <: ParserT[E, T]] = new Parser[E, T, F](){}
 }
 
-object TestFullSimple extends Arith.Lexer with FullUntyped.Lexer
-  with TyArith.Lexer with SimpleBool.Lexer with FullSimple.Lexer {
-
+object TestFullSimple extends Arith.Lexer with FullUntyped.Lexer with TyArith.Lexer with SimpleBool.Lexer with FullSimple.Lexer {
   import Util._
-
   trait List[E, T] {
     val pE: PackratParser[E]
     val pT: PackratParser[T]

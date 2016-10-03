@@ -13,6 +13,8 @@ object Util extends StandardTokenParsers with PackratParsers {
       case t                 => scala.sys.error(t.toString)
     }
   }
-  def alt[G, F](x : (=> F) => PackratParser[G], y : (=> F) => PackratParser[G])
-    : (=> F) => PackratParser[G] = l => x(l) ||| y(l)
+  implicit class Alternative[E, F, G, H](x : F => (=> H) => PackratParser[E]) {
+    def |(y : G => (=> H) => PackratParser[E]) : (F with G) => (=> H) => PackratParser[E] =
+      alg => l => this.x(alg)(l) ||| y(alg)(l)
+  }
 }

@@ -3,22 +3,18 @@ package TAPL
 /* <2> */
 object Untyped {
   import Util._
-  trait Lexer {
+  trait Lexer extends UntypedAlg[String] {
     lexical.delimiters += ("\\", ".", "(", ")")
+    def id(x : String) = x
+    def lam(x : String, e : String) = "\\" + x + "." + e
+    def app(e1 : String, e2 : String) = "[" + e1 + " " + e2 + "]"
   }
   
   type ParserT[E] = {val pE : PackratParser[E]}
-
   trait UntypedAlg[E] {
     def id(x : String) : E
     def lam(x : String, e : E) : E
     def app(e1 : E, e2 : E) : E
-  }
-  
-  trait Pretty extends UntypedAlg[String] {
-    def id(x : String) = x
-    def lam(x : String, e : String) = "\\" + x + "." + e
-    def app(e1 : String, e2 : String) = "[" + e1 + " " + e2 + "]"
   }
   
   trait Parser[E, F <: ParserT[E]] {
@@ -31,31 +27,23 @@ object Untyped {
     }
   }
   
-  def pE[F <: ParserT[String]] = {
-    new Parser[String, F](){}.pE(new Pretty(){})
-  }
+  def pE[E, F <: ParserT[E]] = new Parser[E, F](){}
 }
 
 object TestUntyped extends Arith.Lexer with Untyped.Lexer {
   import Util._
   trait List[E] { val pE : PackratParser[E] }
-  type L = List[String]
-  
   trait Parse[E] {
     type L = List[E]
-    type PE = (=> L) => PackratParser[E]
-    val pArithE : PE
-    val pUntypedE : PE
-    val p : (=> L) => L = l => new L() {
-      override lazy val pE = List(pArithE, pUntypedE).reduce(alt[E, L])(l)
-    }
+    val pArithE = Arith.pE[E, L]
+    val pUntypedE = Untyped.pE[E, L]
+    val pE = pArithE.pE | pUntypedE.pE
   }
   
-  lazy val parser = new Parse[String]() {
-    lazy val pArithE = Arith.pE[L]
-    lazy val pUntypedE = Untyped.pE[L]
+  lazy val parser : (=> List[String]) => List[String] = l => new List[String]() {
+    lazy val pE = new Parse[String](){}.pE(TestUntyped)(l)
   }
-  lazy val parse = runParser(fix(parser.p).pE)
+  lazy val parse = runParser(fix(parser).pE)
  
   def main(args : Array[String]) = {
     parse("\\x.x (x \\x.x)")

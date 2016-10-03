@@ -3,13 +3,18 @@ package TAPL
 /* <3> */
 object FullUntyped {
   import Util._
-  trait Lexer {
+  trait Lexer extends FullUntypedAlg[String] {
     lexical.reserved += ("let", "in")
     lexical.delimiters += ("{", "}", ",", ".", "(", ")", "=", "*")
+    def record(l : List[(String, String)]) = "{" + l.map(x => x._1 + " = " + x._2).reduce((x, y) => x + ", " + y) + "}"
+    def proj(e : String, x : String) = e + "." + x
+    def float(d : Double) = d.toString()
+    def timesfloat(e1 : String, e2 : String) = "timesfloat (" + e1 + ") (" + e2 + ")"
+    def string(s : String) = "\"" + s + "\""
+    def let(x : String, e1 : String, e2 : String) = "let " + x + " = " + e1 + " in " + e2
   }
   
   type ParserT[E] = {val pE : PackratParser[E]}
-  
   trait FullUntypedAlg[E] {
     def record(l : List[(String, E)]) : E
     def proj(e : E, x : String) : E
@@ -19,15 +24,6 @@ object FullUntyped {
     // Therefore we need a delimiter.
     def string(s : String) : E
     def let(x : String, e1 : E, e2 : E) : E
-  }
-  
-  trait Pretty extends FullUntypedAlg[String] {
-    def record(l : List[(String, String)]) = "{" + l.map(x => x._1 + " = " + x._2).reduce((x, y) => x + ", " + y) + "}"
-    def proj(e : String, x : String) = e + "." + x
-    def float(d : Double) = d.toString()
-    def timesfloat(e1 : String, e2 : String) = "timesfloat (" + e1 + ") (" + e2 + ")"
-    def string(s : String) = "\"" + s + "\""
-    def let(x : String, e1 : String, e2 : String) = "let " + x + " = " + e1 + " in " + e2
   }
   
   trait Parser[E, F <: ParserT[E]] {
@@ -41,34 +37,25 @@ object FullUntyped {
       "(" ~> e <~ ")"
     }
   }
-  
-  def pE[F <: ParserT[String]] = {
-    new Parser[String, F](){}.pE(new Pretty(){})
-  }
+    
+  def pE[E, F <: ParserT[E]] = new Parser[E, F](){}
 }
 
 object TestFullUntyped extends Arith.Lexer with Untyped.Lexer with FullUntyped.Lexer {
   import Util._
   trait List[E] { val pE : PackratParser[E] }
-  type L = List[String]
-  
   trait Parse[E] {
     type L = List[E]
-    type PE = (=> L) => PackratParser[E]
-    val pArithE : PE
-    val pUntypedE : PE
-    val pFullUntypedE : PE
-    val p : (=> L) => L = l => new L() {
-      override lazy val pE = List(pArithE, pUntypedE, pFullUntypedE).reduce(alt[E, L])(l)
-    }
+    val pArithE = Arith.pE[E, L]
+    val pUntypedE = Untyped.pE[E, L]
+    val pFullUntypedE = FullUntyped.pE[E, L]
+    val pE = pArithE.pE | pUntypedE.pE | pFullUntypedE.pE
   }
   
-  lazy val parser = new Parse[String]() {
-    lazy val pArithE = Arith.pE[L]
-    lazy val pUntypedE = Untyped.pE[L]
-    lazy val pFullUntypedE = FullUntyped.pE[L]
+  lazy val parser : (=> List[String]) => List[String] = l => new List[String]() {
+    lazy val pE = new Parse[String](){}.pE(TestFullUntyped)(l)
   }
-  lazy val parse = runParser(fix(parser.p).pE)
+  lazy val parse = runParser(fix(parser).pE)
  
   def main(args : Array[String]) = {
     parse("\\x.x (x \\x.x)")

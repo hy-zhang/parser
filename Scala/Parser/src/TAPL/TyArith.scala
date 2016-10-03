@@ -27,7 +27,5 @@ object TyArith {
     }
   }
   
-  def pT[F <: ParserT[String]] = {
-    new Parser[String, F](){}.pT(new Pretty(){})
-  }
+  def pT[T, F <: ParserT[T]] = new Parser[T, F](){}
 }
