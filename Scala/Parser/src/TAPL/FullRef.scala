@@ -1,73 +1,42 @@
 package TAPL
 
-/**
-  * Created by Huang on 9/21/16.
-  */
+/* <7> */
 object FullRef {
-
   import Util._
-
-  trait Lexer {
-    lexical.reserved += ("Top", "Bot", "ref", "Ref", "Source", "Sink")
-    lexical.delimiters += ("!", ":=")
-  }
-
-  type ParserSig[E, T] = {
-    val pE: PackratParser[E]
-    val pT: PackratParser[T]
-  }
-
   trait FullRefAlg[E, T] {
     def TyTop(): T
-
     def TyBot(): T
-
     def TyRef(t: T): T
-
     def TmRef(e: E): E
-
     def TmDeRef(e: E): E
-
     def TmAssign(l: E, r: E): E
-
     def TySource(t: T): T
-
     def TySink(t: T): T
   }
-
-  trait PrettyPrint extends FullRefAlg[String, String] {
+  trait Lexer extends FullRefAlg[String, String] {
+    lexical.reserved += ("Top", "Bot", "ref", "Ref", "Source", "Sink")
+    lexical.delimiters += ("!", ":=")
     def TyTop() = "Top"
-
     def TyBot() = "Bot"
-
     def TyRef(t: String) = "Ref " + t
-
     def TmRef(e: String) = "ref " + e
-
     def TmDeRef(e: String) = "!" + e
-
     def TmAssign(l: String, r: String) = l + " := " + r
-
     def TySource(t: String) = "Source " + t
-
     def TySink(t: String) = "Sink " + t
   }
-
-  trait Parser[E, T, F <: ParserSig[E, T]] {
+  trait Parser[E, T, F <: {val pE: PackratParser[E]; val pT: PackratParser[T]}] {
     lazy val pE: FullRefAlg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
-
       List(
         "ref" ~> e ^^ { e => alg.TmRef(e) },
         "!" ~> e ^^ { e => alg.TmDeRef(e) },
         e ~ (":=" ~> e) ^^ { case lhs ~ rhs => alg.TmAssign(lhs, rhs) }
       ).reduce((a, b) => a ||| b)
     }
-
     lazy val pT: FullRefAlg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
-
       List(
         "Top" ^^ { _ => alg.TyTop() },
         "Bot" ^^ { _ => alg.TyBot() },
@@ -78,49 +47,29 @@ object FullRef {
       ).reduce((a, b) => a ||| b)
     }
   }
-
-  def pE[F <: ParserSig[String, String]] = {
-    new Parser[String, String, F]() {}.pE(new PrettyPrint() {})
-  }
-
-  def pT[F <: ParserSig[String, String]] = {
-    new Parser[String, String, F]() {}.pT(new PrettyPrint() {})
-  }
 }
 
-object TestFullRef extends Arith.Lexer with FullUntyped.Lexer with TyArith.Lexer with SimpleBool.Lexer with FullSimple.Lexer with FullRef.Lexer {
+trait FullRefLNG[E, T, L <: {val pE: Util.PackratParser[E]; val pT: Util.PackratParser[T]}] extends FullSimpleLNG[E, T, L] with FullRef.Lexer {
+  val pFullRefET = new FullRef.Parser[E, T, L](){}
+  val pFullRefLNGE = pFullSimpleLNGE | pFullRefET.pE
+  val pFullRefLNGT = pFullSimpleLNGT | pFullRefET.pT
+}
 
+object TestFullRefLNG {
   import Util._
-
-  trait ParserSig[E, T] {
-    val pE: PackratParser[E]
-    val pT: PackratParser[T]
+  class List[E, T](pe : PackratParser[E], pt : PackratParser[T]) { val pE = pe; val pT = pt }
+  object Test extends FullRefLNG[String, String, List[String, String]] {
+    lazy val parser : (=> List[String, String]) => List[String, String] = l =>
+      new List[String, String](pFullRefLNGE(Test)(l), pFullRefLNGT(Test)(l))
+    lazy val parse = runParser(Util.fix(parser).pE)
   }
-
-  object parser {
-    type R = ParserSig[String, String]
-
-    lazy val pSimpleBoolET = SimpleBool.pET[R]
-    lazy val pFullSimpleET = FullSimple.pET[R]
-
-    val p: (=> R) => R = l => new R() {
-      override lazy val pE = List(
-        Arith.pE[R], FullUntyped.pE[R], pSimpleBoolET._1, pFullSimpleET._1, FullRef.pE[R]
-      ).reduce(alt[String, R])(l)
-
-      override lazy val pT = List(
-        TyArith.pT[R], pSimpleBoolET._2, pFullSimpleET._2, FullRef.pT[R]
-      ).reduce(alt[String, R])(l)
-    }
-  }
-
-  lazy val parse = runParser(fix(parser.p).pE)
-
-  def main(args: Array[String]) = {
-    parse("\\a:Ref (Nat->Nat).\\n:Nat.(!a n)")
-    parse("\\a:Unit.ref (\\n:Nat.0)")
-    parse("\\a:Ref (Nat->Nat).\\m:Nat.\\n:Nat.let oldf = !a in a := (\\n:Nat.if true then v else (oldf n))")
-    parse("\\x:Sink Bool.unit")
-    parse("(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)")
+  def main(args : Array[String]) = {
+    List(
+      "\\a:Ref (Nat->Nat).\\n:Nat.(!a n)",
+      "\\a:Unit.ref (\\n:Nat.0)",
+      "\\a:Ref (Nat->Nat).\\m:Nat.\\n:Nat.let oldf = !a in a := (\\n:Nat.if true then v else (oldf n))",
+      "\\x:Sink Bool.unit",
+      "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)"
+    ).foreach(Test.parse)
   }
 }
