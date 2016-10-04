@@ -3,13 +3,6 @@ package TAPL
 /* <6> */
 object FullSimple {
   import Util._
-  trait Lexer {
-    lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String")
-    lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>")
-  }
-
-  type ParserT[E, T] = {val pE: PackratParser[E]; val pT: PackratParser[T]}
-
   trait FullSimpleAlg[E, T] {
     def unit(): E
     def as(e: E, t: T): E
@@ -21,8 +14,9 @@ object FullSimple {
     def idT(x: String): T
     def variant(l: List[(String, T)]): T
   }
-
-  trait Pretty extends FullSimpleAlg[String, String] {
+  trait Lexer extends FullSimpleAlg[String, String] {
+    lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String")
+    lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>")
     def unit() = "unit"
     def as(e: String, t: String) = "(" + e + ") as " + t
     def tag(x: String, e: String, t: String) = "<" + x + "=" + e + "> as " + t
@@ -33,8 +27,7 @@ object FullSimple {
     def idT(x: String) = x
     def variant(l: List[(String, String)]) = "<" + l.map(x => x._1 + ":" + x._2).reduce((x, y) => x + ", " + y) + ">"
   }
-
-  trait Parser[E, T, F <: ParserT[E, T]] {
+  trait Parser[E, T, F <: {val pE: PackratParser[E]; val pT: PackratParser[T]}] {
     lazy val pE: FullSimpleAlg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
@@ -53,48 +46,35 @@ object FullSimple {
         "<" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ t0 => (x, t0) }, ",") <~ ">" ^^ alg.variant
     }
   }
-
-  def pET[E, T, F <: ParserT[E, T]] = new Parser[E, T, F](){}
 }
 
-object TestFullSimple extends Arith.Lexer with FullUntyped.Lexer with TyArith.Lexer with SimpleBool.Lexer with FullSimple.Lexer {
+trait FullSimpleLNG[E, T, L <: {val pE: Util.PackratParser[E]; val pT: Util.PackratParser[T]}] extends ArithLNG[E, L] with FullUntyped.Lexer with TyArith.Lexer with SimpleBoolLNG[E, T, L] with FullSimple.Lexer {
+  override def trueV() = super.trueV() // explicitly resolving conflicts
+  override def falseV() = super.falseV()
+  override def ifS(e1 : String, e2 : String, e3 : String) = super.ifS(e1, e2, e3)
+  override def bool() = super.bool()
+  val pFullUntypedE = new FullUntyped.Parser[E, L](){}
+  val pTyArithT = new TyArith.Parser[T, L](){}
+  val pFullSimpleET = new FullSimple.Parser[E, T, L](){}
+  val pFullSimpleLNGE = pArithLNGE | pFullUntypedE.pE | pSimpleBoolLNGE | pFullSimpleET.pE
+  val pFullSimpleLNGT = pTyArithT.pT | pSimpleBoolET.pT | pFullSimpleET.pT
+}
+
+object TestFullSimpleLNG {
   import Util._
-  trait List[E, T] {
-    val pE: PackratParser[E]
-    val pT: PackratParser[T]
+  class List[E, T](pe : PackratParser[E], pt : PackratParser[T]) { val pE = pe; val pT = pt }
+  object Test extends FullSimpleLNG[String, String, List[String, String]] {
+    lazy val parser : (=> List[String, String]) => List[String, String] = l =>
+      new List[String, String](pFullSimpleLNGE(Test)(l), pFullSimpleLNGT(Test)(l))
+    lazy val parse = runParser(Util.fix(parser).pE)
   }
-
-  type L = List[String, String]
-
-  trait Parse[E, T] {
-    type L = List[E, T]
-    type PE = (=> L) => PackratParser[E]
-    type PT = (=> L) => PackratParser[T]
-    val pArithE: PE
-    val pFullUntypedE: PE
-    val pTyArithT: PT
-    val pSimpleBoolET: (PE, PT)
-    val pFullSimpleET: (PE, PT)
-    val p: (=> L) => L = l => new L() {
-      override lazy val pE = List(pArithE, pFullUntypedE, pSimpleBoolET._1, pFullSimpleET._1).reduce(alt[E, L])(l)
-      override lazy val pT = List(pTyArithT, pSimpleBoolET._2, pFullSimpleET._2).reduce(alt[T, L])(l)
-    }
-  }
-
-  lazy val parser = new Parse[String, String]() {
-    lazy val pArithE = Arith.pE[L]
-    lazy val pFullUntypedE = FullUntyped.pE[L]
-    lazy val pTyArithT = TyArith.pT[L]
-    lazy val pSimpleBoolET = SimpleBool.pET[L]
-    lazy val pFullSimpleET = FullSimple.pET[L]
-  }
-  lazy val parse = runParser(fix(parser.p).pE)
-
-  def main(args: Array[String]) = {
-    parse("(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)")
-    parse("\\f:T. \\x:Nat. f (f x)")
-    parse("<l=unit> as <l:Unit, r:Unit>")
-    parse("\\a:Unit.fix (\\x:T.x)")
-    parse("case a of <phy=x> => x.first | <vir=y> => y.name")
+  def main(args : Array[String]) = {
+    List(
+      "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)",
+      "\\f:T. \\x:Nat. f (f x)",
+      "<l=unit> as <l:Unit, r:Unit>",
+      "\\a:Unit.fix (\\x:T.x)",
+      "case a of <phy=x> => x.first | <vir=y> => y.name"
+    ).foreach(Test.parse)
   }
 }

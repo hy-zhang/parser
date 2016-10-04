@@ -4,7 +4,16 @@ import scala.collection.immutable.HashSet
 
 /* <1> */
 object Arith {
-  import Util._
+  import Util._ 
+  trait ArithAlg[E] {
+    def trueV() : E
+    def falseV() : E
+    def ifS(e1 : E, e2 : E, e3 : E) : E
+    def zero() : E
+    def succ(e : E) : E
+    def pred(e : E) : E
+    def isZero(e : E) : E
+  } 
   trait Lexer extends ArithAlg[String] {
     lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
     lexical.delimiters += ("(", ")")
@@ -16,19 +25,7 @@ object Arith {
     def pred(e : String) = "pred (" + e + ")"
     def isZero(e : String) = "iszero (" + e + ")"
   }
-  
-  type ParserT[E] = {val pE : PackratParser[E]} 
-  trait ArithAlg[E] {
-    def trueV() : E
-    def falseV() : E
-    def ifS(e1 : E, e2 : E, e3 : E) : E
-    def zero() : E
-    def succ(e : E) : E
-    def pred(e : E) : E
-    def isZero(e : E) : E
-  } 
-  
-  trait Parser[E, F <: ParserT[E]] {
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lazy val pE : ArithAlg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       def num(x : Int) : E = x match {
@@ -45,29 +42,29 @@ object Arith {
       "(" ~> e <~ ")"
     }
   }
-  
-  def pE[E, F <: ParserT[E]] = new Parser[E, F](){}
 }
 
-object TestArith extends Arith.Lexer {
+trait ArithLNG[E, L <: {val pE : Util.PackratParser[E]}] extends Arith.Lexer {
+  val pArithE = new Arith.Parser[E, L](){}
+  val pArithLNGE = pArithE.pE
+  // we cannot use pE, such a name has incompatible types when overridden. is there a solution?
+}
+
+object TestArithLNG {
   import Util._
-  trait List[E] { val pE : PackratParser[E] }
-  trait Parse[E] {
-    type L = List[E]
-    val pArithE = Arith.pE[E, L]
-    val pE = pArithE.pE
+  class List[E](pe : PackratParser[E]) { val pE = pe }
+  object Test extends ArithLNG[String, List[String]] {
+    lazy val parser : (=> List[String]) => List[String] = l =>
+      new List[String](pArithLNGE(Test)(l))
+    lazy val parse = runParser(fix(parser).pE)
   }
-  
-  lazy val parser : (=> List[String]) => List[String] = l => new List[String]() {
-    lazy val pE = new Parse[String](){}.pE(TestArith)(l)
-  }
-  lazy val parse = runParser(fix(parser).pE)
-  
   def main(args : Array[String]) = {
-    parse("true")
-    parse("if false then true else false")
-    parse("3")
-    parse("succ (pred 0)")
-    parse("iszero (pred (succ (succ 0)))")
+    List(
+      "true",
+      "if false then true else false",
+      "3",
+      "succ (pred 0)",
+      "iszero (pred (succ (succ 0)))"
+    ).foreach(Test.parse)
   }
 }
