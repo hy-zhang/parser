@@ -1,0 +1,42 @@
+Title: Type-Safe Modular Parsing
+
+Introduction: 
+
+Overview:
+
+  * Chosing the Parsing Technology:
+     * Parser Generators : why not?
+       * Not type-safe
+       * No modular type-checking
+       * Not modular or no separate compilation 
+         (but we need to mention lots of work on extensible parsing here: example Language Workbenches; Rats)
+     * Parser Combinators: 
+        * Backtracking parsers (Parsec)
+          * Need to remove left recursion
+             * Problem: Transformation is not modular; if we do not know the full grammar then cannot be done
+          * Need try/backtracking
+             * Problem: Since we do not know the full set of rules in a modular setting, we have to assume worst case scenario and add redundant backtracking. 
+          * Mention some possible workarounds (there may be some but they still have issues)
+        * (Non)-Backtracking/Packrat Parsers (find a good name for this type of parsers?)
+          * Works well in a modular setting
+   * Adapting Parser Combinators for modularity
+      * Using Object Algebras
+      * Using Open Recursion
+      * Using new modular parser combinators (Library: new alternative combinator, for example)
+   * Small example: small example of a modular parser using our technique; show also the same example without modularity and write a detailed comparison. Lambda Calculus is a good candidate for the example
+     * Show a small extension (adding plus and numeric literals)
+     
+* Modular Parsing Library using Delegation (Haoyuan)
+  * Fixpoints library + explaining delegation with some examples
+  * Alternative combinator + others
+  * Trait Composition to do Language Composition
+  
+* ...
+
+* Case studies: (Li Huang)
+  * Explain the TAPL case study
+  * Show various results SLOC; performance
+
+  
+* Related Work
+
