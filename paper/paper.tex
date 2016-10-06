@@ -1,0 +1,205 @@
+%\documentclass[preprint]{sigplanconf}
+%\documentclass[preprint]{llncs}
+\documentclass[a4paper,UKenglish]{lipics}
+
+\usepackage{microtype}%if unwanted, comment out or use option "draft"
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{stmaryrd}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{fancyvrb}
+\usepackage{url}
+\usepackage{pstricks,pst-node,pst-tree}
+\usepackage{theorem}
+%% \usepackage{mathpartir}
+\usepackage{bbm}
+\usepackage{pgf}
+\usepackage{multirow}
+
+\usepackage{listings}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+
+\usepackage[T1]{fontenc}
+\usepackage[scaled=0.85]{beramono}
+\usepackage{mathpartir}
+
+% "define" code highlights for Java and Scala
+\lstdefinelanguage{JavaScala}{
+  morekeywords={public,int,interface,implements,default,
+    abstract,case,catch,class,def,static,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,var,while,yield},
+  otherkeywords={=>,<-,<\%,<:,>:,\#,@},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+
+\lstset{ %
+language=JavaScala,                % choose the language of the code
+columns=flexible,
+lineskip=-1pt,
+basicstyle=\ttfamily\small,       % the size of the fonts that are used for the code
+numbers=none,                   % where to put the line-numbers
+numberstyle=\ttfamily\tiny,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it's 1 each line will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+morekeywords={var},
+%  frame=single,                   % adds a frame around the code
+tabsize=2,                  % sets default tabsize to 2 spaces
+captionpos=none,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+title=\lstname,                 % show the filename of files included with \lstinputlisting; also try caption instead of title
+escapeinside={(*}{*)},          % if you want to add a comment within your code
+keywordstyle=\ttfamily\bfseries,
+% commentstyle=\color{Gray},
+% stringstyle=\color{Green}
+}
+
+
+%%\usepackage{natbib}
+%%\bibpunct();A{},
+%%\let\cite=\citep
+
+%include lhs2TeX.fmt
+%include lhs2TeX.sty
+%include forall.fmt
+
+%\pagestyle{plain}
+
+%{\theorembodyfont{\sffamily} \newtheorem{theorem}{Theorem}}
+%{\theorembodyfont{\sffamily} \newtheorem{lemma}{Lemma}}
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{lemma}{Lemma}
+%\newenvironment{proof}{\textbf{Proof:\hspace{4mm}}}{$\Box$}
+\newcommand{\authornote}[3]{{\color{#2} {\sc #1}: #3}}
+\newcommand\bruno[1]{\authornote{bruno}{red}{#1}}
+\newcommand\yanlin[1]{\authornote{yanlin}{purple}{#1}}
+%\newcommand{\hl}[1]{\textcolor{red}{#1}}
+\newcommand\marco[1]{\authornote{marco}{blue}{#1}}
+\newcommand\haoyuan[1]{\authornote{haoyuan}{cyan}{#1}}
+
+\newcommand\sem[1]{\llbracket #1 \rrbracket_r}
+\newcommand\sems[1]{\llbracket #1 \rrbracket_s}
+\newcommand\tsem[1]{\llbracket #1 \rrbracket}
+\newcommand{\rbm}[1]{\raisebox{-2.0ex}[0.5ex]{#1}}
+\newcommand\nat[0]{\mathbb{N}}
+\newcommand\unit[0]{\mathbbm{1}}
+
+\newcommand\mixin{\textbf{@Mixin} }
+\usepackage{xspace}
+
+% Author macros::begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Type-Safe Modular Parsing}
+\titlerunning{Type-Safe Modular Parsing}
+
+\author[1]{John Q. Open}
+\author[2]{Joan R. Access}
+\affil[1]{Dummy University Computing Laboratory\\
+  Address, Country\\
+  \texttt{open@dummyuni.org}}
+\affil[2]{Department of Informatics, Dummy College\\
+  Address, Country\\
+  \texttt{access@dummycollege.org}}
+\authorrunning{J.\,Q. Open and J.\,R. Access}
+% mandatory. First: Use abbreviated first/middle names. Second (only in severe
+% cases): Use first author plus 'et. al.'
+
+\Copyright{John Q. Open and Joan R. Access}
+% mandatory, please use full first names. LIPIcs license is "CC-BY";
+% http://creativecommons.org/licenses/by/3.0/
+
+\subjclass{Dummy classification -- please refer to
+  \url{http://www.acm.org/about/class/ccs98-html}}
+% mandatory: Please choose ACM 1998 classifications from
+% http://www.acm.org/about/class/ccs98-html . E.g., cite as "F.1.1 Models of
+% Computation".
+\keywords{Dummy keyword -- please provide 1--5 keywords}% mandatory: Please provide 1-5 keywords
+% Author macros::end %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Editor-only macros:: begin (do not touch as author)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\serieslogo{}%please provide filename (without suffix)
+\volumeinfo%(easychair interface)
+  {Billy Editor and Bill Editors}% editors
+  {2}% number of editors: 1, 2, ....
+  {Conference title on which this volume is based on}% event
+  {1}% volume
+  {1}% issue
+  {1}% starting page number
+\EventShortName{}
+\DOI{10.4230/LIPIcs.xxx.yyy.p}% to be completed by the volume editor
+% Editor-only macros::end %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\maketitle
+
+\begin{abstract}
+
+Text.
+
+\end{abstract}
+
+%if False
+
+%\category{D.3.2}{Programming Languages}
+%                {Language Classifications}
+%                [Functional Languages]
+%\category{F.3.3}{Logics and Meanings of Programs}
+%                {Studies of Program Constructs}
+%                []
+
+%\terms
+%Languages
+%
+%\keywords
+%Mixins, explicit effects, monads, aspect-oriented programming, parametricity,
+%interference
+
+%endif
+
+%===============================================================================
+
+\input{sections/Introduction.tex}
+
+\input{sections/Overview.tex}
+
+\input{sections/Library.tex}
+
+%...
+
+\input{sections/CaseStudy.tex}
+
+\input{sections/RelatedWork.tex}
+
+\input{sections/Conclusion.tex}
+
+%===============================================================================
+
+\bibliographystyle{plain}
+\bibliography{paper}
+
+\appendix
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "."
+%%% End:

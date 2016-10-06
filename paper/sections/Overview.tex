@@ -1,0 +1,36 @@
+\section{Overview}\label{sec:overview}
+
+\begin{itemize}
+\item Choosing the Parsing Technology
+    \begin{itemize}
+    \item Parser Generators : why not?
+        \begin{itemize}
+            \item Not type-safe
+            \item No modular type-checking
+            \item Not modular or no separate compilation (but we need to mention lots of work on extensible parsing here: example Language Workbenches; Rats)
+        \end{itemize}
+    \item Parser Combinators
+        \begin{itemize}
+        \item Backtracking parsers (Parsec)
+            \begin{itemize}
+            \item Need to remove left recursion (Problem: Transformation is not modular; if we do not know the full grammar then cannot be done)
+            \item Need try/backtracking (Problem: Since we do not know the full set of rules in a modular setting, we have to assume worst case scenario and add redundant backtracking. )
+            \item Mention some possible workarounds (there may be some but they still have issues)
+            \end{itemize}
+        \item (Non)-Backtracking/Packrat Parsers (Works well in a modular setting) (find a good name for this type of parsers?)
+        \end{itemize}
+    \end{itemize}
+\item Adapting Parser Combinators for modularity
+    \begin{itemize}
+    \item Using Object Algebras
+    \item Using Open Recursion
+    \item Using new modular parser combinators (Library: new alternative combinator, for example)
+    \end{itemize}
+\item Small example
+    \begin{itemize}
+    \item small example of a modular parser using our technique
+    \item show also the same example without modularity and write a detailed comparison
+    \item Lambda Calculus is a good candidate for the example
+    \item Show a small extension (adding plus and numeric literals)
+    \end{itemize}
+\end{itemize}
