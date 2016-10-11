@@ -2,45 +2,63 @@ package TAPL
 
 import Util._
 
-object Bot {
+object Top {
 
   trait Alg[T] {
     def TyTop(): T
-
-    def TyBot(): T
   }
 
   trait Print extends Alg[String] {
     def TyTop() = "Top"
-
-    def TyBot() = "Bot"
   }
 
   trait Lexer {
-    lexical.reserved += ("Top", "Bot")
+    lexical.reserved += "Top"
   }
 
   trait Parser[T, F <: {val pT : PackratParser[T]}] {
     lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
-
-      "Top" ^^ { _ => alg.TyTop() } ||| "Bot" ^^ { _ => alg.TyBot() }
+      "Top" ^^ { _ => alg.TyTop() }
     }
   }
 
 }
 
-trait BotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends SimpleBool.Lexer with Bot.Lexer {
-  val pSimpleBoolET = new SimpleBool.Parser[E, T, L]() {}
-  val pBotT = new Bot.Parser[T, L]() {}
-  val pBotLNGE = pSimpleBoolET.pE
-  val pBotLNGT = pSimpleBoolET.pT | pBotT.pT
+object TopBot {
+
+  trait BotAlg[T] {
+    def TyBot(): T
+  }
+
+  trait Alg[T] extends Top.Alg[T] with BotAlg[T]
+
+  trait Print extends Alg[String] with Top.Print {
+    def TyBot() = "Bot"
+  }
+
+  trait Lexer extends Top.Lexer {
+    lexical.reserved += "Bot"
+  }
+
+  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+    lazy val topParser = new Top.Parser[T, F]() {}.pT
+    lazy val botParser: BotAlg[T] => (=> F) => PackratParser[T] = alg => l => {
+      "Bot" ^^ { _ => alg.TyBot() }
+    }
+    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = topParser | botParser
+  }
+
 }
 
-trait BotAlg[E, T] extends SimpleBool.Alg[E, T] with Bot.Alg[T]
+trait BotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+  extends TypedParser[E, T, L] with TopBot.Lexer {
+  val pBotLNGE = pTypedLNGE
+  val pBotLNGT = pTypedLNGT | new TopBot.Parser[T, L]() {}.pT
+}
 
-trait BotPrint extends BotAlg[String, String] with SimpleBool.Print with Bot.Print
+trait BotAlg[E, T] extends TypedAlg[E, T] with TopBot.Alg[T]
+
+trait BotPrint extends BotAlg[String, String] with TypedPrint with TopBot.Print
 
 object TestBot {
 

@@ -3,22 +3,14 @@ package TAPL
 import Util._
 
 /* <2> */
-object Untyped {
+object UntypedAbs {
 
   trait Alg[E] {
-    def id(x: String): E
-
-    def lam(x: String, e: E): E
-
-    def app(e1: E, e2: E): E
+    def TmAbs(x: String, e: E): E
   }
 
   trait Print extends Alg[String] {
-    def id(x: String) = x
-
-    def lam(x: String, e: String) = "\\" + x + "." + e
-
-    def app(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
+    def TmAbs(x: String, e: String) = "\\" + x + "." + e
   }
 
   trait Lexer {
@@ -29,10 +21,37 @@ object Untyped {
     lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
+      ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } ||| "(" ~> e <~ ")"
+    }
+  }
+
+}
+
+object VarApp {
+
+  trait Alg[E] {
+    def TmVar(x: String): E
+
+    def TmApp(e1: E, e2: E): E
+  }
+
+  trait Print extends Alg[String] {
+    def TmVar(x: String) = x
+
+    def TmApp(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
+  }
+
+  trait Lexer {
+    lexical.delimiters += ("(", ")")
+  }
+
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      lazy val e = l.pE
+
       List(
-        ident ^^ alg.id,
-        ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.lam(x, e0) },
-        e ~ e ^^ { case e1 ~ e2 => alg.app(e1, e2) },
+        ident ^^ alg.TmVar,
+        e ~ e ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) },
         "(" ~> e <~ ")"
       ).reduce((a, b) => a ||| b)
     }
@@ -40,14 +59,14 @@ object Untyped {
 
 }
 
-trait UntypedParser[E, L <: {val pE : Util.PackratParser[E]}] extends Untyped.Lexer {
-  val pUntypedE = new Untyped.Parser[E, L]() {}
-  val pUntypedLNGE = pUntypedE.pE
+trait UntypedParser[E, L <: {val pE : Util.PackratParser[E]}]
+  extends UntypedAbs.Lexer with VarApp.Lexer {
+  val pUntypedLNGE = new UntypedAbs.Parser[E, L]() {}.pE | new VarApp.Parser[E, L]() {}.pE
 }
 
-trait UntypedAlg[E] extends Untyped.Alg[E]
+trait UntypedAlg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]
 
-trait UntypedPrint extends UntypedAlg[String] with Untyped.Print
+trait UntypedPrint extends UntypedAlg[String] with UntypedAbs.Print with VarApp.Print
 
 object TestUntyped {
 

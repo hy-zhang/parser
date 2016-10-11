@@ -6,35 +6,35 @@ import Util._
 object FullUntyped {
 
   trait Alg[E] {
-    def record(l: List[(String, E)]): E
+    def TmRecord(l: List[(String, E)]): E
 
-    def proj(e: E, x: String): E
+    def TmProj(e: E, x: String): E
 
-    def float(d: Double): E
+    def TmFloat(d: Double): E
 
     // Not supported for now due to the limit of StandardTokenParsers.
     // See http://jim-mcbeath.blogspot.hk/2008/09/scala-parser-combinators.html for solution.
-    def timesfloat(e1: E, e2: E): E
+    def TmTimesfloat(e1: E, e2: E): E
 
     // "timesfloat 0 0" causes ambiguity: app is applied to (0 0).
     // Therefore we need a delimiter.
-    def string(s: String): E
+    def TmString(s: String): E
 
-    def let(x: String, e1: E, e2: E): E
+    def TmLet(x: String, e1: E, e2: E): E
   }
 
   trait Print extends Alg[String] {
-    def record(l: List[(String, String)]) = "{" + l.map(x => x._1 + " = " + x._2).reduce((x, y) => x + ", " + y) + "}"
+    def TmRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + " = " + x._2).reduce((x, y) => x + ", " + y) + "}"
 
-    def proj(e: String, x: String) = e + "." + x
+    def TmProj(e: String, x: String) = e + "." + x
 
-    def float(d: Double) = d.toString
+    def TmFloat(d: Double) = d.toString
 
-    def timesfloat(e1: String, e2: String) = "timesfloat (" + e1 + ") (" + e2 + ")"
+    def TmTimesfloat(e1: String, e2: String) = "timesfloat (" + e1 + ") (" + e2 + ")"
 
-    def string(s: String) = "\"" + s + "\""
+    def TmString(s: String) = "\"" + s + "\""
 
-    def let(x: String, e1: String, e2: String) = "let " + x + " = " + e1 + " in " + e2
+    def TmLet(x: String, e1: String, e2: String) = "let " + x + " = " + e1 + " in " + e2
   }
 
   trait Lexer {
@@ -47,11 +47,11 @@ object FullUntyped {
       lazy val e = l.pE
 
       List(
-        "{" ~> repsep(lcid ~ ("=" ~> e) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.record,
-        e ~ ("." ~> lcid) ^^ { case e ~ x => alg.proj(e, x) },
-        chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.timesfloat(e1, e2) }),
-        ("let" ~> lcid) ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case x ~ e1 ~ e2 => alg.let(x, e1, e2) },
-        stringLit ^^ alg.string,
+        "{" ~> repsep(lcid ~ ("=" ~> e) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TmRecord,
+        e ~ ("." ~> lcid) ^^ { case e ~ x => alg.TmProj(e, x) },
+        chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.TmTimesfloat(e1, e2) }),
+        ("let" ~> lcid) ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case x ~ e1 ~ e2 => alg.TmLet(x, e1, e2) },
+        stringLit ^^ alg.TmString,
         "(" ~> e <~ ")"
       ).reduce((a, b) => a ||| b)
     }

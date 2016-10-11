@@ -3,24 +3,17 @@ package TAPL
 import Util._
 
 /* <5> */
-object SimpleBool {
+//todo
+object TypedAbsArr {
 
   trait Alg[E, T] {
-    def id(x: String): E
-
     def lam(x: String, t: T, e: E): E
-
-    def app(e1: E, e2: E): E
 
     def arr(t1: T, t2: T): T
   }
 
   trait Print extends Alg[String, String] {
-    def id(x: String) = x
-
     def lam(x: String, t: String, e: String) = "\\(" + x + ":" + t + ")." + e
-
-    def app(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
 
     def arr(t1: String, t2: String) = t1 + "->" + t2
   }
@@ -34,33 +27,40 @@ object SimpleBool {
       lazy val e = l.pE
       lazy val t = l.pT
 
-      List(
-        ident ^^ alg.id,
-        ("\\" ~> lcid) ~ (":" ~> t) ~ ("." ~> e) ^^ { case x ~ t0 ~ e0 => alg.lam(x, t0, e0) },
-        e ~ e ^^ { case e1 ~ e2 => alg.app(e1, e2) },
+      ("\\" ~> lcid) ~ (":" ~> t) ~ ("." ~> e) ^^ { case x ~ t0 ~ e0 => alg.lam(x, t0, e0) } |||
         "(" ~> e <~ ")"
-      ).reduce((a, b) => a ||| b)
     }
 
     lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
-      t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.arr(t1, t2) }
+      t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.arr(t1, t2) } ||| "(" ~> t <~ ")"
     }
   }
 
 }
 
-trait SimpleBoolParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends TyArithParser[E, T, L] with SimpleBool.Lexer {
-  val pSimpleBoolET = new SimpleBool.Parser[E, T, L]() {}
-  val pSimpleBoolLNGE = pTyArithLNGE | pSimpleBoolET.pE
-  val pSimpleBoolLNGT = pTyArithLNGT | pSimpleBoolET.pT
+trait TypedParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+  extends VarApp.Lexer with TypedAbsArr.Lexer {
+  val pTypedET = new TypedAbsArr.Parser[E, T, L]() {}
+  val pTypedLNGE = new VarApp.Parser[E, L]() {}.pE | pTypedET.pE
+  val pTypedLNGT = pTypedET.pT
 }
 
-trait SimpleBoolAlg[E, T] extends TyArithAlg[E, T] with SimpleBool.Alg[E, T]
+trait TypedAlg[E, T] extends VarApp.Alg[E] with TypedAbsArr.Alg[E, T]
 
-trait SimpleBoolPrint extends SimpleBoolAlg[String, String] with TyArithPrint with SimpleBool.Print
+trait TypedPrint extends TypedAlg[String, String] with VarApp.Print with TypedAbsArr.Print
+
+trait SimpleBoolParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+  extends TypedParser[E, T, L] with Bool.Lexer with BoolType.Lexer {
+  val pSimpleBoolLNGE = pTypedLNGE | new Bool.Parser[E, L]() {}.pE
+  val pSimpleBoolLNGT = pTypedLNGT | new BoolType.Parser[T, L]() {}.pT
+}
+
+trait SimpleBoolAlg[E, T] extends TypedAlg[E, T] with Bool.Alg[E] with BoolType.Alg[T]
+
+trait SimpleBoolPrint extends SimpleBoolAlg[String, String]
+  with TypedPrint with Bool.Print with BoolType.Print
 
 object TestSimpleBool {
 
