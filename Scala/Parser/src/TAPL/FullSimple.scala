@@ -3,6 +3,35 @@ package TAPL
 import Util._
 
 /* <6> */
+object TypedRecord {
+
+  trait TAlg[T] {
+    def TyRecord(l: List[(String, T)]): T
+  }
+
+  trait Alg[E, T] extends Record.Alg[E] with TAlg[T]
+
+  trait Print extends Alg[String, String] with Record.Print {
+    def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
+  }
+
+  trait Lexer extends Record.Lexer {
+    lexical.delimiters += (":", ",", "{", "}")
+  }
+
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = new Record.Parser[E, F]() {}.pE
+
+    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      lazy val t = l.pT
+
+      "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
+    }
+  }
+
+}
+
+// todo: use TypedRecord
 object FullSimple {
 
   trait Alg[E, T] {

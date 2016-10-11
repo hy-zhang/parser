@@ -3,42 +3,16 @@ package TAPL
 import Util._
 
 /* <9> */
-object RcdSubBot {
-
-  trait Alg[T] {
-    def TyRecord(l: List[(String, T)]): T
-  }
-
-  trait Print extends Alg[String] {
-    def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
-  }
-
-  trait Lexer {
-    lexical.delimiters += ("{", "}", ",", ":")
-  }
-
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
-
-      "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
-    }
-  }
-
-}
-/*
-
 trait RcdSubBotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullRefParser[E, T, L] with RcdSubBot.Lexer {
-  val pRcdSubBotT = new RcdSubBot.Parser[T, L]() {}
-  val pRcdSubBotLNGE = pFullRefLNGE
-  val pRcdSubBotLNGT = pFullRefLNGT | pRcdSubBotT.pT
+  extends BotParser[E, T, L] with TypedRecord.Lexer {
+  val pTypedRecordET = new TypedRecord.Parser[E, T, L]() {}
+  val pRcdSubBotLNGE = pBotLNGE | pTypedRecordET.pE
+  val pRcdSubBotLNGT = pBotLNGT | pTypedRecordET.pT
 }
 
-// todo: extend from SimpleBool?
-trait RcdSubBotAlg[E, T] extends FullRefAlg[E, T] with RcdSubBot.Alg[T]
+trait RcdSubBotAlg[E, T] extends BotAlg[E, T] with TypedRecord.Alg[E, T]
 
-trait RcdSubBotPrint extends RcdSubBotAlg[String, String] with FullRefPrint with RcdSubBot.Print
+trait RcdSubBotPrint extends RcdSubBotAlg[String, String] with BotPrint with TypedRecord.Print
 
 object TestRcdSubBot {
 
@@ -64,4 +38,4 @@ object TestRcdSubBot {
       "\\x:Bot. x x"
     ).foreach(parseAndPrint)
   }
-}*/
+}
