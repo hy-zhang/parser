@@ -3,7 +3,7 @@ package TAPL
 import Util._
 
 /* <8> */
-object FullError {
+object Error {
 
   trait Alg[E] {
     def TmError(): E
@@ -35,16 +35,16 @@ object FullError {
 }
 
 trait FullErrorParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends SimpleBoolParser[E, T, L] with Bot.Lexer with FullError.Lexer {
-  val pBotT = new Bot.Parser[T, L]() {}
-  val pFullErrorE = new FullError.Parser[E, L]() {}
-  val pFullErrorLNGE = pSimpleBoolLNGE | pFullErrorE.pE
-  val pFullErrorLNGT = pSimpleBoolLNGT | pBotT.pT
+  extends BotParser[E, T, L] with TypedBool.Lexer with Error.Lexer {
+  val pTypedBoolET = new TypedBool.Parser[E, T, L]() {}
+  val pFullErrorLNGE = pBotLNGE | pTypedBoolET.pE | new Error.Parser[E, L]() {}.pE
+  val pFullErrorLNGT = pBotLNGT | pTypedBoolET.pT
 }
 
-trait FullErrorAlg[E, T] extends SimpleBoolAlg[E, T] with Bot.Alg[T] with FullError.Alg[E]
+// todo: TyVar
+trait FullErrorAlg[E, T] extends BotAlg[E, T] with TypedBool.Alg[E, T] with Error.Alg[E]
 
-trait FullErrorPrint extends FullErrorAlg[String, String] with SimpleBoolPrint with Bot.Print with FullError.Print
+trait FullErrorPrint extends FullErrorAlg[String, String] with BotPrint with TypedBool.Print with Error.Print
 
 object TestFullError {
 

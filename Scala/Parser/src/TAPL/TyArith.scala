@@ -3,56 +3,66 @@ package TAPL
 import Util._
 
 /* <4> */
-object NatType {
+object TypedNat {
 
-  trait Alg[T] {
-    def nat(): T
+  trait NatTypeAlg[T] {
+    def TyNat(): T
   }
 
-  trait Print extends Alg[String] {
-    def nat() = "Nat"
+  trait Alg[E, T] extends Nat.Alg[E] with NatTypeAlg[T]
+
+  trait Print extends Alg[String, String] with Nat.Print {
+    def TyNat() = "Nat"
   }
 
-  trait Lexer {
+  trait Lexer extends Nat.Lexer {
     lexical.reserved += "Nat"
   }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      "Nat" ^^ { _ => alg.nat() }
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+    lazy val pNat = new Nat.Parser[E, F]() {}.pE
+    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = pNat
+    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      "Nat" ^^ { _ => alg.TyNat() }
     }
   }
 
 }
 
-object BoolType {
+object TypedBool {
 
-  trait Alg[T] {
-    def bool(): T
+  trait BoolTypeAlg[T] {
+    def TyBool(): T
   }
 
-  trait Print extends Alg[String] {
-    def bool() = "Bool"
+  trait Alg[E, T] extends Bool.Alg[E] with BoolTypeAlg[T]
+
+  trait Print extends Alg[String, String] with Bool.Print {
+    def TyBool() = "Bool"
   }
 
-  trait Lexer {
+  trait Lexer extends Bool.Lexer {
     lexical.reserved += "Bool"
   }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      "Bool" ^^ { _ => alg.bool() }
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+    lazy val pBool = new Bool.Parser[E, F]() {}.pE
+    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = pBool
+    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      "Bool" ^^ { _ => alg.TyBool() }
     }
   }
 
 }
 
 trait TyArithParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends ArithParser[E, L] with BoolType.Lexer with NatType.Lexer {
-  val pTyArithLNGE = pArithLNGE
-  val pTyArithLNGT = new BoolType.Parser[T, L]() {}.pT | new NatType.Parser[T, L]() {}.pT
+  extends TypedBool.Lexer with TypedNat.Lexer {
+  val pTypedBoolET = new TypedBool.Parser[E, T, L]() {}
+  val pTypedNatET = new TypedNat.Parser[E, T, L]() {}
+  val pTyArithLNGE = pTypedBoolET.pE | pTypedNatET.pE
+  val pTyArithLNGT = pTypedBoolET.pT | pTypedNatET.pT
 }
 
-trait TyArithAlg[E, T] extends ArithAlg[E] with BoolType.Alg[T] with NatType.Alg[T]
+trait TyArithAlg[E, T] extends TypedBool.Alg[E, T] with TypedNat.Alg[E, T]
 
-trait TyArithPrint extends TyArithAlg[String, String] with ArithPrint with BoolType.Print with NatType.Print
+trait TyArithPrint extends TyArithAlg[String, String] with TypedBool.Print with TypedNat.Print
