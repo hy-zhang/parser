@@ -35,16 +35,16 @@ object FullError {
 }
 
 trait FullErrorParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullRefParser[E, T, L] with FullError.Lexer {
+  extends SimpleBoolParser[E, T, L] with Bot.Lexer with FullError.Lexer {
+  val pBotT = new Bot.Parser[T, L]() {}
   val pFullErrorE = new FullError.Parser[E, L]() {}
-  val pFullErrorLNGE = pFullRefLNGE | pFullErrorE.pE
-  val pFullErrorLNGT = pFullRefLNGT
+  val pFullErrorLNGE = pSimpleBoolLNGE | pFullErrorE.pE
+  val pFullErrorLNGT = pSimpleBoolLNGT | pBotT.pT
 }
 
-// todo: extend from SimpleBool?
-trait FullErrorAlg[E, T] extends FullRefAlg[E, T] with FullError.Alg[E]
+trait FullErrorAlg[E, T] extends SimpleBoolAlg[E, T] with Bot.Alg[T] with FullError.Alg[E]
 
-trait FullErrorPrint extends FullErrorAlg[String, String] with FullRefPrint with FullError.Print
+trait FullErrorPrint extends FullErrorAlg[String, String] with SimpleBoolPrint with Bot.Print with FullError.Print
 
 object TestFullError {
 

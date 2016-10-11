@@ -42,7 +42,7 @@ object SimpleBool {
       ).reduce((a, b) => a ||| b)
     }
 
-    lazy val pT: SimpleBoolAlg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.arr(t1, t2) }

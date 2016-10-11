@@ -5,7 +5,6 @@ import Util._
 /* <9> */
 object RcdSubBot {
 
-
   trait Alg[T] {
     def TyRecord(l: List[(String, T)]): T
   }

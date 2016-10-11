@@ -6,10 +6,6 @@ import Util._
 object FullRef {
 
   trait Alg[E, T] {
-    def TyTop(): T
-
-    def TyBot(): T
-
     def TyRef(t: T): T
 
     def TmRef(e: E): E
@@ -24,15 +20,11 @@ object FullRef {
   }
 
   trait Lexer {
-    lexical.reserved += ("Top", "Bot", "ref", "Ref", "Source", "Sink")
+    lexical.reserved += ("ref", "Ref", "Source", "Sink")
     lexical.delimiters += ("!", ":=")
   }
 
   trait Print extends Alg[String, String] {
-    def TyTop() = "Top"
-
-    def TyBot() = "Bot"
-
     def TyRef(t: String) = "Ref " + t
 
     def TmRef(e: String) = "ref " + e
@@ -62,8 +54,6 @@ object FullRef {
       lazy val t = l.pT
 
       List(
-        "Top" ^^ { _ => alg.TyTop() },
-        "Bot" ^^ { _ => alg.TyBot() },
         "Ref" ~> t ^^ alg.TyRef,
         "Source" ~> t ^^ alg.TySource,
         "Sink" ~> t ^^ alg.TySink,
@@ -75,15 +65,16 @@ object FullRef {
 }
 
 trait FullRefParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with FullRef.Lexer {
+  extends FullSimpleParser[E, T, L] with Bot.Lexer with FullRef.Lexer {
   val pFullRefET = new FullRef.Parser[E, T, L]() {}
+  val pBotT = new Bot.Parser[T, L]() {}
   val pFullRefLNGE = pFullSimpleLNGE | pFullRefET.pE
-  val pFullRefLNGT = pFullSimpleLNGT | pFullRefET.pT
+  val pFullRefLNGT = pFullSimpleLNGT | pFullRefET.pT | pBotT.pT
 }
 
-trait FullRefAlg[E, T] extends FullSimpleAlg[E, T] with FullRef.Alg[E, T]
+trait FullRefAlg[E, T] extends FullSimpleAlg[E, T] with Bot.Alg[T] with FullRef.Alg[E, T]
 
-trait FullRefPrint extends FullRefAlg[String, String] with FullSimplePrint with FullRef.Print
+trait FullRefPrint extends FullRefAlg[String, String] with FullSimplePrint with Bot.Print with FullRef.Print
 
 object TestFullRef {
 
