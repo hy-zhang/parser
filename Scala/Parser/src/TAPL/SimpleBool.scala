@@ -26,7 +26,6 @@ object SimpleBool {
   }
 
   trait Lexer {
-    lexical.reserved += ("if", "then", "else", "true", "false", "Bool")
     lexical.delimiters += ("\\", ".", "(", ")", ":", "->")
   }
 
@@ -82,6 +81,10 @@ object TestSimpleBool {
 
   def main(args: Array[String]) = {
     List(
+      "true",
+      "if false then true else false",
+      "if x then true else false",
+      "\\x:Bool.x",
       "(\\x:Bool->Bool.x)",
       "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)"
     ).foreach(parseAndPrint)
