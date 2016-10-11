@@ -3,7 +3,7 @@ package TAPL
 import Util._
 
 /* <7> */
-object FullRef {
+object Ref {
 
   trait Alg[E, T] {
     def TyRef(t: T): T
@@ -65,16 +65,15 @@ object FullRef {
 }
 
 trait FullRefParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Bot.Lexer with FullRef.Lexer {
-  val pFullRefET = new FullRef.Parser[E, T, L]() {}
-  val pBotT = new Bot.Parser[T, L]() {}
+  extends FullSimpleParser[E, T, L] with TopBot.Lexer with Ref.Lexer {
+  val pFullRefET = new Ref.Parser[E, T, L]() {}
   val pFullRefLNGE = pFullSimpleLNGE | pFullRefET.pE
-  val pFullRefLNGT = pFullSimpleLNGT | pFullRefET.pT | pBotT.pT
+  val pFullRefLNGT = pFullSimpleLNGT | pFullRefET.pT | new TopBot.Parser[T, L]() {}.pT
 }
 
-trait FullRefAlg[E, T] extends FullSimpleAlg[E, T] with Bot.Alg[T] with FullRef.Alg[E, T]
+trait FullRefAlg[E, T] extends FullSimpleAlg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T]
 
-trait FullRefPrint extends FullRefAlg[String, String] with FullSimplePrint with Bot.Print with FullRef.Print
+trait FullRefPrint extends FullRefAlg[String, String] with FullSimplePrint with TopBot.Print with Ref.Print
 
 object TestFullRef {
 

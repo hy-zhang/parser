@@ -3,51 +3,88 @@ package TAPL
 import Util._
 
 /* <6> */
+object TypedRecord {
+
+  trait TAlg[T] {
+    def TyRecord(l: List[(String, T)]): T
+  }
+
+  trait Alg[E, T] extends Record.Alg[E] with TAlg[T]
+
+  trait Print extends Alg[String, String] with Record.Print {
+    def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
+  }
+
+  trait Lexer extends Record.Lexer {
+    lexical.delimiters += (":", ",", "{", "}")
+  }
+
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = new Record.Parser[E, F]() {}.pE
+
+    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      lazy val t = l.pT
+
+      "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
+    }
+  }
+
+}
+
+// todo: use TypedRecord
 object FullSimple {
 
   trait Alg[E, T] {
-    def unit(): E
+    def TmUnit(): E
 
-    def as(e: E, t: T): E
+    def TmAscribe(e: E, t: T): E
 
-    def tag(x: String, e: E, t: T): E
+    def TmTag(x: String, e: E, t: T): E
 
-    def fix(e: E): E
+    def TmFix(e: E): E
 
-    def caseS(e: E, l: List[(String, String, E)]): E
+    def TmCase(e: E, l: List[(String, String, E)]): E
 
-    def unitT(): T
+    def TyUnit(): T
 
-    def stringT(): T
+    def TyString(): T
 
-    def idT(x: String): T
+    def TyVar(x: String): T
 
-    def variant(l: List[(String, T)]): T
+    def TyVariant(l: List[(String, T)]): T
+
+    def TyFloat(): T
+
+    def TyRecord(l: List[(String, T)]): T
   }
 
   trait Print extends Alg[String, String] {
-    def unit() = "unit"
+    def TmUnit() = "unit"
 
-    def as(e: String, t: String) = "(" + e + ") as " + t
+    def TmAscribe(e: String, t: String) = "(" + e + ") as " + t
 
-    def tag(x: String, e: String, t: String) = "<" + x + "=" + e + "> as " + t
+    def TmTag(x: String, e: String, t: String) = "<" + x + "=" + e + "> as " + t
 
-    def fix(e: String) = "fix (" + e + ")"
+    def TmFix(e: String) = "fix (" + e + ")"
 
-    def caseS(e: String, l: List[(String, String, String)]) = "[case " + e + " of " + l.map(x => "<" + x._1 + "=" + x._2 + "> => " + x._3).reduce((x, y) => x + " | " + y) + "]"
+    def TmCase(e: String, l: List[(String, String, String)]) = "[case " + e + " of " + l.map(x => "<" + x._1 + "=" + x._2 + "> => " + x._3).reduce((x, y) => x + " | " + y) + "]"
 
-    def unitT() = "Unit"
+    def TyUnit() = "Unit"
 
-    def stringT() = "String"
+    def TyString() = "String"
 
-    def idT(x: String) = x
+    def TyVar(x: String) = x
 
-    def variant(l: List[(String, String)]) = "<" + l.map(x => x._1 + ":" + x._2).reduce((x, y) => x + ", " + y) + ">"
+    def TyVariant(l: List[(String, String)]) = "<" + l.map(x => x._1 + ":" + x._2).reduce((x, y) => x + ", " + y) + ">"
+
+    def TyFloat() = "Float"
+
+    def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
   }
 
   trait Lexer {
-    lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String")
-    lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>")
+    lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String", "Float")
+    lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>", "{", "}")
   }
 
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
@@ -55,41 +92,44 @@ object FullSimple {
       lazy val e = l.pE
       lazy val t = l.pT
 
-      "unit" ^^ { _ => alg.unit() } |||
-        e ~ ("as" ~> t) ^^ { case e0 ~ t0 => alg.as(e0, t0) } |||
-        ("<" ~> lcid) ~ ("=" ~> e <~ ">") ~ ("as" ~> t) ^^ { case x ~ e0 ~ t0 => alg.tag(x, e0, t0) } |||
-        "fix" ~> e ^^ alg.fix |||
-        ("case" ~> e <~ "of") ~ repsep(("<" ~> lcid) ~ ("=" ~> lcid) ~ ((">" ~ "=>") ~> e) ^^ { case x1 ~ x2 ~ e0 => (x1, x2, e0) }, "|") ^^ { case e0 ~ l => alg.caseS(e0, l) } |||
+      "unit" ^^ { _ => alg.TmUnit() } |||
+        e ~ ("as" ~> t) ^^ { case e0 ~ t0 => alg.TmAscribe(e0, t0) } |||
+        ("<" ~> lcid) ~ ("=" ~> e <~ ">") ~ ("as" ~> t) ^^ { case x ~ e0 ~ t0 => alg.TmTag(x, e0, t0) } |||
+        "fix" ~> e ^^ alg.TmFix |||
+        ("case" ~> e <~ "of") ~ repsep(("<" ~> lcid) ~ ("=" ~> lcid) ~ ((">" ~ "=>") ~> e) ^^ { case x1 ~ x2 ~ e0 => (x1, x2, e0) }, "|") ^^ { case e0 ~ l => alg.TmCase(e0, l) } |||
         "(" ~> e <~ ")"
     }
 
     lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
-      "Unit" ^^ { _ => alg.unitT() } |||
-        "String" ^^ { _ => alg.stringT() } |||
-        ucid ^^ alg.idT |||
-        "<" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ t0 => (x, t0) }, ",") <~ ">" ^^ alg.variant
+      "Unit" ^^ { _ => alg.TyUnit() } |||
+        "String" ^^ { _ => alg.TyString() } |||
+        "Float" ^^ { _ => alg.TyFloat() } |||
+        ucid ^^ alg.TyVar |||
+        "<" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ t0 => (x, t0) }, ",") <~ ">" ^^ alg.TyVariant |||
+        "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
     }
   }
 
 }
 
 trait FullSimpleParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends SimpleBoolParser[E, T, L] with FullUntyped.Lexer with FullSimple.Lexer {
+  extends TyArithParser[E, T, L] with Typed.Lexer with FullUntyped.Lexer with FullSimple.Lexer {
   val pFullUntypedE = new FullUntyped.Parser[E, L]() {}
   val pFullSimpleET = new FullSimple.Parser[E, T, L]() {}
-  val pFullSimpleLNGE = pSimpleBoolLNGE | pFullSimpleET.pE | pFullUntypedE.pE
-  val pFullSimpleLNGT = pSimpleBoolLNGT | pFullSimpleET.pT
+  val pTypedET = new Typed.Parser[E, T, L]() {}
+  val pFullSimpleLNGE = pTyArithLNGE | pTypedET.pE | pFullUntypedE.pE | pFullSimpleET.pE
+  val pFullSimpleLNGT = pTyArithLNGT | pTypedET.pT | pFullSimpleET.pT
 }
 
-trait FullSimpleAlg[E, T] extends SimpleBoolAlg[E, T] with FullSimple.Alg[E, T] with FullUntyped.Alg[E]
+trait FullSimpleAlg[E, T] extends TyArithAlg[E, T] with Typed.Alg[E, T]
+  with FullUntyped.Alg[E] with FullSimple.Alg[E, T]
 
-trait FullSimplePrint extends FullSimpleAlg[String, String] with SimpleBoolPrint with FullSimple.Print with FullUntyped.Print
+trait FullSimplePrint extends FullSimpleAlg[String, String]
+  with TyArithPrint with Typed.Print with FullUntyped.Print with FullSimple.Print
 
 object TestFullSimple {
-
-  import Util._
 
   class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
     val pE = pe
