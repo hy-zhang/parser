@@ -26,6 +26,7 @@ object RcdSubBot {
   }
 
 }
+/*
 
 trait RcdSubBotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
   extends FullRefParser[E, T, L] with RcdSubBot.Lexer {
@@ -63,4 +64,4 @@ object TestRcdSubBot {
       "\\x:Bot. x x"
     ).foreach(parseAndPrint)
   }
-}
+}*/

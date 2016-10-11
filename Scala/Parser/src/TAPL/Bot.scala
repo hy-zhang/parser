@@ -51,14 +51,15 @@ object TopBot {
 }
 
 trait BotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends TypedParser[E, T, L] with TopBot.Lexer {
-  val pBotLNGE = pTypedLNGE
-  val pBotLNGT = pTypedLNGT | new TopBot.Parser[T, L]() {}.pT
+  extends Typed.Lexer with TopBot.Lexer {
+  val pTypedET = new Typed.Parser[E, T, L]() {}
+  val pBotLNGE = pTypedET.pE
+  val pBotLNGT = pTypedET.pT | new TopBot.Parser[T, L]() {}.pT
 }
 
-trait BotAlg[E, T] extends TypedAlg[E, T] with TopBot.Alg[T]
+trait BotAlg[E, T] extends Typed.Alg[E, T] with TopBot.Alg[T]
 
-trait BotPrint extends BotAlg[String, String] with TypedPrint with TopBot.Print
+trait BotPrint extends BotAlg[String, String] with Typed.Print with TopBot.Print
 
 object TestBot {
 

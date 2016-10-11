@@ -86,18 +86,19 @@ object FullSimple {
 }
 
 trait FullSimpleParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends TyArithParser[E, T, L] with TypedParser[E, T, L] with FullUntyped.Lexer with FullSimple.Lexer {
+  extends TyArithParser[E, T, L] with Typed.Lexer with FullUntyped.Lexer with FullSimple.Lexer {
   val pFullUntypedE = new FullUntyped.Parser[E, L]() {}
   val pFullSimpleET = new FullSimple.Parser[E, T, L]() {}
-  val pFullSimpleLNGE = pTyArithLNGE | pTypedLNGE | pFullUntypedE.pE | pFullSimpleET.pE
-  val pFullSimpleLNGT = pTyArithLNGT | pTypedLNGT | pFullSimpleET.pT
+  val pTypedET = new Typed.Parser[E, T, L]() {}
+  val pFullSimpleLNGE = pTyArithLNGE | pTypedET.pE | pFullUntypedE.pE | pFullSimpleET.pE
+  val pFullSimpleLNGT = pTyArithLNGT | pTypedET.pT | pFullSimpleET.pT
 }
 
-trait FullSimpleAlg[E, T] extends TyArithAlg[E, T] with TypedAlg[E, T]
+trait FullSimpleAlg[E, T] extends TyArithAlg[E, T] with Typed.Alg[E, T]
   with FullUntyped.Alg[E] with FullSimple.Alg[E, T]
 
 trait FullSimplePrint extends FullSimpleAlg[String, String]
-  with TyArithPrint with TypedPrint with FullUntyped.Print with FullSimple.Print
+  with TyArithPrint with Typed.Print with FullUntyped.Print with FullSimple.Print
 
 object TestFullSimple {
 
