@@ -72,7 +72,7 @@ On the other hand, practically parsers are defined as functions (as shown above)
 
 \subsection{Object Algebras for Different Syntax}\label{subsec:differentsyntax}
 
-Such extensibility becomes fragile when it comes to grammars with different syntax. Now suppose we would like to have types in the grammar. Firstly the new grammar is shown below:
+Such extensibility becomes fragile when it comes to grammars with different syntax. Now suppose we would like to have types in the grammar. Firstly the new grammar is shown below, where the \lstinline{Int} type and lambda expression with annotation have been added:
 \begin{lstlisting}
 e ::= x | e ' ' e | \x:t.e
 t ::= "Int"
@@ -81,7 +81,49 @@ t ::= "Int"
 We proceed to implement those parsers. An issue is that we need both a \lstinline{PackratParser[Expr]} and a \lstinline{PackratParser[Type]} in the fixpoint.
 Hence we use a pair in the parameter:
 \begin{lstlisting}
-...
-\end{lstlisting}
+class Type
+class Int extends Type
+val pInt : (=> (PackratParser[Expr], PackratParser[Type])) => PackratParser[Type] =
+    p => "Int" ^^ { _ => new Int() }
 
-% more subsections: object algebras (different syntax, separate variant and behavior, two dimensions of extensibility, generics), lexing, traits, language composition (more extensibility)
+class Lam(x : String, t : Type, e : Expr) extends Expr
+val pLam : (=> (PackratParser[Expr], PackratParser[Type])) => PackratParser[Expr] =
+    p => ("\\" ~> ident) ~ (":" ~> p._2) ~ ("." ~> p._1)
+        ^^ { case x ~ t ~ e => new Lam(x, t, e) }
+
+val p : (=> (PackratParser[Expr], PackratParser[Type])) => (PackratParser[Expr], PackratParser[Type]) =
+    p => (pVar(p._1) ||| pApp(p._1) ||| pLam(p), pInt(p))
+\end{lstlisting}
+The last value \lstinline{p} integrates the four single parsers defined before, so we use \lstinline{fix(p)} to
+obtain the two parsers we want: one for expressions, the other for types. The parser \lstinline{fix(p)._1} parsers expressions
+like \lstinline{"\x:Int.x x"} successfully. Yet meanwhile, some drawbacks of this approach come into sight. With different syntax, it
+is necessary to extend the fixpoint to contain more parsers, in which case usually some structures like tuples are used,
+making code tedious and less elegant. On the other hand, the modularity is quite restricted; only parsing and datatypes are extensible.
+Suppose now we want to realize some behaviors on those data structures, for example pretty-printing, then whenever we introduce a new behavior,
+it needs implementations in every class body, requiring existing code to be modified. At this point, Object Algebras are adopted for data structures
+instead.
+
+Object Algebras are a nice solution to the famous \textit{Expression Problem}, achieving two dimensions of extensibility (data variants and operations)
+in a type-safe way. The intuition of using Object Algebras is to separate data structures from behaviors, so as to modularize the design. We can simply add new variants for the new cases in the grammar, or realize different operations on structures, without modifying existing code, and separate compilation is supported. Coincidentally, Object Algebras use generics, where the type parameters perfectly support extensible different syntax, and hence simplify the code comparatively. Below is the code using Object Algebras, where we start from \lstinline{varE} and \lstinline{appE} only, later we extend them with \lstinline{intT} and \lstinline{lamE}:
+\begin{lstlisting}
+trait OldAlg[E] {
+    def varE(x : String) : E
+    def appE(e1 : E, e2 : E) : E
+}
+
+trait OldParser[E] {
+    val pE : OldAlg[E] => (=> PackratParser[E]) => PackratParser[E] = alg => p =>
+        ident ^^ { x => alg.varE(x) } |||
+        p ~ p ^^ { case e1 ~ e2 => alg.appE(e1, e2) }
+}
+\end{lstlisting}
+Here \lstinline{OldAlg} is called an \textit{Object Algebra interface}, which has two constructs for the AST. Its parser is
+supposed to produce a structure from an input, whereas with Object Algebras structures are implicit: an \textit{algebra}
+is immediately applied to the structure and returns the result. It means such a structure that the parser generates should have
+type \lstinline{"OldAlg[E] =>} \lstinline{E"} for some \lstinline{E}. In the above code, \lstinline{alg} which has type
+\lstinline{OldAlg[E]} is an algebra, and appears as a parameter of \lstinline{pE}, then in the body of \lstinline{pE} the algebra
+is invoked correspondingly right after parsing. Since it should be a generic algebra, the parser is enclosed by the generic trait \lstinline{OldParser}.
+
+% more: newparser, two pretty-printers OldPretty and NewPretty, they are separated to show modularity.
+% more: modify the code using List[E] and type bounds.
+% more subsections: lexing, traits, operations, language composition (more extensibility)
