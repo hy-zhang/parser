@@ -59,14 +59,15 @@ object FullUntyped {
 
 }
 
-trait FullUntypedParser[E, L <: {val pE : Util.PackratParser[E]}] extends UntypedParser[E, L] with FullUntyped.Lexer {
+trait FullUntypedParser[E, L <: {val pE : Util.PackratParser[E]}]
+  extends ArithParser[E, L] with UntypedParser[E, L] with FullUntyped.Lexer {
   val pFullUntypedE = new FullUntyped.Parser[E, L]() {}
-  val pFullUntypedLNGE = pUntypedLNGE | pFullUntypedE.pE
+  val pFullUntypedLNGE = pArithLNGE | pUntypedLNGE | pFullUntypedE.pE
 }
 
-trait FullUntypedAlg[E] extends UntypedAlg[E] with FullUntyped.Alg[E]
+trait FullUntypedAlg[E] extends ArithAlg[E] with UntypedAlg[E] with FullUntyped.Alg[E]
 
-trait FullUntypedPrint extends FullUntypedAlg[String] with UntypedPrint with FullUntyped.Print
+trait FullUntypedPrint extends FullUntypedAlg[String] with ArithPrint with UntypedPrint with FullUntyped.Print
 
 object TestFullUntyped {
 
@@ -91,6 +92,8 @@ object TestFullUntyped {
       "\"\\x.x\"",
       "let x = false in \\y. y x",
       "(\\x.x) * succ 1",
+      "succ (pred 0)",
+      "iszero (pred (succ (succ 0)))",
       "1.2"
     ).foreach(parseAndPrint)
   }

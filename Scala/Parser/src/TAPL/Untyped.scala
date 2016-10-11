@@ -40,14 +40,14 @@ object Untyped {
 
 }
 
-trait UntypedParser[E, L <: {val pE : Util.PackratParser[E]}] extends ArithParser[E, L] with Untyped.Lexer {
+trait UntypedParser[E, L <: {val pE : Util.PackratParser[E]}] extends Untyped.Lexer {
   val pUntypedE = new Untyped.Parser[E, L]() {}
-  val pUntypedLNGE = pArithLNGE | pUntypedE.pE
+  val pUntypedLNGE = pUntypedE.pE
 }
 
-trait UntypedAlg[E] extends ArithAlg[E] with Untyped.Alg[E]
+trait UntypedAlg[E] extends Untyped.Alg[E]
 
-trait UntypedPrint extends UntypedAlg[String] with ArithPrint with Untyped.Print
+trait UntypedPrint extends UntypedAlg[String] with Untyped.Print
 
 object TestUntyped {
 
@@ -67,9 +67,10 @@ object TestUntyped {
 
   def main(args: Array[String]) = {
     List(
-      "\\x.x (x \\x.x)",
-      "if pred 1 then false else succ x",
-      "if \\x.x x x then if true then false else 0 else false"
+      "x",
+      "\\x.x",
+      "(\\x.x) \\x.x",
+      "\\x.x (x \\x.x)"
     ).foreach(parseAndPrint)
   }
 }
