@@ -1,49 +1,81 @@
 package TAPL
 
+import Util._
+
 /* <13> */
-object FullIsoRec {
-  import Util._
-  trait FullIsoAlg[E, T] {
+object Fold {
+
+  trait Alg[E, T] {
     def TmFold(e: E, t: T): E
+
     def TmUnfold(e: E, t: T): E
   }
-  trait Lexer extends FullIsoAlg[String, String] {
-    lexical.reserved += ("fold", "unfold")
-    lexical.delimiters += ("[", "]")
+
+  trait Print extends Alg[String, String] {
     def TmFold(e: String, t: String) = "fold [" + t + "] " + e
+
     def TmUnfold(e: String, t: String) = "unfold [" + t + "] " + e
   }
-  trait Parser[E, T, F <: {val pE: PackratParser[E]; val pT: PackratParser[T]}] {
-    lazy val pE: FullIsoAlg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+
+  trait Lexer {
+    lexical.reserved += ("fold", "unfold")
+    lexical.delimiters += ("[", "]")
+  }
+
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
+
       List(
         "fold" ~> ("[" ~> t <~ "]") ~ e ^^ { case ty ~ ex => alg.TmFold(ex, ty) },
         "unfold" ~> ("[" ~> t <~ "]") ~ e ^^ { case ty ~ ex => alg.TmUnfold(ex, ty) }
       ).reduce((a, b) => a ||| b)
     }
   }
+
 }
 
-trait FullIsoRecLNG[E, T, L <: {val pE: Util.PackratParser[E]; val pT: Util.PackratParser[T]}] extends FullErrorLNG[E, T, L] with RcdSubBot.Lexer with FullIsoRec.Lexer {
-  val pRcdSubBotT = new RcdSubBot.Parser[T, L](){}
-  val pFullIsoRecET = new FullIsoRec.Parser[E, T, L](){}
-  val pFullIsoRecLNGE = pFullErrorLNGE | pFullIsoRecET.pE
-  val pFullIsoRecLNGT = pFullErrorLNGT | pRcdSubBotT.pT
+trait FullIsoRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+  extends FullSimpleParser[E, T, L] with Fold.Lexer with RecType.Lexer {
+  val pFullIsoRecLNGE = pFullSimpleLNGE | new Fold.Parser[E, T, L]() {}.pE
+  val pFullIsoRecLNGT = pFullSimpleLNGT | new RecType.Parser[T, L]() {}.pT
 }
 
-object TestFullIsoRecLNG {
+trait FullIsoRecAlg[E, T] extends FullSimpleAlg[E, T] with Fold.Alg[E, T] with RecType.Alg[T]
+
+trait FullIsoRecPrint extends FullIsoRecAlg[String, String] with FullSimplePrint with Fold.Print with RecType.Print
+
+object TestFullIsoRec {
+
   import Util._
-  class List[E, T](pe : PackratParser[E], pt : PackratParser[T]) { val pE = pe; val pT = pt }
-  object Test extends FullIsoRecLNG[String, String, List[String, String]] {
-    lazy val parser : (=> List[String, String]) => List[String, String] = l =>
-      new List[String, String](pFullIsoRecLNGE(Test)(l), pFullIsoRecLNGT(Test)(l))
-    lazy val parse = runParser(Util.fix(parser).pE)
+
+  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
+    val pE = pe
+    val pT = pt
   }
-  def main(args : Array[String]) = {
+
+  def parse[E, T](inp: String)(alg: FullIsoRecAlg[E, T]) = {
+    def parser(l: => List[E, T]): List[E, T] = {
+      val lang = new FullIsoRecParser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullIsoRecLNGE(alg)(l), lang.pFullIsoRecLNGT(alg)(l))
+    }
+    runParser(fix(parser).pE)(inp)
+  }
+
+  def parseAndPrint(inp: String) = parse(inp)(new FullIsoRecPrint {})
+
+  def main(args: Array[String]) = {
     List(
+      "\\f:(Rec X.A->A).\\x:A.f x",
+      "\\x:<a:Bool, b:Bool>.x",
+      "\\x:(Rec P.{get:Nat, inc:Unit->P}).x",
+      "\\x:(Rec A.Nat->A).x",
+      "let g = fix (\\f:Nat->(Rec A.Nat->A).\\n:Nat.f) in unit",
+      "\\l:NList.case l of <nil=u> => true | <cons=p> => false",
+      "fix (\\p:Nat->Nat->Nat.\\m:Nat.\\n:Nat.if iszero m then n else succ (p (pred m) n))",
       "fold [Counter] {get=unit, inc=unit}",
       "(unfold [Counter] p).get"
-    ).foreach(Test.parse)
+    ).foreach(parseAndPrint)
   }
 }

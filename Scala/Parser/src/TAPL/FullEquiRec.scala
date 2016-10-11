@@ -1,40 +1,61 @@
 package TAPL
 
+import Util._
+
 /* <12> */
-object FullEquiRec {
-  import Util._
-  trait FullEquiRecAlg[T] {
+object RecType {
+
+  trait Alg[T] {
     def TyRec(x: String, t: T): T
   }
-  trait Lexer extends FullEquiRecAlg[String] {
-    lexical.reserved += "Rec"
-    lexical.delimiters += "."
+
+  trait Print extends Alg[String] {
     def TyRec(x: String, t: String) = "Rec " + x + "." + t
   }
-  trait Parser[T, F <: {val pT: PackratParser[T]}] {
-    lazy val pT: FullEquiRecAlg[T] => (=> F) => PackratParser[T] = alg => l => {
+
+  trait Lexer {
+    lexical.reserved += "Rec"
+    lexical.delimiters += "."
+  }
+
+  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
+
       "Rec" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyRec(x, ty) }
     }
   }
+
 }
 
-trait FullEquiRecLNG[E, T, L <: {val pE: Util.PackratParser[E]; val pT: Util.PackratParser[T]}] extends FullErrorLNG[E, T, L] with RcdSubBot.Lexer with FullEquiRec.Lexer {
-  val pRcdSubBotT = new RcdSubBot.Parser[T, L](){}
-  val pFullEquiRecT = new FullEquiRec.Parser[T, L](){}
-  val pFullEquiRecLNGE = pFullErrorLNGE
-  val pFullEquiRecLNGT = pFullErrorLNGT | pRcdSubBotT.pT | pFullEquiRecT.pT
+trait FullEquiRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+  extends FullSimpleParser[E, T, L] with RecType.Lexer {
+  val pFullEquiRecLNGE = pFullSimpleLNGE
+  val pFullEquiRecLNGT = pFullSimpleLNGT | new RecType.Parser[T, L]() {}.pT
 }
 
-object TestFullEquiRecLNG {
-  import Util._
-  class List[E, T](pe : PackratParser[E], pt : PackratParser[T]) { val pE = pe; val pT = pt }
-  object Test extends FullEquiRecLNG[String, String, List[String, String]] {
-    lazy val parser : (=> List[String, String]) => List[String, String] = l =>
-      new List[String, String](pFullEquiRecLNGE(Test)(l), pFullEquiRecLNGT(Test)(l))
-    lazy val parse = runParser(Util.fix(parser).pE)
+trait FullEquiRecAlg[E, T] extends FullSimpleAlg[E, T] with RecType.Alg[T]
+
+trait FullEquiRecPrint extends FullEquiRecAlg[String, String] with FullSimplePrint with RecType.Print
+
+object TestFullEquiRec {
+
+  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
+    val pE = pe
+    val pT = pt
   }
-  def main(args : Array[String]) = {
+
+  def parse[E, T](inp: String)(alg: FullEquiRecAlg[E, T]) = {
+    def parser(l: => List[E, T]): List[E, T] = {
+      val lang = new FullEquiRecParser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullEquiRecLNGE(alg)(l), lang.pFullEquiRecLNGT(alg)(l))
+    }
+    runParser(fix(parser).pE)(inp)
+  }
+
+  def parseAndPrint(inp: String) = parse(inp)(new FullEquiRecPrint {})
+
+  def main(args: Array[String]) = {
     List(
       "\\f:(Rec X.A->A).\\x:A.f x",
       "\\x:<a:Bool, b:Bool>.x",
@@ -43,6 +64,6 @@ object TestFullEquiRecLNG {
       "let g = fix (\\f:Nat->(Rec A.Nat->A).\\n:Nat.f) in unit",
       "\\l:NList.case l of <nil=u> => true | <cons=p> => false",
       "fix (\\p:Nat->Nat->Nat.\\m:Nat.\\n:Nat.if iszero m then n else succ (p (pred m) n))"
-    ).foreach(Test.parse)
+    ).foreach(parseAndPrint)
   }
 }
