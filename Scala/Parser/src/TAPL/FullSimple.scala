@@ -15,14 +15,12 @@ object TypedRecord {
     def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
   }
 
-  trait Lexer extends Record.Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Record.Parser[E, F] {
     lexical.delimiters += (":", ",", "{", "}")
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = new Record.Parser[E, F]() {}.pE
+    lazy val pTypedRecordE: Alg[E, T] => (=> F) => PackratParser[E] = pRecordE
 
-    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pTypedRecordT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
@@ -42,7 +40,7 @@ object TypeVar {
   }
 
   trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => ucid ^^ alg.TyVar
+    lazy val pTypeVarT: Alg[T] => (=> F) => PackratParser[T] = alg => l => ucid ^^ alg.TyVar
   }
 
 }
@@ -98,13 +96,11 @@ object FullSimple {
     def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
   }
 
-  trait Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
     lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String", "Float")
     lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>", "{", "}")
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    lazy val pFullSimpleE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 
@@ -116,7 +112,7 @@ object FullSimple {
         "(" ~> e <~ ")"
     }
 
-    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pFullSimpleT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       "Unit" ^^ { _ => alg.TyUnit() } |||
@@ -131,12 +127,10 @@ object FullSimple {
 }
 
 trait FullSimpleParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends TyArithParser[E, T, L] with Typed.Lexer with FullUntyped.Lexer with FullSimple.Lexer {
-  val pFullUntypedE = new FullUntyped.Parser[E, L]() {}
-  val pFullSimpleET = new FullSimple.Parser[E, T, L]() {}
-  val pTypedET = new Typed.Parser[E, T, L]() {}
-  val pFullSimpleLNGE = pTyArithLNGE | pTypedET.pE | pFullUntypedE.pE | pFullSimpleET.pE
-  val pFullSimpleLNGT = pTyArithLNGT | pTypedET.pT | pFullSimpleET.pT
+  extends TyArithParser[E, T, L] with Typed.Parser[E, T, L]
+    with FullUntyped.Parser[E, L] with FullSimple.Parser[E, T, L] {
+  val pFullSimpleLNGE = pTyArithLNGE | pTypedE | pFullUntypedE | pFullSimpleE
+  val pFullSimpleLNGT = pTyArithLNGT | pTypedT | pFullSimpleT
 }
 
 trait FullSimpleAlg[E, T] extends TyArithAlg[E, T] with Typed.Alg[E, T]

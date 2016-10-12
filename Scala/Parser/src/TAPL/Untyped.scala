@@ -13,12 +13,10 @@ object UntypedAbs {
     def TmAbs(x: String, e: String) = "\\" + x + "." + e
   }
 
-  trait Lexer {
-    lexical.delimiters += ("\\", ".", "(", ")")
-  }
-
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    lexical.delimiters += ("\\", ".", "(", ")")
+
+    lazy val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
       ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } ||| "(" ~> e <~ ")"
@@ -41,12 +39,10 @@ object VarApp {
     def TmApp(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
   }
 
-  trait Lexer {
-    lexical.delimiters += ("(", ")")
-  }
-
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    lexical.delimiters += ("(", ")")
+
+    lazy val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
       List(
@@ -60,8 +56,8 @@ object VarApp {
 }
 
 trait UntypedParser[E, L <: {val pE : Util.PackratParser[E]}]
-  extends UntypedAbs.Lexer with VarApp.Lexer {
-  val pUntypedLNGE = new UntypedAbs.Parser[E, L]() {}.pE | new VarApp.Parser[E, L]() {}.pE
+  extends UntypedAbs.Parser[E, L] with VarApp.Parser[E, L] {
+  val pUntypedLNGE = pUntypedAbsE | pVarAppE
 }
 
 trait UntypedAlg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]

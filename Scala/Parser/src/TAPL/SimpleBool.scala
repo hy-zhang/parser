@@ -19,21 +19,19 @@ object Typed {
     def TyArr(t1: String, t2: String) = t1 + "->" + t2
   }
 
-  trait Lexer extends VarApp.Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends VarApp.Parser[E, F] {
     lexical.delimiters += ("\\", ".", "(", ")", ":", "->")
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pAbsArr: AbsArrAlg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    private lazy val pAbsArrE: AbsArrAlg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 
       ("\\" ~> lcid) ~ (":" ~> t) ~ ("." ~> e) ^^ { case x ~ t0 ~ e0 => alg.TmAbs(x, t0, e0) } ||| "(" ~> e <~ ")"
     }
 
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = new VarApp.Parser[E, F]() {}.pE | pAbsArr
+    lazy val pTypedE: Alg[E, T] => (=> F) => PackratParser[E] = pVarAppE | pAbsArrE
 
-    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pTypedT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.TyArr(t1, t2) } ||| "(" ~> t <~ ")"
@@ -43,11 +41,9 @@ object Typed {
 }
 
 trait SimpleBoolParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends Typed.Lexer with TypedBool.Lexer {
-  val pTypedET = new Typed.Parser[E, T, L]() {}
-  val pTypedBoolET = new TypedBool.Parser[E, T, L]() {}
-  val pSimpleBoolLNGE = pTypedET.pE | pTypedBoolET.pE
-  val pSimpleBoolLNGT = pTypedET.pT | pTypedBoolET.pT
+  extends Typed.Parser[E, T, L] with TypedBool.Parser[E, T, L] {
+  val pSimpleBoolLNGE = pTypedE | pTypedBoolE
+  val pSimpleBoolLNGT = pTypedT | pTypedBoolT
 }
 
 trait SimpleBoolAlg[E, T] extends Typed.Alg[E, T] with TypedBool.Alg[E, T]

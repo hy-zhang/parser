@@ -12,12 +12,10 @@ object Top {
     def TyTop() = "Top"
   }
 
-  trait Lexer {
-    lexical.reserved += "Top"
-  }
-
   trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+    lexical.reserved += "Top"
+
+    lazy val pTopT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
       "Top" ^^ { _ => alg.TyTop() }
     }
   }
@@ -36,25 +34,19 @@ object TopBot {
     def TyBot() = "Bot"
   }
 
-  trait Lexer extends Top.Lexer {
+  trait Parser[T, F <: {val pT : PackratParser[T]}] extends Top.Parser[T, F] {
     lexical.reserved += "Bot"
-  }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val topParser = new Top.Parser[T, F]() {}.pT
-    lazy val botParser: BotAlg[T] => (=> F) => PackratParser[T] = alg => l => {
-      "Bot" ^^ { _ => alg.TyBot() }
-    }
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = topParser | botParser
+    lazy val pBotT: BotAlg[T] => (=> F) => PackratParser[T] = alg => l => "Bot" ^^ { _ => alg.TyBot() }
+    lazy val pTopBotT: Alg[T] => (=> F) => PackratParser[T] = pTopT | pBotT
   }
 
 }
 
 trait BotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends Typed.Lexer with TopBot.Lexer {
-  val pTypedET = new Typed.Parser[E, T, L]() {}
-  val pBotLNGE = pTypedET.pE
-  val pBotLNGT = pTypedET.pT | new TopBot.Parser[T, L]() {}.pT
+  extends Typed.Parser[E, T, L] with TopBot.Parser[T, L] {
+  val pBotLNGE = pTypedE
+  val pBotLNGT = pTypedT | pTopBotT
 }
 
 trait BotAlg[E, T] extends Typed.Alg[E, T] with TopBot.Alg[T]

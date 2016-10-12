@@ -13,13 +13,11 @@ object RecType {
     def TyRec(x: String, t: String) = "Rec " + x + "." + t
   }
 
-  trait Lexer {
+  trait Parser[T, F <: {val pT : PackratParser[T]}] {
     lexical.reserved += "Rec"
     lexical.delimiters += "."
-  }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pRecTypeT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       "Rec" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyRec(x, ty) }
@@ -29,9 +27,9 @@ object RecType {
 }
 
 trait FullEquiRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with RecType.Lexer {
+  extends FullSimpleParser[E, T, L] with RecType.Parser[T, L] {
   val pFullEquiRecLNGE = pFullSimpleLNGE
-  val pFullEquiRecLNGT = pFullSimpleLNGT | new RecType.Parser[T, L]() {}.pT
+  val pFullEquiRecLNGT = pFullSimpleLNGT | pRecTypeT
 }
 
 trait FullEquiRecAlg[E, T] extends FullSimpleAlg[E, T] with RecType.Alg[T]

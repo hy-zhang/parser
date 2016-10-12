@@ -3,9 +3,9 @@ package TAPL
 import Util._
 
 trait FullSubParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Top.Lexer {
+  extends FullSimpleParser[E, T, L] with Top.Parser[T, L] {
   val pFullSubLNGE = pFullSimpleLNGE
-  val pFullSubLNGT = pFullSimpleLNGT | new Top.Parser[T, L]() {}.pT
+  val pFullSubLNGT = pFullSimpleLNGT | pTopT
 }
 
 trait FullSubAlg[E, T] extends FullSimpleAlg[E, T] with Top.Alg[T]

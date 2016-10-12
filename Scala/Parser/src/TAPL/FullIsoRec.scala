@@ -17,13 +17,11 @@ object Fold {
     def TmUnfold(e: String, t: String) = "unfold [" + t + "] " + e
   }
 
-  trait Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
     lexical.reserved += ("fold", "unfold")
     lexical.delimiters += ("[", "]")
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    lazy val pFoldE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 
@@ -37,9 +35,9 @@ object Fold {
 }
 
 trait FullIsoRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Fold.Lexer with RecType.Lexer {
-  val pFullIsoRecLNGE = pFullSimpleLNGE | new Fold.Parser[E, T, L]() {}.pE
-  val pFullIsoRecLNGT = pFullSimpleLNGT | new RecType.Parser[T, L]() {}.pT
+  extends FullSimpleParser[E, T, L] with Fold.Parser[E, T, L] with RecType.Parser[T, L] {
+  val pFullIsoRecLNGE = pFullSimpleLNGE | pFoldE
+  val pFullIsoRecLNGT = pFullSimpleLNGT | pRecTypeT
 }
 
 trait FullIsoRecAlg[E, T] extends FullSimpleAlg[E, T] with Fold.Alg[E, T] with RecType.Alg[T]

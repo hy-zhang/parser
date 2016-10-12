@@ -3,10 +3,9 @@ package TAPL
 import Util._
 
 trait ReconParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends TyArithParser[E, T, L] with Typed.Lexer {
-  val pTypedET = new Typed.Parser[E, T, L]() {}
-  val pReconLNGE = pTypedET.pE | pTyArithLNGE
-  val pReconLNGT = pTypedET.pT | pTyArithLNGT | new TypeVar.Parser[T, L]() {}.pT
+  extends TyArithParser[E, T, L] with Typed.Parser[E, T, L] with TypeVar.Parser[T, L] {
+  val pReconLNGE = pTypedE | pTyArithLNGE
+  val pReconLNGT = pTypedT | pTyArithLNGT | pTypeVarT
 }
 
 trait ReconAlg[E, T] extends Typed.Alg[E, T] with TyArithAlg[E, T] with TypeVar.Alg[T]

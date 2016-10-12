@@ -3,10 +3,9 @@ package TAPL
 import Util._
 
 trait EquiRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends Typed.Lexer with RecType.Lexer {
-  val pTypedET = new Typed.Parser[E, T, L]() {}
-  val pEquiRecLNGE = pTypedET.pE
-  val pEquiRecLNGT = pTypedET.pT | new RecType.Parser[T, L]() {}.pT | new TypeVar.Parser[T, L]() {}.pT
+  extends Typed.Parser[E, T, L] with RecType.Parser[T, L] with TypeVar.Parser[T, L] {
+  val pEquiRecLNGE = pTypedE
+  val pEquiRecLNGT = pTypedT | pRecTypeT | pTypeVarT
 }
 
 trait EquiRecAlg[E, T] extends Typed.Alg[E, T] with RecType.Alg[T] with TypeVar.Alg[T]

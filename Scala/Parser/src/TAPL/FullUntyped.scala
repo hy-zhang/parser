@@ -17,12 +17,10 @@ object Record {
     def TmProj(e: String, x: String) = e + "." + x
   }
 
-  trait Lexer {
-    lexical.delimiters += ("{", "}", ",", ".", "(", ")", "=")
-  }
-
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    lexical.delimiters += ("{", "}", ",", ".", "(", ")", "=")
+
+    lazy val pRecordE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
       List(
@@ -63,12 +61,10 @@ object FullUntyped {
     def TmLet(x: String, e1: String, e2: String) = "let " + x + " = " + e1 + " in " + e2
   }
 
-  trait Lexer extends Record.Lexer {
+  trait Parser[E, F <: {val pE : PackratParser[E]}] extends Record.Parser[E, F] {
     lexical.reserved += ("let", "in")
     lexical.delimiters += ("(", ")", "=", "*")
-  }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lazy val pE2: TAlg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
@@ -79,15 +75,14 @@ object FullUntyped {
         "(" ~> e <~ ")"
       ).reduce((a, b) => a ||| b)
     }
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = new Record.Parser[E, F]() {}.pE | pE2
+    lazy val pFullUntypedE: Alg[E] => (=> F) => PackratParser[E] = pRecordE | pE2
   }
 
 }
 
 trait FullUntypedParser[E, L <: {val pE : Util.PackratParser[E]}]
-  extends ArithParser[E, L] with UntypedParser[E, L] with FullUntyped.Lexer {
-  val pFullUntypedE = new FullUntyped.Parser[E, L]() {}
-  val pFullUntypedLNGE = pArithLNGE | pUntypedLNGE | pFullUntypedE.pE
+  extends ArithParser[E, L] with UntypedParser[E, L] with FullUntyped.Parser[E, L] {
+  val pFullUntypedLNGE = pArithLNGE | pUntypedLNGE | pFullUntypedE
 }
 
 trait FullUntypedAlg[E] extends ArithAlg[E] with UntypedAlg[E] with FullUntyped.Alg[E]

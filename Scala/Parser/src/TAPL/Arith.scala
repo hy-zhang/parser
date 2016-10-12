@@ -22,13 +22,11 @@ object Bool {
     def TmIf(e1: String, e2: String, e3: String) = "if (" + e1 + ") then (" + e2 + ") else (" + e3 + ")"
   }
 
-  trait Lexer {
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.reserved += ("true", "false", "if", "then", "else")
     lexical.delimiters += ("(", ")")
-  }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    lazy val pBoolE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
       List(
@@ -64,13 +62,11 @@ object Nat {
     def TmIsZero(e: String) = "iszero (" + e + ")"
   }
 
-  trait Lexer {
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.reserved += ("iszero", "succ", "pred")
     lexical.delimiters += ("(", ")")
-  }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    lazy val pNatE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
       def num(x: Int): E = x match {
@@ -90,8 +86,8 @@ object Nat {
 
 }
 
-trait ArithParser[E, L <: {val pE : Util.PackratParser[E]}] extends Bool.Lexer with Nat.Lexer {
-  val pArithLNGE = new Bool.Parser[E, L]() {}.pE | new Nat.Parser[E, L] {}.pE
+trait ArithParser[E, L <: {val pE : Util.PackratParser[E]}] extends Bool.Parser[E, L] with Nat.Parser[E, L] {
+  val pArithLNGE = pBoolE | pNatE
   // we cannot use pE, such a name has incompatible types when overridden. is there a solution?
 }
 

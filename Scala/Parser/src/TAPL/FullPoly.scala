@@ -17,13 +17,11 @@ object Pack {
     override def TmUnpack(tx: String, x: String, e1: String, e2: String): String = "let {" + tx + "," + x + "} = " + e1 + " in " + e2
   }
 
-  trait Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
     lexical.reserved += ("as", "let", "in")
     lexical.delimiters += (",", "{", "}", "*", "=")
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    lazy val pPackE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 
@@ -56,13 +54,11 @@ object Poly {
     override def TmTApp(e: String, t: String): String = e + " [" + t + "]"
   }
 
-  trait Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
     lexical.reserved += ("All", "Some")
     lexical.delimiters += (".", ",", "{", "}", "[", "]")
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    lazy val pPolyE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 
@@ -70,7 +66,7 @@ object Poly {
         e ~ ("[" ~> t <~ "]") ^^ { case ex ~ ty => alg.TmTApp(ex, ty) }
     }
 
-    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pPolyT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       "All" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyAll(x, ty) } |||
@@ -81,10 +77,9 @@ object Poly {
 }
 
 trait FullPolyParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Poly.Lexer with Pack.Lexer {
-  val pPolyET = new Poly.Parser[E, T, L]() {}
-  val pFullPolyLNGE = pFullSimpleLNGE | pPolyET.pE | new Pack.Parser[E, T, L]() {}.pE
-  val pFullPolyLNGT = pFullSimpleLNGT | pPolyET.pT
+  extends FullSimpleParser[E, T, L] with Poly.Parser[E, T, L] with Pack.Parser[E, T, L] {
+  val pFullPolyLNGE = pFullSimpleLNGE | pPolyE | pPackE
+  val pFullPolyLNGT = pFullSimpleLNGT | pPolyT
 }
 
 trait FullPolyAlg[E, T] extends FullSimpleAlg[E, T] with Poly.Alg[E, T] with Pack.Alg[E, T]

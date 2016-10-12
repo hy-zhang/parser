@@ -4,10 +4,9 @@ import Util._
 
 /* <9> */
 trait RcdSubBotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends BotParser[E, T, L] with TypedRecord.Lexer {
-  val pTypedRecordET = new TypedRecord.Parser[E, T, L]() {}
-  val pRcdSubBotLNGE = pBotLNGE | pTypedRecordET.pE
-  val pRcdSubBotLNGT = pBotLNGT | pTypedRecordET.pT
+  extends BotParser[E, T, L] with TypedRecord.Parser[E, T, L] {
+  val pRcdSubBotLNGE = pBotLNGE | pTypedRecordE
+  val pRcdSubBotLNGT = pBotLNGT | pTypedRecordT
 }
 
 trait RcdSubBotAlg[E, T] extends BotAlg[E, T] with TypedRecord.Alg[E, T]

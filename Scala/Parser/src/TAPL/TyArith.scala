@@ -15,14 +15,11 @@ object TypedNat {
     def TyNat() = "Nat"
   }
 
-  trait Lexer extends Nat.Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Nat.Parser[E, F] {
     lexical.reserved += "Nat"
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pNat = new Nat.Parser[E, F]() {}.pE
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = pNat
-    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pTypedNatE: Alg[E, T] => (=> F) => PackratParser[E] = pNatE
+    lazy val pTypedNatT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       "Nat" ^^ { _ => alg.TyNat() }
     }
   }
@@ -41,14 +38,11 @@ object TypedBool {
     def TyBool() = "Bool"
   }
 
-  trait Lexer extends Bool.Lexer {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Bool.Parser[E, F] {
     lexical.reserved += "Bool"
-  }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lazy val pBool = new Bool.Parser[E, F]() {}.pE
-    lazy val pE: Alg[E, T] => (=> F) => PackratParser[E] = pBool
-    lazy val pT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    lazy val pTypedBoolE: Alg[E, T] => (=> F) => PackratParser[E] = pBoolE
+    lazy val pTypedBoolT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       "Bool" ^^ { _ => alg.TyBool() }
     }
   }
@@ -56,11 +50,9 @@ object TypedBool {
 }
 
 trait TyArithParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends TypedBool.Lexer with TypedNat.Lexer {
-  val pTypedBoolET = new TypedBool.Parser[E, T, L]() {}
-  val pTypedNatET = new TypedNat.Parser[E, T, L]() {}
-  val pTyArithLNGE = pTypedBoolET.pE | pTypedNatET.pE
-  val pTyArithLNGT = pTypedBoolET.pT | pTypedNatET.pT
+  extends TypedBool.Parser[E, T, L] with TypedNat.Parser[E, T, L] {
+  val pTyArithLNGE = pTypedBoolE | pTypedNatE
+  val pTyArithLNGT = pTypedBoolT | pTypedNatT
 }
 
 trait TyArithAlg[E, T] extends TypedBool.Alg[E, T] with TypedNat.Alg[E, T]

@@ -17,28 +17,23 @@ object Error {
     def TmTry(e1: String, e2: String) = "try " + e1 + " with " + e2
   }
 
-  trait Lexer {
-    lexical.reserved += ("error", "try", "with")
-  }
-
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lazy val pE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    lexical.reserved += ("error", "try", "with")
+
+    lazy val pErrorE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
-      List(
-        "error" ^^ { _ => alg.TmError() },
+      "error" ^^ { _ => alg.TmError() } |||
         "try" ~> e ~ ("with" ~> e) ^^ { case e1 ~ e2 => alg.TmTry(e1, e2) }
-      ).reduce((a, b) => a ||| b)
     }
   }
 
 }
 
 trait FullErrorParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends BotParser[E, T, L] with TypedBool.Lexer with Error.Lexer {
-  val pTypedBoolET = new TypedBool.Parser[E, T, L]() {}
-  val pFullErrorLNGE = pBotLNGE | pTypedBoolET.pE | new Error.Parser[E, L]() {}.pE
-  val pFullErrorLNGT = pBotLNGT | pTypedBoolET.pT | new TypeVar.Parser[T, L]() {}.pT
+  extends BotParser[E, T, L] with TypedBool.Parser[E, T, L] with Error.Parser[E, L] with TypeVar.Parser[T, L] {
+  val pFullErrorLNGE = pBotLNGE | pTypedBoolE | pErrorE
+  val pFullErrorLNGT = pBotLNGT | pTypedBoolT | pTypeVarT
 }
 
 trait FullErrorAlg[E, T] extends BotAlg[E, T] with TypedBool.Alg[E, T] with Error.Alg[E] with TypeVar.Alg[T]
