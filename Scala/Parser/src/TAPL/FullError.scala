@@ -38,13 +38,13 @@ trait FullErrorParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.
   extends BotParser[E, T, L] with TypedBool.Lexer with Error.Lexer {
   val pTypedBoolET = new TypedBool.Parser[E, T, L]() {}
   val pFullErrorLNGE = pBotLNGE | pTypedBoolET.pE | new Error.Parser[E, L]() {}.pE
-  val pFullErrorLNGT = pBotLNGT | pTypedBoolET.pT
+  val pFullErrorLNGT = pBotLNGT | pTypedBoolET.pT | new TypeVar.Parser[T, L]() {}.pT
 }
 
-// todo: TyVar
-trait FullErrorAlg[E, T] extends BotAlg[E, T] with TypedBool.Alg[E, T] with Error.Alg[E]
+trait FullErrorAlg[E, T] extends BotAlg[E, T] with TypedBool.Alg[E, T] with Error.Alg[E] with TypeVar.Alg[T]
 
-trait FullErrorPrint extends FullErrorAlg[String, String] with BotPrint with TypedBool.Print with Error.Print
+trait FullErrorPrint extends FullErrorAlg[String, String]
+  with BotPrint with TypedBool.Print with Error.Print with TypeVar.Print
 
 object TestFullError {
 
@@ -67,7 +67,8 @@ object TestFullError {
     List(
       "\\x:Top.if error then (try x with true) else false",
       "error true",
-      "(\\x:Bool.x) error"
+      "(\\x:Bool.x) error",
+      "\\x:A.x"
     ).foreach(parseAndPrint)
   }
 }

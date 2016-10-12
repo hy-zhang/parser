@@ -31,7 +31,23 @@ object TypedRecord {
 
 }
 
-// todo: use TypedRecord
+object TypeVar {
+
+  trait Alg[T] {
+    def TyVar(x: String): T
+  }
+
+  trait Print extends Alg[String] {
+    def TyVar(x: String) = x
+  }
+
+  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+    lazy val pT: Alg[T] => (=> F) => PackratParser[T] = alg => l => ucid ^^ alg.TyVar
+  }
+
+}
+
+// todo: use TypedRecord and TypeVar
 object FullSimple {
 
   trait Alg[E, T] {
@@ -152,7 +168,9 @@ object TestFullSimple {
       "\\f:T. \\x:Nat. f (f x)",
       "<l=unit> as <l:Unit, r:Unit>",
       "\\a:Unit.fix (\\x:T.x)",
-      "case a of <phy=x> => x.first | <vir=y> => y.name"
+      "case a of <phy=x> => x.first | <vir=y> => y.name",
+      "succ (pred 0)",
+      "iszero (pred (succ (succ 0)))"
     ).foreach(parseAndPrint)
   }
 }
