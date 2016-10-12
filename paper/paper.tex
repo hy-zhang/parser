@@ -66,7 +66,7 @@ captionpos=none,                   % sets the caption-position to bottom
 breaklines=true,                % sets automatic line breaking
 breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
 title=\lstname,                 % show the filename of files included with \lstinputlisting; also try caption instead of title
-escapeinside={(*}{*)},          % if you want to add a comment within your code
+escapeinside={(**}{**)},          % if you want to add a comment within your code
 keywordstyle=\ttfamily\bfseries,
 % commentstyle=\color{Gray},
 % stringstyle=\color{Green}
@@ -180,7 +180,15 @@ Text.
 
 \input{sections/Overview.tex}
 
-\input{sections/Library.tex}
+\input{sections/Library/OpenRecursion.tex}
+\input{sections/Library/ObjectAlgebras.tex}
+\input{sections/Library/FirstTry.tex}
+\input{sections/Library/ParserCombinators.tex}
+\input{sections/Library/DifferentSyntax.tex}
+
+% more: two pretty-printers OldPretty and NewPretty, they are separated to show modularity.
+% subsection: modify the code using List[E] and type bounds.
+% more subsections: lexing, traits, operations, language composition (more extensibility)
 
 %...
 

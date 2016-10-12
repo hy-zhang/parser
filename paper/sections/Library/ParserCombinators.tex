@@ -1,0 +1,7 @@
+\subsection{Parser Combinators}\label{subsec:parsercombinators}
+
+Using Packrat parsers we obtain the access to a lot of library functions, including parser combinators. In the last subsection we introduced \lstinline{|} for alternation, which realizes delegation pattern in our parsing. Moreover, we have \lstinline{~} for sequential composition, \lstinline{rep} and \lstinline{repsep} for repetitions, \lstinline{chainl1} for left-associative grammars, and so on.
+
+Specifically, Scala parsers have a new combinator \lstinline{|||} also for alternative but with longest match composition. Consider the example in the last subsection, where we used \lstinline{pApp(p)} \lstinline{|} \lstinline{pVar(p)} for alternation. If \lstinline{pVar} is put in the front instead, the parser cannot even parse \lstinline{"x y"}, since the first case succeeds, which unexpectedly stops parsing and discards the rest. But \lstinline{|||} can successfully parse the whole input string. It implies that using \lstinline{|||} we no longer need to worry about the order of composition, which encourages its extensibility.
+
+On the other hand, practically parsers are defined as functions (as shown above), which means we do not apply \lstinline{|||} to them directly, but use \lstinline{|||} implement a new combinator for those functions. We will introduce it later in this paper. 

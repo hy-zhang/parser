@@ -1,0 +1,51 @@
+\subsection{First Try on Parsing}\label{sec:firsttry}
+
+Our story begins with a single parser that only parses a free variable (i.e., a string). In Scala we use the Packrat Parsing
+library, which supports lexing and direct left-recursion. To write such a parser, we need to import the library as
+well as defining the datatype for which it produces.
+
+\begin{lstlisting}
+object OpenRecursion extends StandardTokenParsers with PackratParsers {
+    class Expr
+    class Var(x : String) extends Expr
+    val pVar : PackratParser[Expr] = ident ^^ { x => new Var(x) }
+    ...
+}
+\end{lstlisting}
+Note that we are omitting lexing and demo code here. Furthermore, we would like the parser to support applications.
+Not only the implementation of that parser is needed, but also its corresponding datatype: (we omit the fact that the code for below few
+examples is written in the same object, namely \lstinline{OpenRecursion})
+\begin{lstlisting}
+class App(e1 : Expr, e2 : Expr) extends Expr
+val pApp : PackratParser[Expr] = pVar ~ pVar ^^ { case e1 ~ e2 => new App(e1, e2) }
+\end{lstlisting}
+Such a parser \lstinline{pApp} can only parse one-layer applications like \lstinline{"x y"}. Hence we revise it using recursion:
+\begin{lstlisting}
+val pApp : PackratParser[Expr] =
+    (pApp | pVar) ~ (pApp | pVar) ^^ { case e1 ~ e2 => new App(e1, e2) }
+\end{lstlisting}
+Now \lstinline{pApp} manages to parse an arbitrary number of applications like \lstinline{"x y z ..."} in a right-associative way.
+Nevertheless, such an approach does not turn out to be a modular extension. The grammar we want for an expression is actually:
+\begin{lstlisting}
+e ::= x | e ' ' e | ...
+\end{lstlisting}
+Note that such an \lstinline{"e"} in the second case should not only include all existing cases, but also take all future extensions into account (the ellipsis we used above, for instance, \lstinline{e '+'} \lstinline{e}). This inspires us to use \textit{open recursion}. To define \lstinline{pApp} in a different way, we add a parameter \lstinline{p} to it, representing the explicit ``self reference'' of our whole parser, which is open to future extensions. Note that \lstinline{p} should be defined as a by-name parameter using \lstinline{"=>"}.
+\begin{lstlisting}
+val pApp : (=> PackratParser[Expr]) => PackratParser[Expr] =
+    p => p ~ p ^^ { case e1 ~ e2 => new App(e1, e2) }
+\end{lstlisting}
+Similarly we redefine \lstinline{pVar} also as a function using the fixpoint \lstinline{p}. Furthermore, we combine \lstinline{pVar} and \lstinline{pApp} together using the parser combinator \lstinline{"|"} for alternative:
+ \begin{lstlisting}
+val pVar : (=> PackratParser[Expr]) => PackratParser[Expr] =
+    p => ident ^^ { x => new Var(x) }
+val pVarApp : (=> PackratParser[Expr]) => PackratParser[Expr] =
+    p => pApp(p) | pVar(p)
+\end{lstlisting}
+But what we really want is something that has type \lstinline{PackratParser[Expr]}. In functional programming, we can use ``fix'' to get the fixpoint of a function, in this case we write \lstinline{fix(pVarApp)}, which parses an arbitrary number of applications. Such a function can easily be defined
+in Scala based on its laziness:
+\begin{lstlisting}
+def fix[A](f : (=> A) => A) : A = { lazy val a : A = f(a); a }
+\end{lstlisting}
+That is the magic of open recursion: we can define as many small components as we like, and they are implemented as functions, with the help of explicit self-reference. Whenever we would like to close the recursion, simply use \lstinline{fix} for their combination. Such a process is guaranteed to terminate when we restrict the input for parsing to be finite, and we have some base cases like \lstinline{pVar}, which terminates recursion in their branches, in addition, with the help of direct left-recursion support from Packrat parsers.
+
+Another thing which catches our attention is that, small parsers are combined using the alternative combinator. It is a matter of delegation: parsing failing at any position will try its next alternative, and for each recursion all the parsers are tried successively until one of them succeeds. It reveals its essence as a recursive descent parser. But it is quite easy and modular to use; with further extensions, they can be implemented separately and then appended to the combination of old ones.
