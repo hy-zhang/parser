@@ -20,8 +20,8 @@ object Record {
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.delimiters += ("{", "}", ",", ".", "(", ")", "=")
 
-    lazy val pRecordE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pRecordE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       List(
         "{" ~> repsep(lcid ~ ("=" ~> e) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TmRecord,
@@ -65,8 +65,8 @@ object FullUntyped {
     lexical.reserved += ("let", "in")
     lexical.delimiters += ("(", ")", "=", "*")
 
-    lazy val pE2: TAlg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pE2: TAlg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       List(
         chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.TmTimesfloat(e1, e2) }),
@@ -75,7 +75,7 @@ object FullUntyped {
         "(" ~> e <~ ")"
       ).reduce((a, b) => a ||| b)
     }
-    lazy val pFullUntypedE: Alg[E] => (=> F) => PackratParser[E] = pRecordE | pE2
+    val pFullUntypedE: Alg[E] => (=> F) => PackratParser[E] = pRecordE | pE2
   }
 
 }

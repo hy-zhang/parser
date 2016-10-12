@@ -15,7 +15,7 @@ object Top {
   trait Parser[T, F <: {val pT : PackratParser[T]}] {
     lexical.reserved += "Top"
 
-    lazy val pTopT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+    val pTopT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
       "Top" ^^ { _ => alg.TyTop() }
     }
   }
@@ -35,8 +35,8 @@ object TopBot {
   trait Parser[T, F <: {val pT : PackratParser[T]}] extends Top.Parser[T, F] {
     lexical.reserved += "Bot"
 
-    lazy val pBotT: Alg[T] => (=> F) => PackratParser[T] = alg => l => "Bot" ^^ { _ => alg.TyBot() }
-    lazy val pTopBotT: Alg[T] => (=> F) => PackratParser[T] = pTopT | pBotT
+    val pBotT: Alg[T] => (=> F) => PackratParser[T] = alg => l => "Bot" ^^ { _ => alg.TyBot() }
+    val pTopBotT: Alg[T] => (=> F) => PackratParser[T] = pTopT | pBotT
   }
 
 }

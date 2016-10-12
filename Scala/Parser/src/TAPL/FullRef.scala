@@ -37,9 +37,9 @@ object Ref {
     lexical.reserved += ("ref", "Ref", "Source", "Sink")
     lexical.delimiters += ("!", ":=")
 
-    lazy val pRefE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    val pRefE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
 
       List(
         "ref" ~> e ^^ { e => alg.TmRef(e) },
@@ -48,8 +48,8 @@ object Ref {
       ).reduce((a, b) => a ||| b)
     }
 
-    lazy val pRefT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val pRefT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       List(
         "Ref" ~> t ^^ alg.TyRef,

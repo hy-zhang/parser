@@ -16,8 +16,8 @@ object TypedNat {
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Nat.Parser[E, F] {
     lexical.reserved += "Nat"
 
-    lazy val pTypedNatE: Alg[E, T] => (=> F) => PackratParser[E] = pNatE
-    lazy val pTypedNatT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    val pTypedNatE: Alg[E, T] => (=> F) => PackratParser[E] = pNatE
+    val pTypedNatT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       "Nat" ^^ { _ => alg.TyNat() }
     }
   }
@@ -37,8 +37,8 @@ object TypedBool {
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Bool.Parser[E, F] {
     lexical.reserved += "Bool"
 
-    lazy val pTypedBoolE: Alg[E, T] => (=> F) => PackratParser[E] = pBoolE
-    lazy val pTypedBoolT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    val pTypedBoolE: Alg[E, T] => (=> F) => PackratParser[E] = pBoolE
+    val pTypedBoolT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       "Bool" ^^ { _ => alg.TyBool() }
     }
   }

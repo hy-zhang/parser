@@ -16,8 +16,8 @@ object UntypedAbs {
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.delimiters += ("\\", ".", "(", ")")
 
-    lazy val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } ||| "(" ~> e <~ ")"
     }
@@ -42,8 +42,8 @@ object VarApp {
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.delimiters += ("(", ")")
 
-    lazy val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       List(
         ident ^^ alg.TmVar,

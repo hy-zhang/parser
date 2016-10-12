@@ -26,8 +26,8 @@ object Bool {
     lexical.reserved += ("true", "false", "if", "then", "else")
     lexical.delimiters += ("(", ")")
 
-    lazy val pBoolE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pBoolE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       List(
         "true" ^^ { _ => alg.TmTrue() },
@@ -66,8 +66,8 @@ object Nat {
     lexical.reserved += ("iszero", "succ", "pred")
     lexical.delimiters += ("(", ")")
 
-    lazy val pNatE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pNatE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       def num(x: Int): E = x match {
         case 0 => alg.TmZero()

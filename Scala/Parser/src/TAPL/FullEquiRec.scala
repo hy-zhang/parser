@@ -17,8 +17,8 @@ object RecType {
     lexical.reserved += "Rec"
     lexical.delimiters += "."
 
-    lazy val pRecTypeT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val pRecTypeT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       "Rec" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyRec(x, ty) }
     }

@@ -16,10 +16,10 @@ object TypedRecord {
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Record.Parser[E, F] {
     lexical.delimiters += (":", ",", "{", "}")
 
-    lazy val pTypedRecordE: Alg[E, T] => (=> F) => PackratParser[E] = pRecordE
+    val pTypedRecordE: Alg[E, T] => (=> F) => PackratParser[E] = pRecordE
 
-    lazy val pTypedRecordT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val pTypedRecordT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
     }
@@ -38,7 +38,7 @@ object TypeVar {
   }
 
   trait Parser[T, F <: {val pT : PackratParser[T]}] {
-    lazy val pTypeVarT: Alg[T] => (=> F) => PackratParser[T] = alg => l => ucid ^^ alg.TyVar
+    val pTypeVarT: Alg[T] => (=> F) => PackratParser[T] = alg => l => ucid ^^ alg.TyVar
   }
 
 }
@@ -94,9 +94,9 @@ object FullSimple {
     lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String", "Float")
     lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>", "{", "}")
 
-    lazy val pFullSimpleE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    val pFullSimpleE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
 
       "unit" ^^ { _ => alg.TmUnit() } |||
         e ~ ("as" ~> t) ^^ { case e0 ~ t0 => alg.TmAscribe(e0, t0) } |||
@@ -106,8 +106,8 @@ object FullSimple {
         "(" ~> e <~ ")"
     }
 
-    private lazy val pFullSimpleT2: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    private val pFullSimpleT2: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       "Unit" ^^ { _ => alg.TyUnit() } |||
         "String" ^^ { _ => alg.TyString() } |||
@@ -116,7 +116,7 @@ object FullSimple {
         "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
     }
 
-    lazy val pFullSimpleT: Alg[E, T] => (=> F) => PackratParser[T] = pFullSimpleT2 | pTypeVarT
+    val pFullSimpleT: Alg[E, T] => (=> F) => PackratParser[T] = pFullSimpleT2 | pTypeVarT
   }
 
 }

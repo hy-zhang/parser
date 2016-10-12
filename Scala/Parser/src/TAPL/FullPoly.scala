@@ -21,9 +21,9 @@ object Pack {
     lexical.reserved += ("as", "let", "in")
     lexical.delimiters += (",", "{", "}", "*", "=")
 
-    lazy val pPackE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    val pPackE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
 
       ("{" ~> "*" ~> t ~ ("," ~> e) <~ "}") ~ ("as" ~> t) ^^ { case t1 ~ ex ~ t2 => alg.TmPack(t1, ex, t2) } |||
         "let" ~> ("{" ~> ucid ~ ("," ~> lcid) <~ "}") ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case tx ~ x ~ e1 ~ e2 => alg.TmUnpack(tx, x, e1, e2) }
@@ -58,16 +58,16 @@ object Poly {
     lexical.reserved += ("All", "Some")
     lexical.delimiters += (".", ",", "{", "}", "[", "]")
 
-    lazy val pPolyE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    val pPolyE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
 
       "\\" ~> ucid ~ ("." ~> e) ^^ { case x ~ ex => alg.TmTAbs(x, ex) } |||
         e ~ ("[" ~> t <~ "]") ^^ { case ex ~ ty => alg.TmTApp(ex, ty) }
     }
 
-    lazy val pPolyT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val pPolyT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       "All" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyAll(x, ty) } |||
         ("{" ~> "Some" ~> ucid ~ ("," ~> t) <~ "}") ^^ { case x ~ ty => alg.TySome(x, ty) }

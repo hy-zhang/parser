@@ -20,17 +20,17 @@ object Typed {
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends VarApp.Parser[E, F] {
     lexical.delimiters += ("\\", ".", "(", ")", ":", "->")
 
-    private lazy val pAbsArrE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    private val pAbsArrE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
 
       ("\\" ~> lcid) ~ (":" ~> t) ~ ("." ~> e) ^^ { case x ~ t0 ~ e0 => alg.TmAbs(x, t0, e0) } ||| "(" ~> e <~ ")"
     }
 
-    lazy val pTypedE: Alg[E, T] => (=> F) => PackratParser[E] = pVarAppE | pAbsArrE
+    val pTypedE: Alg[E, T] => (=> F) => PackratParser[E] = pVarAppE | pAbsArrE
 
-    lazy val pTypedT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val pTypedT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.TyArr(t1, t2) } ||| "(" ~> t <~ ")"
     }
