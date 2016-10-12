@@ -5,11 +5,9 @@ import Util._
 /* <4> */
 object TypedNat {
 
-  trait NatTypeAlg[T] {
+  trait Alg[E, T] extends Nat.Alg[E] {
     def TyNat(): T
   }
-
-  trait Alg[E, T] extends Nat.Alg[E] with NatTypeAlg[T]
 
   trait Print extends Alg[String, String] with Nat.Print {
     def TyNat() = "Nat"
@@ -28,11 +26,9 @@ object TypedNat {
 
 object TypedBool {
 
-  trait BoolTypeAlg[T] {
+  trait Alg[E, T] extends Bool.Alg[E] {
     def TyBool(): T
   }
-
-  trait Alg[E, T] extends Bool.Alg[E] with BoolTypeAlg[T]
 
   trait Print extends Alg[String, String] with Bool.Print {
     def TyBool() = "Bool"

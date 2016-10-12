@@ -5,13 +5,11 @@ import Util._
 /* <5> */
 object Typed {
 
-  trait AbsArrAlg[E, T] {
+  trait Alg[E, T] extends VarApp.Alg[E] {
     def TmAbs(x: String, t: T, e: E): E
 
     def TyArr(t1: T, t2: T): T
   }
-
-  trait Alg[E, T] extends VarApp.Alg[E] with AbsArrAlg[E, T]
 
   trait Print extends Alg[String, String] with VarApp.Print {
     def TmAbs(x: String, t: String, e: String) = "\\(" + x + ":" + t + ")." + e
@@ -22,7 +20,7 @@ object Typed {
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends VarApp.Parser[E, F] {
     lexical.delimiters += ("\\", ".", "(", ")", ":", "->")
 
-    private lazy val pAbsArrE: AbsArrAlg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    private lazy val pAbsArrE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 

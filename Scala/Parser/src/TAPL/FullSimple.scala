@@ -5,11 +5,9 @@ import Util._
 /* <6> */
 object TypedRecord {
 
-  trait TAlg[T] {
+  trait Alg[E, T] extends Record.Alg[E] {
     def TyRecord(l: List[(String, T)]): T
   }
-
-  trait Alg[E, T] extends Record.Alg[E] with TAlg[T]
 
   trait Print extends Alg[String, String] with Record.Print {
     def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
