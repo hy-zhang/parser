@@ -33,7 +33,7 @@ object Record {
 
 }
 
-object FullUntyped {
+object FullUntypedExt {
 
   trait TAlg[E] {
     def TmFloat(d: Double): E
@@ -75,19 +75,23 @@ object FullUntyped {
         "(" ~> e <~ ")"
       ).reduce((a, b) => a ||| b)
     }
-    val pFullUntypedE: Alg[E] => (=> F) => PackratParser[E] = pRecordE | pE2
+    val pFullUntypedExtE: Alg[E] => (=> F) => PackratParser[E] = pRecordE | pE2
   }
 
 }
 
-trait FullUntypedParser[E, L <: {val pE : Util.PackratParser[E]}]
-  extends ArithParser[E, L] with UntypedParser[E, L] with FullUntyped.Parser[E, L] {
-  val pFullUntypedLNGE = pArithLNGE | pUntypedLNGE | pFullUntypedE
+object FullUntyped {
+
+  trait Alg[E] extends Arith.Alg[E] with Untyped.Alg[E] with FullUntypedExt.Alg[E]
+
+  trait Print extends Alg[String] with Arith.Print with Untyped.Print with FullUntypedExt.Print
+
+  trait Parser[E, L <: {val pE : Util.PackratParser[E]}]
+    extends Arith.Parser[E, L] with Untyped.Parser[E, L] with FullUntypedExt.Parser[E, L] {
+    val pFullUntypedE = pArithE | pUntypedE | pFullUntypedExtE
+  }
+
 }
-
-trait FullUntypedAlg[E] extends ArithAlg[E] with UntypedAlg[E] with FullUntyped.Alg[E]
-
-trait FullUntypedPrint extends FullUntypedAlg[String] with ArithPrint with UntypedPrint with FullUntyped.Print
 
 object TestFullUntyped {
 
@@ -95,15 +99,15 @@ object TestFullUntyped {
     val pE = pe
   }
 
-  def parse[E](inp: String)(alg: FullUntypedAlg[E]) = {
+  def parse[E](inp: String)(alg: FullUntyped.Alg[E]) = {
     def parser(l: => List[E]): List[E] = {
-      val lang = new FullUntypedParser[E, List[E]] {}
-      new List[E](lang.pFullUntypedLNGE(alg)(l))
+      val lang = new FullUntyped.Parser[E, List[E]] {}
+      new List[E](lang.pFullUntypedE(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullUntypedPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullUntyped.Print {})
 
   def main(args: Array[String]) = {
     List(

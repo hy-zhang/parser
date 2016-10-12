@@ -38,16 +38,19 @@ object Typed {
 
 }
 
-trait SimpleBoolParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends Typed.Parser[E, T, L] with TypedBool.Parser[E, T, L] {
-  val pSimpleBoolLNGE = pTypedE | pTypedBoolE
-  val pSimpleBoolLNGT = pTypedT | pTypedBoolT
+object SimpleBool {
+
+  trait Alg[E, T] extends Typed.Alg[E, T] with TypedBool.Alg[E, T]
+
+  trait Print extends Alg[String, String] with Typed.Print with TypedBool.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends Typed.Parser[E, T, L] with TypedBool.Parser[E, T, L] {
+    val pSimpleBoolE = pTypedE | pTypedBoolE
+    val pSimpleBoolT = pTypedT | pTypedBoolT
+  }
+
 }
-
-trait SimpleBoolAlg[E, T] extends Typed.Alg[E, T] with TypedBool.Alg[E, T]
-
-trait SimpleBoolPrint extends SimpleBoolAlg[String, String]
-  with Typed.Print with TypedBool.Print
 
 object TestSimpleBool {
 
@@ -56,15 +59,15 @@ object TestSimpleBool {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: SimpleBoolAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: SimpleBool.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new SimpleBoolParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pSimpleBoolLNGE(alg)(l), lang.pSimpleBoolLNGT(alg)(l))
+      val lang = new SimpleBool.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pSimpleBoolE(alg)(l), lang.pSimpleBoolT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new SimpleBoolPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new SimpleBool.Print {})
 
   def main(args: Array[String]) = {
     List(

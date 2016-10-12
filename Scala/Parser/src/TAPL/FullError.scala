@@ -30,16 +30,20 @@ object Error {
 
 }
 
-trait FullErrorParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends BotParser[E, T, L] with TypedBool.Parser[E, T, L] with Error.Parser[E, L] with TypeVar.Parser[T, L] {
-  val pFullErrorLNGE = pBotLNGE | pTypedBoolE | pErrorE
-  val pFullErrorLNGT = pBotLNGT | pTypedBoolT | pTypeVarT
+object FullError {
+
+  trait Alg[E, T] extends Bot.Alg[E, T] with TypedBool.Alg[E, T] with Error.Alg[E] with TypeVar.Alg[T]
+
+  trait Print extends Alg[String, String]
+    with Bot.Print with TypedBool.Print with Error.Print with TypeVar.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends Bot.Parser[E, T, L] with TypedBool.Parser[E, T, L] with Error.Parser[E, L] with TypeVar.Parser[T, L] {
+    val pFullErrorE = pBotE | pTypedBoolE | pErrorE
+    val pFullErrorT = pBotT | pTypedBoolT | pTypeVarT
+  }
+
 }
-
-trait FullErrorAlg[E, T] extends BotAlg[E, T] with TypedBool.Alg[E, T] with Error.Alg[E] with TypeVar.Alg[T]
-
-trait FullErrorPrint extends FullErrorAlg[String, String]
-  with BotPrint with TypedBool.Print with Error.Print with TypeVar.Print
 
 object TestFullError {
 
@@ -48,15 +52,15 @@ object TestFullError {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: FullErrorAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: FullError.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullErrorParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullErrorLNGE(alg)(l), lang.pFullErrorLNGT(alg)(l))
+      val lang = new FullError.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullErrorE(alg)(l), lang.pFullErrorT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullErrorPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullError.Print {})
 
   def main(args: Array[String]) = {
     List(

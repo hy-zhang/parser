@@ -76,15 +76,19 @@ object Poly {
 
 }
 
-trait FullPolyParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Poly.Parser[E, T, L] with Pack.Parser[E, T, L] {
-  val pFullPolyLNGE = pFullSimpleLNGE | pPolyE | pPackE
-  val pFullPolyLNGT = pFullSimpleLNGT | pPolyT
+object FullPoly {
+
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with Poly.Alg[E, T] with Pack.Alg[E, T]
+
+  trait Print extends Alg[String, String] with FullSimple.Print with Poly.Print with Pack.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends FullSimple.Parser[E, T, L] with Poly.Parser[E, T, L] with Pack.Parser[E, T, L] {
+    val pFullPolyE = pFullSimpleE | pPolyE | pPackE
+    val pFullPolyT = pFullSimpleT | pPolyT
+  }
+
 }
-
-trait FullPolyAlg[E, T] extends FullSimpleAlg[E, T] with Poly.Alg[E, T] with Pack.Alg[E, T]
-
-trait FullPolyPrint extends FullPolyAlg[String, String] with FullSimplePrint with Poly.Print with Pack.Print
 
 object TestFullPoly {
 
@@ -93,15 +97,15 @@ object TestFullPoly {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: FullPolyAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: FullPoly.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullPolyParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullPolyLNGE(alg)(l), lang.pFullPolyLNGT(alg)(l))
+      val lang = new FullPoly.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullPolyE(alg)(l), lang.pFullPolyT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullPolyPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullPoly.Print {})
 
   def main(args: Array[String]) = {
     List(

@@ -2,15 +2,19 @@ package TAPL
 
 import Util._
 
-trait FullSubParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Top.Parser[T, L] {
-  val pFullSubLNGE = pFullSimpleLNGE
-  val pFullSubLNGT = pFullSimpleLNGT | pTopT
+object FullSub {
+
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with Top.Alg[T]
+
+  trait Print extends Alg[String, String] with FullSimple.Print with Top.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends FullSimple.Parser[E, T, L] with Top.Parser[T, L] {
+    val pFullSubE = pFullSimpleE
+    val pFullSubT = pFullSimpleT | pTopT
+  }
+
 }
-
-trait FullSubAlg[E, T] extends FullSimpleAlg[E, T] with Top.Alg[T]
-
-trait FullSubPrint extends FullSubAlg[String, String] with FullSimplePrint with Top.Print
 
 object TestFullSub {
 
@@ -19,15 +23,15 @@ object TestFullSub {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: FullSubAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: FullSub.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullSubParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullSubLNGE(alg)(l), lang.pFullSubLNGT(alg)(l))
+      val lang = new FullSub.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullSubE(alg)(l), lang.pFullSubT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullSubPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullSub.Print {})
 
   def main(args: Array[String]) = {
     List(

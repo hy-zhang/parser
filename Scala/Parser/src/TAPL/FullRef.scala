@@ -62,15 +62,19 @@ object Ref {
 
 }
 
-trait FullRefParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] {
-  val pFullRefLNGE = pFullSimpleLNGE | pRefE
-  val pFullRefLNGT = pFullSimpleLNGT | pRefT | pTopBotT
+object FullRef {
+
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T]
+
+  trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] {
+    val pFullRefE = pFullSimpleE | pRefE
+    val pFullRefT = pFullSimpleT | pRefT | pTopBotT
+  }
+
 }
-
-trait FullRefAlg[E, T] extends FullSimpleAlg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T]
-
-trait FullRefPrint extends FullRefAlg[String, String] with FullSimplePrint with TopBot.Print with Ref.Print
 
 object TestFullRef {
 
@@ -79,15 +83,15 @@ object TestFullRef {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: FullRefAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: FullRef.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullRefParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullRefLNGE(alg)(l), lang.pFullRefLNGT(alg)(l))
+      val lang = new FullRef.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullRefE(alg)(l), lang.pFullRefT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullRefPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullRef.Print {})
 
   def main(args: Array[String]) = {
     List(
