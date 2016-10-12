@@ -46,7 +46,7 @@ object TypeVar {
 // todo: use TypedRecord and TypeVar
 object FullSimple {
 
-  trait Alg[E, T] {
+  trait Alg[E, T] extends TypeVar.Alg[T] {
     def TmUnit(): E
 
     def TmAscribe(e: E, t: T): E
@@ -61,8 +61,6 @@ object FullSimple {
 
     def TyString(): T
 
-    def TyVar(x: String): T
-
     def TyVariant(l: List[(String, T)]): T
 
     def TyFloat(): T
@@ -70,7 +68,7 @@ object FullSimple {
     def TyRecord(l: List[(String, T)]): T
   }
 
-  trait Print extends Alg[String, String] {
+  trait Print extends Alg[String, String] with TypeVar.Print {
     def TmUnit() = "unit"
 
     def TmAscribe(e: String, t: String) = "(" + e + ") as " + t
@@ -85,8 +83,6 @@ object FullSimple {
 
     def TyString() = "String"
 
-    def TyVar(x: String) = x
-
     def TyVariant(l: List[(String, String)]) = "<" + l.map(x => x._1 + ":" + x._2).reduce((x, y) => x + ", " + y) + ">"
 
     def TyFloat() = "Float"
@@ -94,7 +90,7 @@ object FullSimple {
     def TyRecord(l: List[(String, String)]) = "{" + l.map(x => x._1 + ": " + x._2).reduce((x, y) => x + ", " + y) + "}"
   }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends TypeVar.Parser[T, F] {
     lexical.reserved += ("unit", "Unit", "as", "fix", "case", "of", "String", "Float")
     lexical.delimiters += ("(", ")", "<", ">", "=", ":", ",", "|", "=>", "{", "}")
 
@@ -110,16 +106,17 @@ object FullSimple {
         "(" ~> e <~ ")"
     }
 
-    lazy val pFullSimpleT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    private lazy val pFullSimpleT2: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       lazy val t = l.pT
 
       "Unit" ^^ { _ => alg.TyUnit() } |||
         "String" ^^ { _ => alg.TyString() } |||
         "Float" ^^ { _ => alg.TyFloat() } |||
-        ucid ^^ alg.TyVar |||
         "<" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ t0 => (x, t0) }, ",") <~ ">" ^^ alg.TyVariant |||
         "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
     }
+
+    lazy val pFullSimpleT: Alg[E, T] => (=> F) => PackratParser[T] = pFullSimpleT2 | pTypeVarT
   }
 
 }
