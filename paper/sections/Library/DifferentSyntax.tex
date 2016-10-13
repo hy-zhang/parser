@@ -1,6 +1,6 @@
 \subsection{Object Algebras for Different Syntax}\label{subsec:differentsyntax}
 
-Such extensibility becomes fragile when it comes to grammars with different syntax. Now suppose we would like to have types in the grammar. Firstly the new grammar is shown below, where the \lstinline{Int} type and lambda expressions with annotation have been added:
+Such extensibility becomes fragile when it comes to grammars with different syntax. Now suppose we would like to have types in the grammar. Firstly the new grammar is shown below, where the \lstinline{IntT} type and lambda expressions with annotation have been added:
 \begin{lstlisting}
 e ::= x | e ' ' e | \x:t.e
 t ::= "Int"
@@ -10,9 +10,9 @@ We proceed to implement those parsers. An issue is that we need both a \lstinlin
 Hence we use a pair in the parameter:
 \begin{lstlisting}
 class Type
-class Int extends Type
+class IntT extends Type
 val pInt : (=> (PackratParser[Expr], PackratParser[Type])) => PackratParser[Type] =
-    p => "Int" ^^ { _ => new Int() }
+    p => "Int" ^^ { _ => new IntT() }
 
 class Lam(x : String, t : Type, e : Expr) extends Expr
 val pLam : (=> (PackratParser[Expr], PackratParser[Type])) => PackratParser[Expr] =

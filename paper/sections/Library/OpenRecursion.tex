@@ -12,11 +12,11 @@ then present how they are integrated in our library.
 Starting from simple examples, a series of extensions and refactorings will be applied to illustrate
 how we achieve modularity in a type-safe way.
 
-\subsection{Open Recursion and Delegation}\label{sec:openrecursion}
+\subsection{Open Recursion and Delegation}\label{subsec:openrecursion}
 
-Open recursion is known as a useful feature that one method body can ``invoke another method of the same object via a special variable called \lstinline{self} or, in some languages, \lstinline[keywords={}]{this}'' (by Ralf Hinze). The interesting thing is that such a variable \lstinline{self} is late-bound, or open to the recursion, which means it can integrate some additional features defined later, whereas the method that takes \lstinline{self} as a parameter can simply delegate its known cases to it.
+Open recursion is known as a useful feature that one method body can ``invoke another method of the same object via a special variable called \lstinline{self} or, in some languages, \lstinline[keywords={}]{this}'' (by Ralf Hinze). The interesting thing is that such a variable \lstinline{self} is late-bound, or open to the recursion, which means it can integrate some additional features defined later, whereas the method that takes \lstinline{self} as a parameter can simply delegate the known cases to it.
 
-For sure we cannot always leave it open; upon using it we have to close the recursion, and at that time we need to take a fix-point. Here one might suddenly be reminded of the \lstinline{fix} function in some functional languages like Haskell. Below is the famous Fibonacci example:
+For sure we cannot always leave it open; upon using it we have to close the recursion, at which time we need to take a fix-point. Here one might suddenly be reminded of the \lstinline{fix} function in some functional languages like Haskell. Below is the famous Fibonacci example:
 \begin{lstlisting}[language=Haskell,keywords={}]
 fib :: Int -> Int
 fib 0 = 0
@@ -67,7 +67,7 @@ def fix[A](f : (=> A) => A) : A = {
     a
 }
 \end{lstlisting}
-Next we define the general combinator \lstinline{merge} for open recursion. It is similar to the \lstinline{(*)} above, but instead of putting two values in a pair by default, \lstinline{merge} takes a parameter called \lstinline{op}, which tells the associative operation of two results.
+Next we define the general combinator \lstinline{merge} for open recursion. It is similar to the \lstinline{(*)} above, but instead of putting two values in a pair by default, \lstinline{merge} takes a parameter called \lstinline{op}, which tells the associative operation of two results. The definition is straightforward:
 \begin{lstlisting}
 def merge[E, F, G, H[_,_]](op : F => G => H[F, G], x : (=> E) => F, y : (=> E) => G) : (=> E) => H[F, G] = e => op(x(e))(y(e))
 \end{lstlisting}
