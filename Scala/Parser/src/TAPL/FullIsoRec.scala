@@ -21,9 +21,9 @@ object Fold {
     lexical.reserved += ("fold", "unfold")
     lexical.delimiters += ("[", "]")
 
-    lazy val pFoldE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    val pFoldE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
 
       List(
         "fold" ~> ("[" ~> t <~ "]") ~ e ^^ { case ty ~ ex => alg.TmFold(ex, ty) },
@@ -34,15 +34,19 @@ object Fold {
 
 }
 
-trait FullIsoRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with Fold.Parser[E, T, L] with RecType.Parser[T, L] {
-  val pFullIsoRecLNGE = pFullSimpleLNGE | pFoldE
-  val pFullIsoRecLNGT = pFullSimpleLNGT | pRecTypeT
+object FullIsoRec {
+
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with Fold.Alg[E, T] with RecType.Alg[T]
+
+  trait Print extends Alg[String, String] with FullSimple.Print with Fold.Print with RecType.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends FullSimple.Parser[E, T, L] with Fold.Parser[E, T, L] with RecType.Parser[T, L] {
+    val pFullIsoRecE = pFullSimpleE | pFoldE
+    val pFullIsoRecT = pFullSimpleT | pRecTypeT
+  }
+
 }
-
-trait FullIsoRecAlg[E, T] extends FullSimpleAlg[E, T] with Fold.Alg[E, T] with RecType.Alg[T]
-
-trait FullIsoRecPrint extends FullIsoRecAlg[String, String] with FullSimplePrint with Fold.Print with RecType.Print
 
 object TestFullIsoRec {
 
@@ -53,15 +57,15 @@ object TestFullIsoRec {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: FullIsoRecAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: FullIsoRec.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullIsoRecParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullIsoRecLNGE(alg)(l), lang.pFullIsoRecLNGT(alg)(l))
+      val lang = new FullIsoRec.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullIsoRecE(alg)(l), lang.pFullIsoRecT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullIsoRecPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullIsoRec.Print {})
 
   def main(args: Array[String]) = {
     List(

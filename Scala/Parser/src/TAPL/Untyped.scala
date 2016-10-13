@@ -16,8 +16,8 @@ object UntypedAbs {
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.delimiters += ("\\", ".", "(", ")")
 
-    lazy val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } ||| "(" ~> e <~ ")"
     }
@@ -42,8 +42,8 @@ object VarApp {
   trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.delimiters += ("(", ")")
 
-    lazy val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       List(
         ident ^^ alg.TmVar,
@@ -55,14 +55,18 @@ object VarApp {
 
 }
 
-trait UntypedParser[E, L <: {val pE : Util.PackratParser[E]}]
-  extends UntypedAbs.Parser[E, L] with VarApp.Parser[E, L] {
-  val pUntypedLNGE = pUntypedAbsE | pVarAppE
+object Untyped {
+
+  trait Alg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]
+
+  trait Print extends Alg[String] with UntypedAbs.Print with VarApp.Print
+
+  trait Parser[E, L <: {val pE : Util.PackratParser[E]}]
+    extends UntypedAbs.Parser[E, L] with VarApp.Parser[E, L] {
+    val pUntypedE = pUntypedAbsE | pVarAppE
+  }
+
 }
-
-trait UntypedAlg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]
-
-trait UntypedPrint extends UntypedAlg[String] with UntypedAbs.Print with VarApp.Print
 
 object TestUntyped {
 
@@ -70,15 +74,15 @@ object TestUntyped {
     val pE = pe
   }
 
-  def parse[E](inp: String)(alg: UntypedAlg[E]) = {
+  def parse[E](inp: String)(alg: Untyped.Alg[E]) = {
     def parser(l: => List[E]): List[E] = {
-      val lang = new UntypedParser[E, List[E]] {}
-      new List[E](lang.pUntypedLNGE(alg)(l))
+      val lang = new Untyped.Parser[E, List[E]] {}
+      new List[E](lang.pUntypedE(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new UntypedPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new Untyped.Print {})
 
   def main(args: Array[String]) = {
     List(

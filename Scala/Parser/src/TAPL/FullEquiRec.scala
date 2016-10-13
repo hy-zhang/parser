@@ -17,8 +17,8 @@ object RecType {
     lexical.reserved += "Rec"
     lexical.delimiters += "."
 
-    lazy val pRecTypeT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val pRecTypeT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
 
       "Rec" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyRec(x, ty) }
     }
@@ -26,15 +26,19 @@ object RecType {
 
 }
 
-trait FullEquiRecParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends FullSimpleParser[E, T, L] with RecType.Parser[T, L] {
-  val pFullEquiRecLNGE = pFullSimpleLNGE
-  val pFullEquiRecLNGT = pFullSimpleLNGT | pRecTypeT
+object FullEquiRec {
+
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with RecType.Alg[T]
+
+  trait Print extends Alg[String, String] with FullSimple.Print with RecType.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends FullSimple.Parser[E, T, L] with RecType.Parser[T, L] {
+    val pFullEquiRecE = pFullSimpleE
+    val pFullEquiRecT = pFullSimpleT | pRecTypeT
+  }
+
 }
-
-trait FullEquiRecAlg[E, T] extends FullSimpleAlg[E, T] with RecType.Alg[T]
-
-trait FullEquiRecPrint extends FullEquiRecAlg[String, String] with FullSimplePrint with RecType.Print
 
 object TestFullEquiRec {
 
@@ -43,15 +47,15 @@ object TestFullEquiRec {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: FullEquiRecAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: FullEquiRec.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullEquiRecParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullEquiRecLNGE(alg)(l), lang.pFullEquiRecLNGT(alg)(l))
+      val lang = new FullEquiRec.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullEquiRecE(alg)(l), lang.pFullEquiRecT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullEquiRecPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new FullEquiRec.Print {})
 
   def main(args: Array[String]) = {
     List(

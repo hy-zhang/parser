@@ -15,7 +15,7 @@ object Top {
   trait Parser[T, F <: {val pT : PackratParser[T]}] {
     lexical.reserved += "Top"
 
-    lazy val pTopT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+    val pTopT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
       "Top" ^^ { _ => alg.TyTop() }
     }
   }
@@ -35,21 +35,25 @@ object TopBot {
   trait Parser[T, F <: {val pT : PackratParser[T]}] extends Top.Parser[T, F] {
     lexical.reserved += "Bot"
 
-    lazy val pBotT: Alg[T] => (=> F) => PackratParser[T] = alg => l => "Bot" ^^ { _ => alg.TyBot() }
-    lazy val pTopBotT: Alg[T] => (=> F) => PackratParser[T] = pTopT | pBotT
+    private val pBotT: Alg[T] => (=> F) => PackratParser[T] = alg => l => "Bot" ^^ { _ => alg.TyBot() }
+    val pTopBotT: Alg[T] => (=> F) => PackratParser[T] = pTopT | pBotT
   }
 
 }
 
-trait BotParser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-  extends Typed.Parser[E, T, L] with TopBot.Parser[T, L] {
-  val pBotLNGE = pTypedE
-  val pBotLNGT = pTypedT | pTopBotT
+object Bot {
+
+  trait Alg[E, T] extends Typed.Alg[E, T] with TopBot.Alg[T]
+
+  trait Print extends Alg[String, String] with Typed.Print with TopBot.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends Typed.Parser[E, T, L] with TopBot.Parser[T, L] {
+    val pBotE = pTypedE
+    val pBotT = pTypedT | pTopBotT
+  }
+
 }
-
-trait BotAlg[E, T] extends Typed.Alg[E, T] with TopBot.Alg[T]
-
-trait BotPrint extends BotAlg[String, String] with Typed.Print with TopBot.Print
 
 object TestBot {
 
@@ -58,15 +62,15 @@ object TestBot {
     val pT = pt
   }
 
-  def parse[E, T](inp: String)(alg: BotAlg[E, T]) = {
+  def parse[E, T](inp: String)(alg: Bot.Alg[E, T]) = {
     def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new BotParser[E, T, List[E, T]] {}
-      new List[E, T](lang.pBotLNGE(alg)(l), lang.pBotLNGT(alg)(l))
+      val lang = new Bot.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pBotE(alg)(l), lang.pBotT(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new BotPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new Bot.Print {})
 
   def main(args: Array[String]) = {
     List(

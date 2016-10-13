@@ -26,8 +26,8 @@ object Bool {
     lexical.reserved += ("true", "false", "if", "then", "else")
     lexical.delimiters += ("(", ")")
 
-    lazy val pBoolE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pBoolE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       List(
         "true" ^^ { _ => alg.TmTrue() },
@@ -66,8 +66,8 @@ object Nat {
     lexical.reserved += ("iszero", "succ", "pred")
     lexical.delimiters += ("(", ")")
 
-    lazy val pNatE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val pNatE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
 
       def num(x: Int): E = x match {
         case 0 => alg.TmZero()
@@ -86,14 +86,18 @@ object Nat {
 
 }
 
-trait ArithParser[E, L <: {val pE : Util.PackratParser[E]}] extends Bool.Parser[E, L] with Nat.Parser[E, L] {
-  val pArithLNGE = pBoolE | pNatE
-  // we cannot use pE, such a name has incompatible types when overridden. is there a solution?
+object Arith {
+
+  trait Alg[E] extends Bool.Alg[E] with Nat.Alg[E]
+
+  trait Print extends Alg[String] with Bool.Print with Nat.Print
+
+  trait Parser[E, L <: {val pE : Util.PackratParser[E]}] extends Bool.Parser[E, L] with Nat.Parser[E, L] {
+    val pArithE = pBoolE | pNatE
+    // we cannot use pE, such a name has incompatible types when overridden. is there a solution?
+  }
+
 }
-
-trait ArithAlg[E] extends Bool.Alg[E] with Nat.Alg[E]
-
-trait ArithPrint extends ArithAlg[String] with Bool.Print with Nat.Print
 
 object TestArith {
 
@@ -101,15 +105,15 @@ object TestArith {
     val pE = pe
   }
 
-  def parse[E](inp: String)(alg: ArithAlg[E]) = {
+  def parse[E](inp: String)(alg: Arith.Alg[E]) = {
     def parser(l: => List[E]): List[E] = {
-      val lang = new ArithParser[E, List[E]] {}
-      new List[E](lang.pArithLNGE(alg)(l))
+      val lang = new Arith.Parser[E, List[E]] {}
+      new List[E](lang.pArithE(alg)(l))
     }
     runParser(fix(parser).pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new ArithPrint {})
+  def parseAndPrint(inp: String) = parse(inp)(new Arith.Print {})
 
   def main(args: Array[String]) = {
     List(
