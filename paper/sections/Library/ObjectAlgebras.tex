@@ -58,7 +58,7 @@ results in \lstinline{1}, as the result of evaluation. Now we observe that an ``
 has the function type \lstinline{SubAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
 that it is illusory compared to traditional objects, and since we are struggling against the parsing problem, if a parser
 produces structures as functions, it could be hardly be further processed like objects, especially, in the design of a compiler
-there will be a lot of desugarings (or transformations). However, we argue that this is not a case, because functions can be used
+there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
 in a very clever way. For example, if one wants to refactor an \lstinline{ExpAlg} expression to a \lstinline{SubAlg} expression by
 replacing all negative numbers with subtraction, a transformation algebra can be implemented as follows:
 \begin{lstlisting}
@@ -70,4 +70,4 @@ trait Refactor[E] extends ExpAlg[E] {
 \end{lstlisting}
 With \lstinline{Refactor}, the expression \lstinline{"1 + (-2)"} is refactored to \lstinline{"1 + (0 - 2)"}. The abstract method
 \lstinline{alg} in \lstinline{Refactor} can be any algebra of \lstinline{SubAlg}, simply for delegation. By passing a concrete implementation
-to \lstinline{alg}, \lstinline{Refactor} will be able to apply refactoring to an \lstinline{ExpAlg} expression.
+to \lstinline{alg}, \lstinline{Refactor} will be able to apply refactoring to an \lstinline{ExpAlg} expression before \lstinline{alg} returns the result.

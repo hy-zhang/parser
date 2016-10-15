@@ -9,12 +9,12 @@
 In this section, we will further look into the mechanism behind our modular parsing library.
 We will first introduce some concepts independently from the process of parsing, including open recursion and Object Algebras,
 then present how they are integrated in our library.
-Starting from simple examples, a series of extensions and refactorings will be applied to illustrate
+Starting from simple examples, a series of extensions and refactoring will be applied to illustrate
 how we achieve modularity in a type-safe way.
 
 \subsection{Open Recursion and Delegation}\label{subsec:openrecursion}
 
-Open recursion is known as a useful feature that one method body can ``invoke another method of the same object via a special variable called \lstinline{self} or, in some languages, \lstinline[keywords={}]{this}'' (by Ralf Hinze). The interesting thing is that such a variable \lstinline{self} is late-bound, or open to the recursion, which means it can integrate some additional features defined later, whereas the method that takes \lstinline{self} as a parameter can simply delegate the known cases to it.
+Open recursion is known as a useful feature that one method body can ``invoke another method of the same object via a special variable called \lstinline{self} or, in some languages, \lstinline[keywords={}]{this}'' (by Ralf Hinze). The interesting thing is that such a variable \lstinline{self} is late-bound, or open to the recursion, which means it can integrate some additional features defined later, while existing methods that take \lstinline{self} as a parameter can simply delegate their known cases to it.
 
 For sure we cannot always leave it open; upon using it we have to close the recursion, at which time we need to take a fix-point. Here one might suddenly be reminded of the \lstinline{fix} function in some functional languages like Haskell. Below is the famous Fibonacci example:
 \begin{lstlisting}[language=Haskell,keywords={}]
@@ -23,7 +23,7 @@ fib 0 = 0
 fib 1 = 1
 fib n = fib (n - 1) + fib (n - 2)
 \end{lstlisting}
-An alternative approach using open recursion is as follows:
+An alternative implementation using open recursion is as follows:
 \begin{lstlisting}[language=Haskell,keywords={type}]
 type Fix t = t -> t
 
@@ -37,7 +37,7 @@ an explicit self-reference as its parameter are called \textit{generators} (by R
 \begin{lstlisting}[language=Haskell,keywords={}]
 fix f = let x = f x in x
 \end{lstlisting}
-If we close the recursion on \lstinline{fib'} only, the evaluation of \lstinline{fix fib'} \lstinline{2} is as follows:
+If we close the recursion on \lstinline{fib'} only, the evaluation of \lstinline{fix fib'} \lstinline{2} is processed as follows:
 \begin{lstlisting}[language=Haskell,keywords={}]
    fix fib' 2
 = let x = fib' x in x 2
@@ -60,7 +60,7 @@ Then we define a generator which prints out a number as a string:
 show' :: Fix (Int -> String)
 show' self x = show x
 \end{lstlisting}
-Now \lstinline{fix (fib'}\lstinline{ * show')} \lstinline{2} results in \lstinline{(1, "2")}. We have seen that both \lstinline{fib'} and \lstinline{show'} are integrated in the evaluation. In Scala, however, there is no \lstinline{fix} function, but it can be easily defined since it is based on lazy evaluation. See below:
+Now \lstinline{fix (fib'}\lstinline{ * show')} \lstinline{2} results in \lstinline{(1, "2")}. We have seen that both \lstinline{fib'} and \lstinline{show'} are integrated in the evaluation. In Scala, however, there is no library \lstinline{fix} function, but it can be easily defined since it is based on lazy evaluation. See below:
 \begin{lstlisting}
 def fix[A](f : (=> A) => A) : A = {
     lazy val a : A = f(a)
