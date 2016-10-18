@@ -6,24 +6,32 @@ e ::= x | e ' ' e | \x:t.e
 t ::= "Int"
 \end{lstlisting}
 
-We proceed to implement those parsers. An issue is that we need both a \lstinline{PackratParser[Expr]} and a \lstinline{PackratParser[Type]} in the fixpoint.
+We proceed to implement those parsers. An issue is that we need both a \lstinline{Parser[Expr]} and a \lstinline{Parser[Type]} in the fixpoint.
 Hence we use a pair in the parameter:
 \begin{lstlisting}
+type Pair = (Parser[Expr], Parser[Type])
+
 class Type
 class IntT extends Type
-val pInt : (=> (PackratParser[Expr], PackratParser[Type])) => PackratParser[Type] =
+val pInt : (=> Pair) => Parser[Type] =
     p => "Int" ^^ { _ => new IntT() }
 
 class Lam(x : String, t : Type, e : Expr) extends Expr
-val pLam : (=> (PackratParser[Expr], PackratParser[Type])) => PackratParser[Expr] =
-    p => ("\\" ~> ident) ~ (":" ~> p._2) ~ ("." ~> p._1)
-        ^^ { case x ~ t ~ e => new Lam(x, t, e) }
+val pLam : (=> Pair) => Parser[Expr] =
+    p => ("\\" ~> ident) ~ (":" ~> p._2) ~ ("." ~> p._1) ^^
+        { case x ~ t ~ e => new Lam(x, t, e) }
 
-val p : (=> (PackratParser[Expr], PackratParser[Type])) => (PackratParser[Expr], PackratParser[Type]) =
-    p => (pVar(p._1) ||| pApp(p._1) ||| pLam(p), pInt(p))
+val pVar2 : (=> Pair) => Parser[Expr] = p => pVar(p._1)
+val pApp2 : (=> Pair) => Parser[Expr] = p => pApp(p._1)
+
+val pET : (=> Pair) => Pair = {
+    val pE = pVar2 ||| pApp2 ||| pLam
+    val pT = pInt
+    p => (pE(p), pT(p))
+}
 \end{lstlisting}
 The last value \lstinline{p} integrates the four single parsers defined before, so we use \lstinline{fix(p)} to
-obtain the two parsers we want: one for expressions, the other for types. The parser \lstinline{fix(p)._1} parsers expressions
+obtain a pair two parsers we want: one for expressions, the other for types. The parser \lstinline{fix(p)._1} parsers expressions
 like \lstinline{"\x:Int.x x"} successfully. Yet meanwhile, some drawbacks of this approach come into sight. With different syntax, it
 is necessary to extend the fixpoint to contain more parsers, in which case usually some structures like tuples are used,
 making code tedious and less elegant. On the other hand, the modularity is quite restricted; only parsing and datatypes are extensible.
