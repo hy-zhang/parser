@@ -2,9 +2,9 @@
 
 \subsection{Overview}\label{subsec:overview}
 
-To demonstrate the utility of our modular parsing library, we implemented parsers of the first 18 calculi from book \textit{Types and Programming Languages}. In the book it introduces several calculi from simple to complex, by gradually adding new features to syntax. It is suitable for our case study for mainly two reason. First, the calculi are arguably practical as we want to show our library could be used in real world development. One of the most complex calculi in our case study is System F (with several extensions such as records and variants), which could be the foundation of practical functional programming languages. Second, the evolution of calculi in the book reveals the advantages of modular representation of abstract syntax and modular parsing, which is the key functionality of our library. By decomposing those calculi into smaller components and reusing the common ones, we can obtain considerably code reuse in parsing with little performance penalty, as shown later.
+To demonstrate the utility of our modular parsing library, we implemented parsers of the first \textcolor{red}{18} calculi from book \textit{Types and Programming Languages}. In the book it introduces several calculi from simple to complex, by gradually adding new features to syntax. It is suitable for our case study for mainly two reason. First, the calculi are arguably practical as we want to show our library could be used in real world development. One of the most complex calculi in our case study is System F (with several extensions such as records and variants), which could be the foundation of practical functional programming languages. Second, the evolution of calculi in the book reveals the advantages of modular representation of abstract syntax and modular parsing, which is the key functionality of our library. By decomposing those calculi into smaller components and reusing the common ones, we can obtain considerably code reuse in parsing with little performance penalty, as shown later.
 
-For better modularity and eliminate code duplication, we extract 21 reusable \textit{components} from syntax of all the calculi. Each component, which may contain several syntactical structures, is a reusable fragment representing a certain feature in the syntax. For example, \lstinline{VarApp} component represents the variable case and application case of expressions. In our case study, each component is represented by a Scala object which has three parts. \lstinline{Alg} is an object algebra interface for the abstract syntax. \lstinline{Print} is an object algebra implements that interface \lstinline{Alg}, for the pretty printing operation. It is not necessary for parsing, but we include it here for demonstration. \lstinline{Parser} is the modular parser for this piece of syntax.
+Using the modular parsing techniques discussed before, we extract reusable \textit{components} from syntax of all the calculi. Each component, which may contain several syntactical structures, is a reusable fragment representing a certain feature in the syntax. For example, \lstinline{VarApp} component represents the variable case and application case of expressions. In our case study, each component is represented by a Scala object which has three parts. \lstinline{Alg} is an object algebra interface for the abstract syntax. \lstinline{Print} is an object algebra implements that interface \lstinline{Alg}, for the pretty printing operation. It is not necessary for parsing, but we include it here for demonstration. \lstinline{Parser} is the modular parser for this piece of syntax.
 
 \begin{lstlisting}
 object VarApp {
@@ -30,7 +30,7 @@ object VarApp {
 
 We use some naming conventions in our code, \lstinline{E} represents expressions, \lstinline{T} represents types and \lstinline{K} represents kinds. In this component \lstinline{VarApp} we only have expressions. The \lstinline{Alg} and \lstinline{Print} are standard object algebra operations, thus we will focus on the modular parser \lstinline{Parser}. Each parser carries lexical information and parsing functions. The lexical information includes reserved words, delimiters, etc. Parsing functions are similar with we described before, except that we use record types under some subtyping constraints here for the explicit self-reference. The record type contains a parser for expressions \lstinline{pE}, a parser for types \lstinline{pT} and a parser for kinds \lstinline{pK}, if the corresponding one is needed when parsing the syntax of this component. Here the type of self-reference, namely \lstinline{F}, is only required to have a parser of expressions \lstinline{pE}. Then we can build the parsing function \lstinline{pVarAppE}, the suffix \lstinline{E} also denotes that it will parse an expression.
 
-Each calculus could be composed directly from components and other calculi, if it has those common structures in the syntax. For example, the calculus \lstinline{Untyped}, representing the famous untyped lambda calculus, can be constructed from components \lstinline{VarApp} and \lstinline{UntypedAbs}.
+Each calculus could be composed directly from components and other calculi, if it has those common structures in the syntax. For example, the calculus \lstinline{Untyped}, representing the famous untyped lambda calculus, can be constructed from components \lstinline{VarApp} and untyped lambda abstraction \lstinline{UntypedAbs}.
 
 \begin{lstlisting}
 object UntypedAbs {
@@ -54,7 +54,21 @@ object Untyped {
 }
 \end{lstlisting}
 
+When composing the calculus from components, the \lstinline{Alg} and \lstinline{Print} can be easily combined by Scala’s \lstinline{extends...with} keywords as demonstrated in the code. For \lstinline{Parser}, the subtyping constraint for the explicit self-reference should satisfy all the requirement of the parsers it extends from. \huang{Talk about | here?}
+
+Finally, we have demo code for every calculus. The parsing result is a string because we provide the pretty printing algebra to the parser, and it can be changed as long as the concrete algebra is available. Implementing object algebra operation is another topic which is not much relevant with our library, so that in this case study we only have pretty printing as the operation.
+
+\begin{lstlisting}
+object TestUntyped {
+    to be polished
+}
+\end{lstlisting}
+
+In the next section we will show more examples and talk further about how we extend and compose these components and calculi.
+
 \subsection{Extensibility}\label{subsec:extensibility}
+
+As mentioned before, we decompose all the calculi into reusable components for modularity. In this case study, we have \textcolor{red}{18} components in total. The graph below shows the dependency of all the components, representing by circles, and calculi, representing by boxes.
 
 \subsection{Comparison}\label{subsec:comparison}
 
