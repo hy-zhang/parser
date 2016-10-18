@@ -1,5 +1,61 @@
 \section{Case Studies}\label{sec:casestudy}
 
+\subsection{Overview}\label{subsec:overview}
+
+To demonstrate the utility of our modular parsing library, we implemented parsers of the first 18 calculi from the book \textit{Types and Programming Languages}. In this book, it introduces several calculi from simple ones to complex ones by gradually adding new features to syntax. It is suitable for our case study for mainly two reason. First, the calculi are arguably practical as we want to show our library could be used in real world development. One of the most complex calculi in our case study is System F (with several extensions such as records and variants), which could be the foundation of practical functional programming languages. Second, the evolution of calculi in the book reveals the advantages of modular representation of abstract syntax and modular parsing, which is the key functionality of our library. By decomposing those calculi into smaller components and reusing the common ones, we can obtain considerably code reuse in parsing with little performance penalty, as shown later.
+
+For better modularity and eliminate code duplication, we extract 21 reusable \textit{components} from syntax of all the calculi. Each component, which may contain several syntactical structures, is a reusable fragment representing a certain feature in the syntax. For example, \lstinline{VarApp} component represents the variable case and application case of expressions. In our case study, each component is represented by a Scala object which has three parts. \lstinline{Alg} is an object algebra interface for the abstract syntax. \lstinline{Print} is an object algebra implements that interface \lstinline{Alg}, for the pretty printing operation. \lstinline{Parser} is the modular parser for this piece of syntax.
+
+\begin{lstlisting}
+object VarApp {
+  trait Alg[E] {
+    def TmVar(x: String): E
+    def TmApp(e1: E, e2: E): E
+  }
+  trait Print extends Alg[String] {
+    def TmVar(x: String) = x
+    def TmApp(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
+  }
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+    lexical.delimiters += ("(", ")")
+    val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      ident ^^ alg.TmVar |||
+      e ~ e ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) } |||
+      "(" ~> e <~ ")"
+    }
+  }
+}
+\end{lstlisting}
+
+Then each calculus could be composed directly from components and other calculi, if it has those common structures in the syntax. For example, the calculus \lstinline{Untyped}, representing the famous untyped lambda calculus, can be constructed from components \lstinline{VarApp} and \lstinline{UntypedAbs}.
+
+\begin{lstlisting}
+object UntypedAbs {
+  trait Alg[E] {
+    def TmAbs(x: String, e: E): E
+  }
+  trait Print extends Alg[String] {
+    def TmAbs(x: String, e: String) = "\\" + x + "." + e
+  }
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+    val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = {...}
+  }
+}
+
+object Untyped {
+  trait Alg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]
+  trait Print extends Alg[String] with UntypedAbs.Print with VarApp.Print
+  trait Parser[E, L <: {val pE : PackratParser[E]}] extends UntypedAbs.Parser[E, L] with VarApp.Parser[E, L] {
+    val pUntypedE = pUntypedAbsE | pVarAppE
+  }
+}
+\end{lstlisting}
+
+\subsection{Extensibility}\label{subsec:extensibility}
+
+\subsection{Comparison}\label{subsec:comparison}
+
 \begin{itemize}
 \item Explain the TAPL case study
 \item Show various results SLOC; performance
