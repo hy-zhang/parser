@@ -1,6 +1,6 @@
 \section{Case Studies}\label{sec:casestudy}
 
-\subsection{Overview}\label{subsec:overview}
+\subsection{Overview}\label{subsec:cs-overview}
 
 To demonstrate the utility of our modular parsing library, we implemented parsers of the first \textcolor{red}{18} calculi from book \textit{Types and Programming Languages}. In the book it introduces several calculi from simple to complex, by gradually adding new features to syntax. It is suitable for our case study for mainly two reason. First, the calculi are arguably practical as we want to show our library could be used in real world development. One of the most complex calculi in our case study is System F (with several extensions such as records and variants), which could be the foundation of practical functional programming languages. Second, the evolution of calculi in the book reveals the advantages of modular representation of abstract syntax and modular parsing, which is the key functionality of our library. By decomposing those calculi into smaller components and reusing the common ones, we can obtain considerably code reuse in parsing with little performance penalty, as shown later.
 
@@ -54,9 +54,9 @@ object Untyped {
 }
 \end{lstlisting}
 
-When composing the calculus from components, the \lstinline{Alg} and \lstinline{Print} can be easily combined by Scala’s \lstinline{extends...with} keywords as demonstrated in the code. For \lstinline{Parser}, the subtyping constraint for the explicit self-reference should satisfy all the requirement of the parsers it extends from. \huang{Talk about | here?}
+When composing the calculus from components, all the fields can be easily combined by Scala’s \lstinline{extends...with} keywords as shown in the code. For \lstinline{Parser}, the subtyping constraint for the explicit self-reference should satisfy all the requirement of the parsers it extends from. \huang{Talk about | here?}
 
-Finally, we have demo code for every calculus. The parsing result is a string because we provide the pretty printing algebra to the parser, and it can be changed as long as the concrete algebra is available. Implementing object algebra operation is another topic which is not much relevant with our library, so that in this case study we only have pretty printing as the operation.
+Finally, we have demo code for every calculus. The parsing result is a string because we provide the pretty printing algebra to the parser, and it can be changed as long as the concrete algebra is available. In this case study we only have pretty printing as the operation, since it is enough for demonstration.
 
 \begin{lstlisting}
 object TestUntyped {
@@ -66,11 +66,54 @@ object TestUntyped {
 
 In the next section we will show more examples and talk further about how we extend and compose these components and calculi.
 
-\subsection{Extensibility}\label{subsec:extensibility}
+\subsection{Extensibility}\label{subsec:cs-extensibility}
 
-As mentioned before, we decompose all the calculi into reusable components for modularity. In this case study, we have \textcolor{red}{18} components in total. The graph below shows the dependency of all the components, representing by circles, and calculi, representing by boxes.
+As mentioned before, we decompose all the calculi into reusable components for modularity. In this case study, we have \textcolor{red}{21} components in total. The graph below shows the dependency of all the components, representing by circles, and calculi, representing by boxes. An arrow starting from shape A to shape B denotes that B includes and thus reuses A.
 
-\subsection{Comparison}\label{subsec:comparison}
+\textcolor{red}{graph here}
+
+As shown in the graph, some components such as \lstinline{VarApp} are created from scratch, while others such as \lstinline{Typed} are extended from existing components. The \lstinline{Typed} component extends from \lstinline{VarApp} and has two more syntactical structures which are typed lambda abstraction and function type (arrow type). It is the core of many calculi in this case study, and we use it here as an example for demonstrating the extensibility of components.
+
+\begin{lstlisting}
+object Typed {
+  trait Alg[E, T] extends VarApp.Alg[E] {
+    def TmAbs(x: String, t: T, e: E): E
+    def TyArr(t1: T, t2: T): T
+  }
+  trait Print extends Alg[String, String] with VarApp.Print {
+    def TmAbs(x: String, t: String, e: String) = "\\(" + x + ":" + t + ")." + e
+    def TyArr(t1: String, t2: String) = t1 + "->" + t2
+  }
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends VarApp.Parser[E, F] {
+    ...
+    private val pAbsE: Alg[E, T] => (=> F) => PackratParser[E] = {...}
+    val pTypedE: Alg[E, T] => (=> F) => PackratParser[E] = pVarAppE | pAbsE
+    val pTypedT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
+      t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.TyArr(t1, t2) } ||| "(" ~> t <~ ")"
+    }
+  }
+}
+\end{lstlisting}
+
+Except building a component by extending an existing one, here we have another extension which is adding a new sort of syntax. It has been discussed in section \ref{subsec:openrecursion}. In this example, originally \lstinline{VarApp} has only one sort of syntax which is expressions, and then \lstinline{Typed} introduces types to the syntax. We add an extra type parameter \lstinline{T} for it, so that it is able to be distinguished. The \lstinline{Parser} also requires the self-reference to have a field \lstinline{pT} for parsing types, which is represented by the subtyping constraint. With this support, the \lstinline{pTypedT} function parses arrow types using \lstinline{pT}. Another point worth mentioning is that we use a private local function \lstinline{pAbsE} here for parsing the typed lambda abstraction case, and we can directly combine it with the inherited \lstinline{pVarApp} to obtain our parsing function of expressions.
+
+Since calculi and components have the similar signature, each calculus can also be extended and reused directly. Our last example shows how to build calculus \lstinline{FullRef} from extending \lstinline{FullSimple}, another calculus.
+
+\begin{lstlisting}
+object FullRef {
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T]
+  trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print
+  trait Parser[E, T, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] {
+    val pFullRefE = pFullSimpleE | pRefE
+    val pFullRefT = pFullSimpleT | pRefT | pTopBotT
+  }
+}
+\end{lstlisting}
+
+Using our modular parsing library, dividing the syntax into small pieces and bind them with corresponding parsers to form reusable language component is convenient. From the dependency graph we know that the common components such as \lstinline{VarApp} are reused in lots of calculi. Such reuse could shorten the codes considerably. We will show this advantage and exam the possible performance penalty in a quantitative way in the next section.
+
+\subsection{Comparison}\label{subsec:cs-comparison}
 
 \begin{itemize}
 \item Explain the TAPL case study
