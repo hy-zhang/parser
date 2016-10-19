@@ -68,7 +68,7 @@ object FullRef {
 
   trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+  trait Parser[E, T, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]}]
     extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] {
     val pFullRefE = pFullSimpleE | pRefE
     val pFullRefT = pFullSimpleT | pRefT | pTopBotT
