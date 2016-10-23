@@ -33,9 +33,32 @@ object Record {
 
 }
 
+object Let {
+
+  trait Alg[E] {
+    def TmLet(x: String, e1: E, e2: E): E
+  }
+
+  trait Print extends Alg[String] {
+    def TmLet(x: String, e1: String, e2: String) = "let " + x + " = " + e1 + " in " + e2
+  }
+
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+    lexical.reserved += ("let", "in")
+    lexical.delimiters += "="
+
+    val pLetE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+
+      ("let" ~> lcid) ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case x ~ e1 ~ e2 => alg.TmLet(x, e1, e2) }
+    }
+  }
+
+}
+
 object FullUntypedExt {
 
-  trait TAlg[E] {
+  trait Alg[E] extends Let.Alg[E] {
     def TmFloat(d: Double): E
 
     // Not supported for now due to the limit of StandardTokenParsers.
@@ -45,50 +68,40 @@ object FullUntypedExt {
     // "timesfloat 0 0" causes ambiguity: app is applied to (0 0).
     // Therefore we need a delimiter.
     def TmString(s: String): E
-
-    def TmLet(x: String, e1: E, e2: E): E
   }
 
-  trait Alg[E] extends Record.Alg[E] with TAlg[E]
-
-  trait Print extends Alg[String] with Record.Print {
+  trait Print extends Alg[String] with Let.Print {
     def TmFloat(d: Double) = d.toString
 
     def TmTimesfloat(e1: String, e2: String) = "timesfloat (" + e1 + ") (" + e2 + ")"
 
     def TmString(s: String) = "\"" + s + "\""
-
-    def TmLet(x: String, e1: String, e2: String) = "let " + x + " = " + e1 + " in " + e2
   }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] extends Record.Parser[E, F] {
-    lexical.reserved += ("let", "in")
-    lexical.delimiters += ("(", ")", "=", "*")
+  trait Parser[E, F <: {val pE : PackratParser[E]}] extends Let.Parser[E, F] {
+    lexical.delimiters += "*"
 
-    val pE2: TAlg[E] => (=> F) => PackratParser[E] = alg => l => {
+    private val pFullUntypedExtE2: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       val e = l.pE
 
-      List(
-        chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.TmTimesfloat(e1, e2) }),
-        ("let" ~> lcid) ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case x ~ e1 ~ e2 => alg.TmLet(x, e1, e2) },
-        stringLit ^^ alg.TmString,
-        "(" ~> e <~ ")"
-      ).reduce((a, b) => a ||| b)
+      chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.TmTimesfloat(e1, e2) }) |||
+        stringLit ^^ alg.TmString
     }
-    val pFullUntypedExtE: Alg[E] => (=> F) => PackratParser[E] = pRecordE | pE2
+
+    val pFullUntypedExtE: Alg[E] => (=> F) => PackratParser[E] = pFullUntypedExtE2 | pLetE
   }
 
 }
 
 object FullUntyped {
 
-  trait Alg[E] extends Arith.Alg[E] with Untyped.Alg[E] with FullUntypedExt.Alg[E]
+  trait Alg[E] extends Arith.Alg[E] with Untyped.Alg[E] with Record.Alg[E] with FullUntypedExt.Alg[E]
 
-  trait Print extends Alg[String] with Arith.Print with Untyped.Print with FullUntypedExt.Print
+  trait Print extends Alg[String] with Arith.Print with Untyped.Print with Record.Print with FullUntypedExt.Print
 
   trait Parser[E, L <: {val pE : Util.PackratParser[E]}]
-    extends Arith.Parser[E, L] with Untyped.Parser[E, L] with FullUntypedExt.Parser[E, L] {
-    val pFullUntypedE = pArithE | pUntypedE | pFullUntypedExtE
+    extends Arith.Parser[E, L] with Untyped.Parser[E, L] with Record.Parser[E, L] with FullUntypedExt.Parser[E, L] {
+    val pFullUntypedE = pArithE | pUntypedE | pRecordE | pFullUntypedExtE
   }
 
 }

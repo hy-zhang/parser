@@ -4,14 +4,17 @@ import Util._
 
 object FullSub {
 
-  trait Alg[E, T] extends FullSimple.Alg[E, T] with Top.Alg[T]
+  trait Alg[E, T] extends Typed.Alg[E, T] with TyArith.Alg[E, T] with FullUntypedExt.Alg[E]
+    with TypedRecord.Alg[E, T] with FullSimpleExt.Alg[E, T] with Top.Alg[T]
 
-  trait Print extends Alg[String, String] with FullSimple.Print with Top.Print
+  trait Print extends Alg[String, String] with Typed.Print with TyArith.Print with FullUntypedExt.Print
+    with TypedRecord.Print with FullSimpleExt.Print with Top.Print
 
   trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends FullSimple.Parser[E, T, L] with Top.Parser[T, L] {
-    val pFullSubE = pFullSimpleE
-    val pFullSubT = pFullSimpleT | pTopT
+    extends Typed.Parser[E, T, L] with TyArith.Parser[E, T, L] with FullUntypedExt.Parser[E, L]
+      with TypedRecord.Parser[E, T, L] with FullSimpleExt.Parser[E, T, L] with Top.Parser[T, L] {
+    val pFullSubE = pTyArithE | pTypedE | pTypedRecordE | pFullSimpleExtE | pFullUntypedExtE
+    val pFullSubT = pTyArithT | pTypedT | pTypedRecordT | pFullSimpleExtT | pTopT
   }
 
 }
@@ -54,8 +57,6 @@ object TestFullSub {
       "let x=true in x",
       "unit",
       "unit as Unit",
-      "<l=unit> as <l:Unit, r:Unit>",
-      "case a of <phy=x> => x.first | <vir=y> => y.name",
       "\\x:Top.x",
       "(\\r:{x:Top->Top}. r.x r.x) {x=\\z:Top.z, y=\\z:Top.z}"
     ).foreach(parseAndPrint)

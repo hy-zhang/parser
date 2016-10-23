@@ -78,14 +78,18 @@ object Poly {
 
 object FullPoly {
 
-  trait Alg[E, T] extends FullSimple.Alg[E, T] with Poly.Alg[E, T] with Pack.Alg[E, T]
+  trait Alg[E, T] extends Typed.Alg[E, T] with TyArith.Alg[E, T] with FullUntypedExt.Alg[E]
+    with TypedRecord.Alg[E, T] with FullSimpleExt.Alg[E, T] with Poly.Alg[E, T] with Pack.Alg[E, T]
 
-  trait Print extends Alg[String, String] with FullSimple.Print with Poly.Print with Pack.Print
+  trait Print extends Alg[String, String] with Typed.Print with TyArith.Print with FullUntypedExt.Print
+    with TypedRecord.Print with FullSimpleExt.Print with Poly.Print with Pack.Print
 
   trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends FullSimple.Parser[E, T, L] with Poly.Parser[E, T, L] with Pack.Parser[E, T, L] {
-    val pFullPolyE = pFullSimpleE | pPolyE | pPackE
-    val pFullPolyT = pFullSimpleT | pPolyT
+    extends Typed.Parser[E, T, L] with TyArith.Parser[E, T, L] with FullUntypedExt.Parser[E, L]
+      with TypedRecord.Parser[E, T, L] with FullSimpleExt.Parser[E, T, L]
+      with Poly.Parser[E, T, L] with Pack.Parser[E, T, L] {
+    val pFullPolyE = pTyArithE | pTypedE | pTypedRecordE | pFullSimpleExtE | pFullUntypedExtE | pPolyE | pPackE
+    val pFullPolyT = pTyArithT | pTypedT | pTypedRecordT | pFullSimpleExtT | pPolyT
   }
 
 }
