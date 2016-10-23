@@ -27,7 +27,7 @@ object Bool {
     lexical.delimiters += ("(", ")")
 
     val pBoolE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
+      lazy val e = l.pE
 
       List(
         "true" ^^ { _ => alg.TmTrue() },
@@ -67,7 +67,7 @@ object Nat {
     lexical.delimiters += ("(", ")")
 
     val pNatE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
+      lazy val e = l.pE
 
       def num(x: Int): E = x match {
         case 0 => alg.TmZero()

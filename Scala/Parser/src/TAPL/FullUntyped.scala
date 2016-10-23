@@ -21,7 +21,7 @@ object Record {
     lexical.delimiters += ("{", "}", ",", ".", "(", ")", "=")
 
     val pRecordE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
+      lazy val e = l.pE
 
       List(
         "{" ~> repsep(lcid ~ ("=" ~> e) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TmRecord,
@@ -48,7 +48,7 @@ object Let {
     lexical.delimiters += "="
 
     val pLetE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
+      lazy val e = l.pE
 
       ("let" ~> lcid) ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case x ~ e1 ~ e2 => alg.TmLet(x, e1, e2) }
     }
@@ -82,7 +82,7 @@ object FullUntypedExt {
     lexical.delimiters += "*"
 
     private val pFullUntypedExtE2: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
+      lazy val e = l.pE
 
       chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.TmTimesfloat(e1, e2) }) |||
         stringLit ^^ alg.TmString

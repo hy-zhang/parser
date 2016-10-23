@@ -21,7 +21,7 @@ object Error {
     lexical.reserved += ("error", "try", "with")
 
     val pErrorE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
+      lazy val e = l.pE
 
       "error" ^^ { _ => alg.TmError() } |||
         "try" ~> e ~ ("with" ~> e) ^^ { case e1 ~ e2 => alg.TmTry(e1, e2) }

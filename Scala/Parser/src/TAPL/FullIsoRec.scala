@@ -22,8 +22,8 @@ object Fold {
     lexical.delimiters += ("[", "]")
 
     val pFoldE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
-      val t = l.pT
+      lazy val e = l.pE
+      lazy val t = l.pT
 
       List(
         "fold" ~> ("[" ~> t <~ "]") ~ e ^^ { case ty ~ ex => alg.TmFold(ex, ty) },

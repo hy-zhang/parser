@@ -45,17 +45,17 @@ object Omega {
     lexical.delimiters += ("=>", ":", ".", ",", "{", "}")
 
     val pOmegaE: Alg[E, T, K] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
-      val t = l.pT
-      val k = l.pK
+      lazy val e = l.pE
+      lazy val t = l.pT
+      lazy val k = l.pK
 
       "\\" ~> ucid ~ (":" ~> k) ~ ("." ~> e) ^^ { case x ~ kn ~ ex => alg.TmTAbs(x, kn, ex) } |||
         e ~ ("[" ~> t <~ "]") ^^ { case ex ~ ty => alg.TmTApp(ex, ty) }
     }
 
     val pOmegaT: Alg[E, T, K] => (=> F) => PackratParser[T] = alg => l => {
-      val t = l.pT
-      val k = l.pK
+      lazy val t = l.pT
+      lazy val k = l.pK
 
       List(
         "All" ~> ucid ~ (":" ~> k) ~ ("." ~> t) ^^ { case x ~ kn ~ ty => alg.TyAll(x, kn, ty) },
@@ -66,7 +66,6 @@ object Omega {
     }
 
     val pOmegaK: Alg[E, T, K] => (=> F) => PackratParser[K] = alg => l => {
-      // todo: why is the 'lazy' needed here?
       lazy val k = l.pK
 
       "Star" ^^ { _ => alg.KnStar() } |||

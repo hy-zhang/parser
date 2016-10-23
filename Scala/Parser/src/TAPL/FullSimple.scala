@@ -19,7 +19,7 @@ object TypedRecord {
     val pTypedRecordE: Alg[E, T] => (=> F) => PackratParser[E] = pRecordE
 
     val pTypedRecordT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      val t = l.pT
+      lazy val t = l.pT
 
       "{" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ alg.TyRecord
     }
@@ -66,15 +66,15 @@ object Variant {
     lexical.delimiters += ("<", ">", "=", ":", ",", "|", "=>")
 
     val pVariantE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
-      val t = l.pT
+      lazy val e = l.pE
+      lazy val t = l.pT
 
       ("<" ~> lcid) ~ ("=" ~> e <~ ">") ~ ("as" ~> t) ^^ { case x ~ e0 ~ t0 => alg.TmTag(x, e0, t0) } |||
         ("case" ~> e <~ "of") ~ repsep(("<" ~> lcid) ~ ("=" ~> lcid) ~ ((">" ~ "=>") ~> e) ^^ { case x1 ~ x2 ~ e0 => (x1, x2, e0) }, "|") ^^ { case e0 ~ l => alg.TmCase(e0, l) }
     }
 
     val pVariantT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      val t = l.pT
+      lazy val t = l.pT
 
       "<" ~> repsep(lcid ~ (":" ~> t) ^^ { case x ~ t0 => (x, t0) }, ",") <~ ">" ^^ alg.TyVariant
     }
@@ -122,8 +122,8 @@ object FullSimpleExt {
     lexical.delimiters += ("(", ")", "[", "]")
 
     val pFullSimpleExtE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
-      val t = l.pT
+      lazy val e = l.pE
+      lazy val t = l.pT
 
       "unit" ^^ { _ => alg.TmUnit() } |||
         e ~ ("as" ~> t) ^^ { case e0 ~ t0 => alg.TmAscribe(e0, t0) } |||

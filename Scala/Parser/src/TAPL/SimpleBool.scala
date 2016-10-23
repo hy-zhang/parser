@@ -21,8 +21,8 @@ object Typed {
     lexical.delimiters += ("\\", ".", "(", ")", ":", "->")
 
     private val pAbsE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
-      val t = l.pT
+      lazy val e = l.pE
+      lazy val t = l.pT
 
       ("\\" ~> lcid) ~ (":" ~> t) ~ ("." ~> e) ^^ { case x ~ t0 ~ e0 => alg.TmAbs(x, t0, e0) } |||
         "(" ~> e <~ ")"
@@ -31,7 +31,7 @@ object Typed {
     val pTypedE: Alg[E, T] => (=> F) => PackratParser[E] = pVarAppE | pAbsE
 
     val pTypedT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      val t = l.pT
+      lazy val t = l.pT
 
       t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.TyArr(t1, t2) } ||| "(" ~> t <~ ")"
     }
