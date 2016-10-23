@@ -1,68 +1,117 @@
 package TAPL
 
-/* <18> */
-object FullOmega {
-  import Util._
-  trait FullOmegaAlg[E, T, K] {
+import Util._
+
+object Omega {
+
+  trait Alg[E, T, K] {
     def KnStar(): K
+
     def KnArr(k1: K, k2: K): K
-    def TyAll2(x: String, k: K, t: T): T
-    def TySome2(x: String, k: K, t: T): T
-    def TmTAbs2(x: String, k: K, e: E): E
-    // Missed some cases?
+
+    def TyAll(x: String, k: K, t: T): T
+
+    def TySome(x: String, k: K, t: T): T
+
+    def TmTAbs(x: String, k: K, e: E): E
+
+    def TmTApp(e: E, t: T): E
+
+    def TyAbs(x: String, k: K, t: T): T
+
+    def TyApp(t1: T, t2: T): T
   }
-  trait Lexer extends FullOmegaAlg[String, String, String] {
+
+  trait Print extends Alg[String, String, String] {
+    def KnStar(): String = "Star"
+
+    def KnArr(k1: String, k2: String): String = k1 + "=>" + k2
+
+    def TyAll(x: String, k: String, t: String): String = "All " + x + ":" + k + "." + t
+
+    def TySome(x: String, k: String, t: String): String = "{Some " + x + ":" + k + "," + t + "}"
+
+    def TmTAbs(x: String, k: String, e: String): String = "\\(" + x + ":" + k + ")." + e
+
+    def TmTApp(e: String, t: String): String = e + " [" + t + "]"
+
+    def TyAbs(x: String, k: String, t: String) = "\\(" + x + ":" + k + ")." + t
+
+    def TyApp(t1: String, t2: String) = "[" + t1 + " " + t2 + "]"
+  }
+
+  trait Parser[E, T, K, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]; val pK : PackratParser[K]}] {
     lexical.reserved += ("Star", "All", "Some")
     lexical.delimiters += ("=>", ":", ".", ",", "{", "}")
-    override def KnStar(): String = "Star"
-    override def KnArr(k1: String, k2: String): String = k1 + "=>" + k2
-    override def TyAll2(x: String, k: String, t: String): String = "All " + x + ":" + k + "." + t
-    override def TySome2(x: String, k: String, t: String): String = "{Some " + x + ":" + k + "," + t + "}"
-    override def TmTAbs2(x: String, k: String, e: String): String = "\\(" + x + ":" + k + ")." + e
-  }
-  trait Parser[E, T, K, F <: {val pE: PackratParser[E]; val pT: PackratParser[T]; val pK: PackratParser[K]}] {
-    lazy val pE: FullOmegaAlg[E, T, K] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val k = l.pK
-      "\\" ~> ucid ~ (":" ~> k) ~ ("." ~> e) ^^ { case x ~ kn ~ ex => alg.TmTAbs2(x, kn, ex) }
+
+    val pOmegaE: Alg[E, T, K] => (=> F) => PackratParser[E] = alg => l => {
+      val e = l.pE
+      val t = l.pT
+      val k = l.pK
+
+      "\\" ~> ucid ~ (":" ~> k) ~ ("." ~> e) ^^ { case x ~ kn ~ ex => alg.TmTAbs(x, kn, ex) } |||
+        e ~ ("[" ~> t <~ "]") ^^ { case ex ~ ty => alg.TmTApp(ex, ty) }
     }
-    lazy val pT: FullOmegaAlg[E, T, K] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
-      lazy val k = l.pK
+
+    val pOmegaT: Alg[E, T, K] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
+      val k = l.pK
+
       List(
-        "All" ~> ucid ~ (":" ~> k) ~ ("." ~> t) ^^ { case x ~ kn ~ ty => alg.TyAll2(x, kn, ty) },
-        ("{" ~> "Some" ~> ucid ~ (":" ~> k) ~ ("," ~> t) <~ "}") ^^ { case x ~ kn ~ ty => alg.TySome2(x, kn, ty) }
+        "All" ~> ucid ~ (":" ~> k) ~ ("." ~> t) ^^ { case x ~ kn ~ ty => alg.TyAll(x, kn, ty) },
+        ("{" ~> "Some" ~> ucid ~ (":" ~> k) ~ ("," ~> t) <~ "}") ^^ { case x ~ kn ~ ty => alg.TySome(x, kn, ty) },
+        "\\" ~> ucid ~ (":" ~> k) ~ ("." ~> t) ^^ { case x ~ kn ~ ty => alg.TyAbs(x, kn, ty) },
+        t ~ t ^^ { case t1 ~ t2 => alg.TyApp(t1, t2) }
       ).reduce((a, b) => a ||| b)
     }
-    lazy val pK: FullOmegaAlg[E, T, K] => (=> F) => PackratParser[K] = alg => l => {
+
+    val pOmegaK: Alg[E, T, K] => (=> F) => PackratParser[K] = alg => l => {
+      // todo: why is the 'lazy' needed here?
       lazy val k = l.pK
-      List(
-        "Star" ^^ { _ => alg.KnStar() },
-        k ~ ("=>" ~> k) ^^ { case k1 ~ k2 => alg.KnArr(k1, k2) }
-      ).reduce((a, b) => a ||| b)
+
+      "Star" ^^ { _ => alg.KnStar() } |||
+        k ~ ("=>" ~> k) ^^ { case k1 ~ k2 => alg.KnArr(k1, k2) } |||
+        "(" ~> k <~ ")"
     }
   }
+
 }
 
-trait FullOmegaLNG[E, T, K, L <: {val pE: Util.PackratParser[E]; val pT: Util.PackratParser[T]; val pK: Util.PackratParser[K]}] extends FullPolyLNG[E, T, L] with FullOmega.Lexer {
-  val pFullOmegaETK = new FullOmega.Parser[E, T, K, L](){}
-  val pFullOmegaLNGE = pFullPolyLNGE | pFullOmegaETK.pE
-  val pFullOmegaLNGT = pFullPolyLNGT | pFullOmegaETK.pT
-  val pFullOmegaLNGK = pFullOmegaETK.pK
-}
+object FullOmega {
 
-object TestFullOmegaLNG {
-  import Util._
-  class List[E, T, K](pe : PackratParser[E], pt : PackratParser[T], pk : PackratParser[K]) { val pE = pe; val pT = pt; val pK = pk }
-  object Test extends FullOmegaLNG[String, String, String, List[String, String, String]] {
-    lazy val parser : (=> List[String, String, String]) => List[String, String, String] = l =>
-      new List[String, String, String](pFullOmegaLNGE(Test)(l), pFullOmegaLNGT(Test)(l), pFullOmegaLNGK(Test)(l))
-    lazy val parse = runParser(Util.fix(parser).pE)
+  trait Alg[E, T, K] extends Simple.Alg[E, T] with Pack.Alg[E, T] with Ref.Alg[E, T] with Omega.Alg[E, T, K]
+
+  trait Print extends Alg[String, String, String] with Simple.Print with Pack.Print with Ref.Print with Omega.Print
+
+  trait Parser[E, T, K, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]; val pK : PackratParser[K]}]
+    extends Simple.Parser[E, T, L] with Pack.Parser[E, T, L] with Ref.Parser[E, T, L] with Omega.Parser[E, T, K, L] {
+    val pFullOmegaE = pSimpleE | pPackE | pRefE | pOmegaE
+    val pFullOmegaT = pSimpleT | pRefT | pOmegaT
+    val pFullOmegaK = pOmegaK
   }
-  def main(args : Array[String]) = {
+
+}
+
+object TestFullOmega {
+
+  class List[E, T, K](pe: PackratParser[E], pt: PackratParser[T], pk: PackratParser[K]) {
+    val pE = pe
+    val pT = pt
+    val pK = pk
+  }
+
+  def parse[E, T, K](inp: String)(alg: FullOmega.Alg[E, T, K]) = {
+    def parser(l: => List[E, T, K]): List[E, T, K] = {
+      val lang = new FullOmega.Parser[E, T, K, List[E, T, K]] {}
+      new List[E, T, K](lang.pFullOmegaE(alg)(l), lang.pFullOmegaT(alg)(l), lang.pFullOmegaK(alg)(l))
+    }
+    runParser(fix(parser).pE)(inp)
+  }
+
+  def parseAndPrint(inp: String) = parse(inp)(new FullOmega.Print {})
+
+  def main(args: Array[String]) = {
     List(
-      "fold [Counter] {get=unit, inc=unit}",
-      "(unfold [Counter] p).get",
       "x",
       "if x then false else x",
       "\\x:A.x",
@@ -72,6 +121,6 @@ object TestFullOmegaLNG {
       "{*All Y:Star.Y, \\x:All Y:Star.Y.x} as {Some X:Star, X->X}",
       "{*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}}",
       "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}} in (ops.f ops.c)"
-    ).foreach(Test.parse)
+    ).foreach(parseAndPrint)
   }
 }

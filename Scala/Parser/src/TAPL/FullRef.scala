@@ -13,10 +13,6 @@ object Ref {
     def TmDeRef(e: E): E
 
     def TmAssign(l: E, r: E): E
-
-    def TySource(t: T): T
-
-    def TySink(t: T): T
   }
 
   trait Print extends Alg[String, String] {
@@ -27,36 +23,50 @@ object Ref {
     def TmDeRef(e: String) = "!" + e
 
     def TmAssign(l: String, r: String) = l + " := " + r
-
-    def TySource(t: String) = "Source " + t
-
-    def TySink(t: String) = "Sink " + t
   }
 
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
-    lexical.reserved += ("ref", "Ref", "Source", "Sink")
+    lexical.reserved += ("ref", "Ref")
     lexical.delimiters += ("!", ":=")
 
     val pRefE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       val e = l.pE
-      val t = l.pT
 
-      List(
-        "ref" ~> e ^^ { e => alg.TmRef(e) },
-        "!" ~> e ^^ { e => alg.TmDeRef(e) },
+      "ref" ~> e ^^ { e => alg.TmRef(e) } |||
+        "!" ~> e ^^ { e => alg.TmDeRef(e) } |||
         e ~ (":=" ~> e) ^^ { case lhs ~ rhs => alg.TmAssign(lhs, rhs) }
-      ).reduce((a, b) => a ||| b)
     }
 
     val pRefT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       val t = l.pT
 
-      List(
-        "Ref" ~> t ^^ alg.TyRef,
-        "Source" ~> t ^^ alg.TySource,
-        "Sink" ~> t ^^ alg.TySink,
-        "(" ~> t <~ ")"
-      ).reduce((a, b) => a ||| b)
+      "Ref" ~> t ^^ alg.TyRef
+    }
+  }
+
+}
+
+object SourceSink {
+
+  trait Alg[T] {
+    def TySource(t: T): T
+
+    def TySink(t: T): T
+  }
+
+  trait Print extends Alg[String] {
+    def TySource(t: String) = "Source " + t
+
+    def TySink(t: String) = "Sink " + t
+  }
+
+  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+    lexical.reserved += ("Source", "Sink")
+
+    val pSourceSinkT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+      val t = l.pT
+
+      "Source" ~> t ^^ alg.TySource ||| "Sink" ~> t ^^ alg.TySink
     }
   }
 
@@ -64,14 +74,14 @@ object Ref {
 
 object FullRef {
 
-  trait Alg[E, T] extends FullSimple.Alg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T]
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T] with SourceSink.Alg[T]
 
-  trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print
+  trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print with SourceSink.Print
 
   trait Parser[E, T, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]}]
-    extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] {
+    extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] with SourceSink.Parser[T, L] {
     val pFullRefE = pFullSimpleE | pRefE
-    val pFullRefT = pFullSimpleT | pRefT | pTopBotT
+    val pFullRefT = pFullSimpleT | pRefT | pTopBotT | pSourceSinkT
   }
 
 }

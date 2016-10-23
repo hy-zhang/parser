@@ -143,19 +143,34 @@ object FullSimpleExt {
 
 }
 
-object FullSimple {
+// todo: rename; FullSimple - Variant
+object Simple {
 
   trait Alg[E, T] extends TyArith.Alg[E, T] with Typed.Alg[E, T] with FullUntypedExt.Alg[E]
-    with TypedRecord.Alg[E, T] with FullSimpleExt.Alg[E, T] with Variant.Alg[E, T]
+    with TypedRecord.Alg[E, T] with FullSimpleExt.Alg[E, T]
 
   trait Print extends Alg[String, String] with TyArith.Print with Typed.Print with FullUntypedExt.Print
-    with TypedRecord.Print with FullSimpleExt.Print with Variant.Print
+    with TypedRecord.Print with FullSimpleExt.Print
 
   trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
     extends TyArith.Parser[E, T, L] with Typed.Parser[E, T, L] with FullUntypedExt.Parser[E, L]
-      with TypedRecord.Parser[E, T, L] with FullSimpleExt.Parser[E, T, L] with Variant.Parser[E, T, L] {
-    val pFullSimpleE = pTyArithE | pTypedE | pTypedRecordE | pFullSimpleExtE | pVariantE | pFullUntypedExtE
-    val pFullSimpleT = pTyArithT | pTypedT | pTypedRecordT | pFullSimpleExtT | pVariantT
+      with TypedRecord.Parser[E, T, L] with FullSimpleExt.Parser[E, T, L] {
+    val pSimpleE = pTyArithE | pTypedE | pTypedRecordE | pFullSimpleExtE | pFullUntypedExtE
+    val pSimpleT = pTyArithT | pTypedT | pTypedRecordT | pFullSimpleExtT
+  }
+
+}
+
+object FullSimple {
+
+  trait Alg[E, T] extends Simple.Alg[E, T] with Variant.Alg[E, T]
+
+  trait Print extends Alg[String, String] with Simple.Print with Variant.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends Simple.Parser[E, T, L] with Variant.Parser[E, T, L] {
+    val pFullSimpleE = pSimpleE | pVariantE
+    val pFullSimpleT = pSimpleT | pVariantT
   }
 
 }

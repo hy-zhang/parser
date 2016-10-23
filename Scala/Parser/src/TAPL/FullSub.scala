@@ -4,17 +4,14 @@ import Util._
 
 object FullSub {
 
-  trait Alg[E, T] extends Typed.Alg[E, T] with TyArith.Alg[E, T] with FullUntypedExt.Alg[E]
-    with TypedRecord.Alg[E, T] with FullSimpleExt.Alg[E, T] with Top.Alg[T]
+  trait Alg[E, T] extends Simple.Alg[E, T] with Top.Alg[T]
 
-  trait Print extends Alg[String, String] with Typed.Print with TyArith.Print with FullUntypedExt.Print
-    with TypedRecord.Print with FullSimpleExt.Print with Top.Print
+  trait Print extends Alg[String, String] with Simple.Print with Top.Print
 
   trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends Typed.Parser[E, T, L] with TyArith.Parser[E, T, L] with FullUntypedExt.Parser[E, L]
-      with TypedRecord.Parser[E, T, L] with FullSimpleExt.Parser[E, T, L] with Top.Parser[T, L] {
-    val pFullSubE = pTyArithE | pTypedE | pTypedRecordE | pFullSimpleExtE | pFullUntypedExtE
-    val pFullSubT = pTyArithT | pTypedT | pTypedRecordT | pFullSimpleExtT | pTopT
+    extends Simple.Parser[E, T, L] with Top.Parser[T, L] {
+    val pFullSubE = pSimpleE
+    val pFullSubT = pSimpleT | pTopT
   }
 
 }
