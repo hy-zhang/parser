@@ -3,6 +3,7 @@ package TAPL
 import Util._
 
 object FullRecon {
+
   trait Alg[E, T] extends Recon.Alg[E, T] with Let.Alg[E]
 
   trait Print extends Alg[String, String] with Recon.Print with Let.Print

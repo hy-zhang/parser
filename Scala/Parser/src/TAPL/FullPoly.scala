@@ -14,7 +14,8 @@ object Pack {
   trait Print extends Alg[String, String] {
     override def TmPack(t1: String, e: String, t2: String): String = "{*" + t1 + "," + e + "} as " + t2
 
-    override def TmUnpack(tx: String, x: String, e1: String, e2: String): String = "let {" + tx + "," + x + "} = " + e1 + " in " + e2
+    override def TmUnpack(tx: String, x: String, e1: String, e2: String): String = "let {" + tx + "," + x + "} = " +
+      e1 + " in " + e2
   }
 
   trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
@@ -26,7 +27,9 @@ object Pack {
       lazy val t = l.pT
 
       ("{" ~> "*" ~> t ~ ("," ~> e) <~ "}") ~ ("as" ~> t) ^^ { case t1 ~ ex ~ t2 => alg.TmPack(t1, ex, t2) } |||
-        "let" ~> ("{" ~> ucid ~ ("," ~> lcid) <~ "}") ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case tx ~ x ~ e1 ~ e2 => alg.TmUnpack(tx, x, e1, e2) }
+        "let" ~> ("{" ~> ucid ~ ("," ~> lcid) <~ "}") ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case tx ~ x ~ e1 ~ e2 => alg
+          .TmUnpack(tx, x, e1, e2)
+        }
     }
   }
 

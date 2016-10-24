@@ -56,7 +56,8 @@ object Variant {
   trait Print extends Alg[String, String] {
     def TmTag(x: String, e: String, t: String) = "<" + x + "=" + e + "> as " + t
 
-    def TmCase(e: String, l: List[(String, String, String)]) = "[case " + e + " of " + l.map(x => "<" + x._1 + "=" + x._2 + "> => " + x._3).reduce((x, y) => x + " | " + y) + "]"
+    def TmCase(e: String, l: List[(String, String, String)]) =
+      "[case " + e + " of " + l.map(x => "<" + x._1 + "=" + x._2 + "> => " + x._3).reduce((x, y) => x + " | " + y) + "]"
 
     def TyVariant(l: List[(String, String)]) = "<" + l.map(x => x._1 + ":" + x._2).reduce((x, y) => x + ", " + y) + ">"
   }
@@ -70,7 +71,9 @@ object Variant {
       lazy val t = l.pT
 
       ("<" ~> lcid) ~ ("=" ~> e <~ ">") ~ ("as" ~> t) ^^ { case x ~ e0 ~ t0 => alg.TmTag(x, e0, t0) } |||
-        ("case" ~> e <~ "of") ~ repsep(("<" ~> lcid) ~ ("=" ~> lcid) ~ ((">" ~ "=>") ~> e) ^^ { case x1 ~ x2 ~ e0 => (x1, x2, e0) }, "|") ^^ { case e0 ~ l => alg.TmCase(e0, l) }
+        ("case" ~> e <~ "of") ~ repsep(("<" ~> lcid) ~ ("=" ~> lcid) ~ ((">" ~ "=>") ~> e) ^^ { case x1 ~ x2 ~ e0 =>
+          (x1, x2, e0)
+        }, "|") ^^ { case e0 ~ l => alg.TmCase(e0, l) }
     }
 
     val pVariantT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
