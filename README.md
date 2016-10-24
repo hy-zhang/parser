@@ -11,13 +11,16 @@ Nat               | 4            |
 VarApp            | 2            |
 UntypedAbs        | 1            |
 Record            | 2            |
-FullUntyped Ext   | 4            |
+FloatString       | 3            |
+Let               | 1            |
 Typed             | 4 = 2 + 2    | VarApp
 TypedBool         | 4 = 3 + 1    | Bool
 TypedNat          | 5 = 4 + 1    | Nat
 TypeVar           | 1            |
 TypedRecord       | 3 = 2 + 1    | Record
-FullSimple Ext    |              |
+Variant           | 3            |
+Extension         | 7            |
+Simple            | 28           | TyArith, Typed, FloatString, Let, TypedRecord, Extension, TypeVar
 Top               | 1            |
 TopBot            | 2 = 1 + 1    | Top
 Ref               | 6            |
@@ -34,19 +37,19 @@ Name              | Component
 ----------------- | -------------------------------
 Arith             | Bool, Nat
 Untyped           | VarApp, UntypedAbs
-FullUntyped       | Arith, Untyped, Record, FullUntyped Ext
+FullUntyped       | Arith, Untyped, Record, FloatString, Let
 TyArith           | TypedBool, TypedNat
 SimpleBool        | Typed, TypedBool
-FullSimple        | Typed, TyArith, FullUntyped Ext, FullSimple Ext
+FullSimple        | Simple, Variant
 Bot               | Typed, TopBot
-FullRef           | FullSimple, TopBot, Ref
-FullError         | Bot, TypeBool, Error, TypeVar
+FullRef           | FullSimple, TopBot, Ref, SourceSink
+FullError         | Bot, TypedBool, Error, TypeVar
 RcdSubBot         | Bot, TypedRecord
-FullSub           | FullSimple, Top
+FullSub           | Simple, Top
 FullEquiRec       | FullSimple, RecType
 FullIsoRec        | FullEquiRec, Fold
 EquiRec           | Typed, RecType, TypeVar
-Recon             | Typed, TyArith, TyVar
-FullRecon         | 
-FullPoly          | FullSimple, Pack, Poly
-FullOmega         | FullSimple, Ref, Pack, Omega
+Recon             | Typed, TyArith, TypeVar
+FullRecon         | Recon, Let
+FullPoly          | Simple, Pack, Poly
+FullOmega         | Simple, Ref, Pack, Omega

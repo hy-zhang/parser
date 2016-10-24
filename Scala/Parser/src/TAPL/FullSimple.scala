@@ -82,10 +82,9 @@ object Variant {
 
 }
 
-// todo: use TypeVar
-object FullSimpleExt {
+object Extension {
 
-  trait Alg[E, T] extends TypeVar.Alg[T] {
+  trait Alg[E, T] {
     def TmUnit(): E
 
     def TmAscribe(e: E, t: T): E
@@ -101,7 +100,7 @@ object FullSimpleExt {
     def TyFloat(): T
   }
 
-  trait Print extends Alg[String, String] with TypeVar.Print {
+  trait Print extends Alg[String, String] {
     def TmUnit() = "unit"
 
     def TmAscribe(e: String, t: String) = "(" + e + ") as " + t
@@ -117,11 +116,11 @@ object FullSimpleExt {
     def TyFloat() = "Float"
   }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends TypeVar.Parser[T, F] {
+  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
     lexical.reserved += ("unit", "Unit", "as", "fix", "String", "Float", "inert")
     lexical.delimiters += ("(", ")", "[", "]")
 
-    val pFullSimpleExtE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
+    val pExtensionE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
       lazy val t = l.pT
 
@@ -132,13 +131,11 @@ object FullSimpleExt {
         "(" ~> e <~ ")"
     }
 
-    private val pFullSimpleExtT2: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
+    val pExtensionT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
       "Unit" ^^ { _ => alg.TyUnit() } |||
         "String" ^^ { _ => alg.TyString() } |||
         "Float" ^^ { _ => alg.TyFloat() }
     }
-
-    val pFullSimpleExtT: Alg[E, T] => (=> F) => PackratParser[T] = pFullSimpleExtT2 | pTypeVarT
   }
 
 }
@@ -146,17 +143,17 @@ object FullSimpleExt {
 // todo: rename; FullSimple - Variant
 object Simple {
 
-  trait Alg[E, T] extends TyArith.Alg[E, T] with Typed.Alg[E, T] with FullUntypedExt.Alg[E]
-    with TypedRecord.Alg[E, T] with FullSimpleExt.Alg[E, T]
+  trait Alg[E, T] extends TyArith.Alg[E, T] with Typed.Alg[E, T] with FloatString.Alg[E] with Let.Alg[E]
+    with TypedRecord.Alg[E, T] with Extension.Alg[E, T] with TypeVar.Alg[T]
 
-  trait Print extends Alg[String, String] with TyArith.Print with Typed.Print with FullUntypedExt.Print
-    with TypedRecord.Print with FullSimpleExt.Print
+  trait Print extends Alg[String, String] with TyArith.Print with Typed.Print with FloatString.Print
+    with Let.Print with TypedRecord.Print with Extension.Print with TypeVar.Print
 
   trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends TyArith.Parser[E, T, L] with Typed.Parser[E, T, L] with FullUntypedExt.Parser[E, L]
-      with TypedRecord.Parser[E, T, L] with FullSimpleExt.Parser[E, T, L] {
-    val pSimpleE = pTyArithE | pTypedE | pTypedRecordE | pFullSimpleExtE | pFullUntypedExtE
-    val pSimpleT = pTyArithT | pTypedT | pTypedRecordT | pFullSimpleExtT
+    extends TyArith.Parser[E, T, L] with Typed.Parser[E, T, L] with FloatString.Parser[E, L] with Let.Parser[E, L]
+      with TypedRecord.Parser[E, T, L] with Extension.Parser[E, T, L] with TypeVar.Parser[T, L] {
+    val pSimpleE = pTyArithE | pTypedE | pTypedRecordE | pExtensionE | pFloatStringE | pLetE
+    val pSimpleT = pTyArithT | pTypedT | pTypedRecordT | pExtensionT | pTypeVarT
   }
 
 }
@@ -201,7 +198,8 @@ object TestFullSimple {
       "case a of <phy=x> => x.first | <vir=y> => y.name",
       "succ (pred 0)",
       "iszero (pred (succ (succ 0)))",
-      "inert [Bool->Nat]"
+      "inert [Bool->Nat]",
+      "let x = false in \\y:Bool->Nat. y x"
     ).foreach(parseAndPrint)
   }
 }

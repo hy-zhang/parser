@@ -36,14 +36,14 @@ object Fold {
 
 object FullIsoRec {
 
-  trait Alg[E, T] extends FullSimple.Alg[E, T] with Fold.Alg[E, T] with RecType.Alg[T]
+  trait Alg[E, T] extends FullEquiRec.Alg[E, T] with Fold.Alg[E, T]
 
-  trait Print extends Alg[String, String] with FullSimple.Print with Fold.Print with RecType.Print
+  trait Print extends Alg[String, String] with FullEquiRec.Print with Fold.Print
 
   trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends FullSimple.Parser[E, T, L] with Fold.Parser[E, T, L] with RecType.Parser[T, L] {
-    val pFullIsoRecE = pFullSimpleE | pFoldE
-    val pFullIsoRecT = pFullSimpleT | pRecTypeT
+    extends FullEquiRec.Parser[E, T, L] with Fold.Parser[E, T, L] {
+    val pFullIsoRecE = pFullEquiRecE | pFoldE
+    val pFullIsoRecT = pFullEquiRecT
   }
 
 }

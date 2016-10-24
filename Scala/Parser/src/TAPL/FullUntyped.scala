@@ -56,9 +56,9 @@ object Let {
 
 }
 
-object FullUntypedExt {
+object FloatString {
 
-  trait Alg[E] extends Let.Alg[E] {
+  trait Alg[E] {
     def TmFloat(d: Double): E
 
     // Not supported for now due to the limit of StandardTokenParsers.
@@ -70,7 +70,7 @@ object FullUntypedExt {
     def TmString(s: String): E
   }
 
-  trait Print extends Alg[String] with Let.Print {
+  trait Print extends Alg[String] {
     def TmFloat(d: Double) = d.toString
 
     def TmTimesfloat(e1: String, e2: String) = "timesfloat (" + e1 + ") (" + e2 + ")"
@@ -78,30 +78,31 @@ object FullUntypedExt {
     def TmString(s: String) = "\"" + s + "\""
   }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] extends Let.Parser[E, F] {
+  trait Parser[E, F <: {val pE : PackratParser[E]}] {
     lexical.delimiters += "*"
 
-    private val pFullUntypedExtE2: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
+    val pFloatStringE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
       lazy val e = l.pE
 
       chainl1(e, "*" ^^^ { (e1: E, e2: E) => alg.TmTimesfloat(e1, e2) }) |||
         stringLit ^^ alg.TmString
     }
-
-    val pFullUntypedExtE: Alg[E] => (=> F) => PackratParser[E] = pFullUntypedExtE2 | pLetE
   }
 
 }
 
 object FullUntyped {
 
-  trait Alg[E] extends Arith.Alg[E] with Untyped.Alg[E] with Record.Alg[E] with FullUntypedExt.Alg[E]
+  trait Alg[E] extends Arith.Alg[E] with Untyped.Alg[E] with Record.Alg[E]
+    with FloatString.Alg[E] with Let.Alg[E]
 
-  trait Print extends Alg[String] with Arith.Print with Untyped.Print with Record.Print with FullUntypedExt.Print
+  trait Print extends Alg[String] with Arith.Print with Untyped.Print with Record.Print
+    with FloatString.Print with Let.Print
 
   trait Parser[E, L <: {val pE : Util.PackratParser[E]}]
-    extends Arith.Parser[E, L] with Untyped.Parser[E, L] with Record.Parser[E, L] with FullUntypedExt.Parser[E, L] {
-    val pFullUntypedE = pArithE | pUntypedE | pRecordE | pFullUntypedExtE
+    extends Arith.Parser[E, L] with Untyped.Parser[E, L] with Record.Parser[E, L]
+      with FloatString.Parser[E, L] with Let.Parser[E, L] {
+    val pFullUntypedE = pArithE | pUntypedE | pRecordE | pFloatStringE | pLetE
   }
 
 }
