@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 /* <2> */
 object UntypedAbs {
@@ -84,12 +84,4 @@ object TestUntyped {
 
   def parseAndPrint(inp: String) = parse(inp)(new Untyped.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "x",
-      "\\x.x",
-      "(\\x.x) \\x.x",
-      "\\x.x (x \\x.x)"
-    ).foreach(parseAndPrint)
-  }
 }

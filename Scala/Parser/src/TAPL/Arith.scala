@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 /* <1> */
 
@@ -115,13 +115,4 @@ object TestArith {
 
   def parseAndPrint(inp: String) = parse(inp)(new Arith.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "true",
-      "if false then true else false",
-      "3",
-      "succ (pred 0)",
-      "iszero (pred (succ (succ 0)))"
-    ).foreach(parseAndPrint)
-  }
 }
