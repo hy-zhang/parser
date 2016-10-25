@@ -72,6 +72,11 @@ As mentioned before, we decompose all the calculi into reusable components for m
 
 \textcolor{red}{graph here}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{depGraph}
+\end{figure}
+
 As shown in the graph, some components such as \lstinline{VarApp} are created from scratch, while others such as \lstinline{Typed} are extended from existing components. The \lstinline{Typed} component extends from \lstinline{VarApp} and has two more syntactical structures which are typed lambda abstraction and function type (arrow type). It is the core of many calculi in this case study, and we use it here as an example for demonstrating the extensibility of components.
 
 \begin{lstlisting}
