@@ -3,6 +3,7 @@ package TAPLcomp.fullequirec
 import scala.io.Source
 
 object FullEquirecDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

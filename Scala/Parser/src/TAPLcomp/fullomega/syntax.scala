@@ -4,6 +4,7 @@ import scala.text.Document
 import scala.text.Document._
 
 object PrettyPrinter {
+
   import TAPLcomp.Print._
 
   def pknKind(outer: Boolean, k: Kind): Document = k match {
@@ -19,7 +20,7 @@ object PrettyPrinter {
 
   def pknAKind(outer: Boolean, k: Kind): Document = k match {
     case KnStar => "*"
-    case knK    => "(" :: pknKind(outer, knK) :: ")"
+    case knK => "(" :: pknKind(outer, knK) :: ")"
   }
 
   def pkn(k: Kind): Document =
@@ -27,7 +28,7 @@ object PrettyPrinter {
 
   def prokn(knk: Kind): Document = knk match {
     case KnStar => empty
-    case _      => "::" :: pknKind(false, knk)
+    case _ => "::" :: pknKind(false, knk)
   }
 
   def ptyType(outer: Boolean, ty: Ty): Document = ty match {
@@ -71,7 +72,8 @@ object PrettyPrinter {
         } else {
           g0(li :: ":" :/: ptyType(false, tyTi))
         }
-      g2("{" :: fields.zipWithIndex.map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }.reduceLeftOption(_ :: "," :/: _).getOrElse(empty) :: "}")
+      g2("{" :: fields.zipWithIndex.map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }.reduceLeftOption(_ :: "," :/:
+        _).getOrElse(empty) :: "}")
     case TyNat =>
       "Nat"
     case TySome(tyX, knK1, tyT2) =>

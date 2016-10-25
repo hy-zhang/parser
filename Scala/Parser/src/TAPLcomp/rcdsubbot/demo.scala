@@ -3,6 +3,7 @@ package TAPLcomp.rcdsubbot
 import scala.io.Source
 
 object RcdSubBotDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

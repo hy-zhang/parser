@@ -1,17 +1,22 @@
 package TAPLcomp.bot
 
-import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
+import scala.util.parsing.combinator.{ImplicitConversions, PackratParsers}
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 sealed trait Ty
+
 case object TyTop extends Ty
+
 case object TyBot extends Ty
+
 case class TyArr(t1: Ty, t2: Ty) extends Ty
 
 sealed trait Term
+
 case class TmVar(i: String) extends Term
+
 case class TmAbs(v: String, ty: Ty, t: Term) extends Term
+
 case class TmApp(t1: Term, t2: Term) extends Term
 
 object BotParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
@@ -43,8 +48,8 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
 
   // TERMS
   lazy val term: PackratParser[Term] =
-    appTerm |
-      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) }
+  appTerm |
+    ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) }
   lazy val appTerm: PackratParser[Term] =
     appTerm ~ aTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
       aTerm
@@ -55,7 +60,7 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
-    case t                 => error(t.toString)
+    case t => error(t.toString)
   }
 
 }

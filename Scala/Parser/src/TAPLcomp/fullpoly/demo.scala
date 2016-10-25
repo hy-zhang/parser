@@ -3,6 +3,7 @@ package TAPLcomp.fullpoly
 import scala.io.Source
 
 object FullPolyDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

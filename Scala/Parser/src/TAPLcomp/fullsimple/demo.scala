@@ -3,6 +3,7 @@ package TAPLcomp.fullsimple
 import scala.io.Source
 
 object FullSimpleDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

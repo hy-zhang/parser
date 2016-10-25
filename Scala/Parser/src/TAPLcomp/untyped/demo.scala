@@ -3,6 +3,7 @@ package TAPLcomp.untyped
 import scala.io.Source
 
 object UntypedDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

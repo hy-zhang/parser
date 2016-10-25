@@ -5,13 +5,14 @@ import scala.text.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
+
   import TAPLcomp.Print._
 
   def ptyType(outer: Boolean, ty: Ty): Document = ty match {
-    case TyRef(tyT)    => "Ref " :: ptyAType(false, tyT)
+    case TyRef(tyT) => "Ref " :: ptyAType(false, tyT)
     case TySource(tyT) => "Source " :: ptyAType(false, tyT)
-    case TySink(tyT)   => "Sink " :: ptyAType(false, tyT)
-    case ty            => ptyArrowType(outer, ty)
+    case TySink(tyT) => "Sink " :: ptyAType(false, tyT)
+    case ty => ptyArrowType(outer, ty)
   }
 
   def ptyArrowType(outer: Boolean, tyT: Ty): Document = tyT match {
@@ -50,7 +51,8 @@ object PrettyPrinter {
         } else {
           g0(li :: ":" :/: ptyType(false, tyTi))
         }
-      g2("{" :: fields.zipWithIndex.map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }.reduceLeftOption(_ :: "," :/: _).getOrElse(empty) :: "}")
+      g2("{" :: fields.zipWithIndex.map { case ((li, tyTi), i) => pf(i + 1, li, tyTi) }.reduceLeftOption(_ :: "," :/:
+        _).getOrElse(empty) :: "}")
     case TyNat =>
       "Nat"
     case tyT =>

@@ -3,6 +3,7 @@ package TAPLcomp.fullisorec
 import scala.io.Source
 
 object FullIsorecDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

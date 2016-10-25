@@ -1,10 +1,10 @@
 package TAPLcomp.simplebool
 
 import scala.text.Document
-import scala.text.Document._
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
+
   import TAPLcomp.Print._
 
   def ptyType(outer: Boolean, ty: Ty): Document = ty match {
@@ -20,7 +20,7 @@ object PrettyPrinter {
 
   def ptyAType(outer: Boolean, tyT: Ty): Document = tyT match {
     case TyBool => "Bool"
-    case tyT    => "(" :: ptyType(outer, tyT) :: ")"
+    case tyT => "(" :: ptyType(outer, tyT) :: ")"
   }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)

@@ -3,6 +3,7 @@ package TAPLcomp.fullerror
 import scala.io.Source
 
 object FullErrorDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

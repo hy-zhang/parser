@@ -3,6 +3,7 @@ package TAPLcomp.fullsub
 import scala.io.Source
 
 object FullSubDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

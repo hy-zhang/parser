@@ -3,6 +3,7 @@ package TAPLcomp.fullref
 import scala.io.Source
 
 object FullRefDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

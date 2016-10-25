@@ -1,19 +1,26 @@
 package TAPLcomp.simplebool
 
-import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
+import scala.util.parsing.combinator.{ImplicitConversions, PackratParsers}
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 sealed trait Term
+
 case class TmVar(i: String) extends Term
+
 case class TmAbs(v: String, ty: Ty, t: Term) extends Term
+
 case class TmApp(t1: Term, t2: Term) extends Term
+
 case object TmTrue extends Term
+
 case object TmFalse extends Term
+
 case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
 
 sealed trait Ty
+
 case class TyArr(t1: Ty, t2: Ty) extends Ty
+
 case object TyBool extends Ty
 
 object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
@@ -50,7 +57,7 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
-    case t                 => error(t.toString)
+    case t => error(t.toString)
   }
 
 }

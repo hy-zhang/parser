@@ -3,6 +3,7 @@ package TAPLcomp.bot
 import scala.io.Source
 
 object BotDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

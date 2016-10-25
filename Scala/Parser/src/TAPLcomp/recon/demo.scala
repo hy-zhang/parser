@@ -3,6 +3,7 @@ package TAPLcomp.recon
 import scala.io.Source
 
 object ReconDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

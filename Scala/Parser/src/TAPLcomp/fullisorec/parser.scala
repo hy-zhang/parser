@@ -1,49 +1,80 @@
 package TAPLcomp.fullisorec
 
-import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
+import scala.util.parsing.combinator.{ImplicitConversions, PackratParsers}
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 sealed trait Ty
+
 case class TyVar(i: String) extends Ty
+
 case class TyRecord(els: List[(String, Ty)]) extends Ty
+
 case class TyArr(t1: Ty, t2: Ty) extends Ty
+
 case object TyNat extends Ty
+
 case class TyVariant(els: List[(String, Ty)]) extends Ty
+
 case object TyBool extends Ty
+
 case object TyString extends Ty
+
 case object TyUnit extends Ty
+
 case class TyRec(id: String, ty: Ty) extends Ty
 
 sealed trait Term
+
 case object TmTrue extends Term
+
 case object TmFalse extends Term
+
 case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
+
 case class TmVar(i: String) extends Term
+
 case class TmString(s: String) extends Term
+
 case class TmAscribe(t: Term, ty: Ty) extends Term
+
 case class TmRecord(fields: List[(String, Term)]) extends Term
+
 case class TmProj(t: Term, proj: String) extends Term
+
 case class TmAbs(v: String, ty: Ty, t: Term) extends Term
+
 case class TmApp(t1: Term, t2: Term) extends Term
+
 case object TmZero extends Term
+
 case class TmSucc(t: Term) extends Term
+
 case class TmPred(t: Term) extends Term
+
 case class TmIsZero(t: Term) extends Term
+
 case class TmInert(ty: Ty) extends Term
+
 case class TmCase(sel: Term, branches: List[(String, String, Term)]) extends Term
+
 case class TmTag(tag: String, t: Term, ty: Ty) extends Term
+
 case class TmLet(l: String, t1: Term, t2: Term) extends Term
+
 case object TmUnit extends Term
+
 case class TmFix(t: Term) extends Term
+
 case class TmFold(ty: Ty) extends Term
+
 case class TmUnfold(ty: Ty) extends Term
 
 object FullIsorecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "Rec", "_", "fold", "unfold")
-  lexical.delimiters += ("\\", "(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "[", "]")
+  lexical.delimiters += ("\\", "(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|",
+    "[", "]")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
@@ -52,8 +83,8 @@ object FullIsorecParsers extends StandardTokenParsers with PackratParsers with I
 
   // TYPES
   lazy val `type`: PackratParser[Ty] =
-    arrowType |
-      ("Rec" ~> ucid) ~ ("." ~> `type`) ^^ { case id ~ ty => TyRec(id, ty) }
+  arrowType |
+    ("Rec" ~> ucid) ~ ("." ~> `type`) ^^ { case id ~ ty => TyRec(id, ty) }
   lazy val aType: PackratParser[Ty] =
     "(" ~> `type` <~ ")" |
       ucid ^^ { tn => TyVar(tn) } |
@@ -76,11 +107,11 @@ object FullIsorecParsers extends StandardTokenParsers with PackratParsers with I
 
   // TERMS
   lazy val term: PackratParser[Term] =
-    appTerm |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |
-      ("case" ~> term) ~ ("of" ~> cases) ^^ { case t ~ cs => TmCase(t, cs) } |
-      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |
-      ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) }
+  appTerm |
+    ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |
+    ("case" ~> term) ~ ("of" ~> cases) ^^ { case t ~ cs => TmCase(t, cs) } |
+    ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |
+    ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) }
 
   lazy val appTerm: PackratParser[Term] =
     appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
@@ -88,8 +119,8 @@ object FullIsorecParsers extends StandardTokenParsers with PackratParsers with I
       "succ" ~> pathTerm ^^ { t => TmSucc(t) } |
       "pred" ~> pathTerm ^^ { t => TmPred(t) } |
       "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |
-      ("fold" ~ "[") ~> `type` <~ "]" ^^ {ty => TmFold(ty)} |
-      ("unfold" ~ "[") ~> `type` <~ "]" ^^ {ty => TmUnfold(ty)} |
+      ("fold" ~ "[") ~> `type` <~ "]" ^^ { ty => TmFold(ty) } |
+      ("unfold" ~ "[") ~> `type` <~ "]" ^^ { ty => TmUnfold(ty) } |
       pathTerm
 
   lazy val ascribeTerm: PackratParser[Term] =
@@ -134,7 +165,7 @@ object FullIsorecParsers extends StandardTokenParsers with PackratParsers with I
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
-    case t                 => error(t.toString)
+    case t => error(t.toString)
   }
 
 }

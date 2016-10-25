@@ -1,20 +1,28 @@
 package TAPLcomp.rcdsubbot
 
-import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
+import scala.util.parsing.combinator.{ImplicitConversions, PackratParsers}
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 sealed trait Ty
+
 case object TyTop extends Ty
+
 case object TyBot extends Ty
+
 case class TyArr(t1: Ty, t2: Ty) extends Ty
+
 case class TyRecord(els: List[(String, Ty)]) extends Ty
 
 sealed trait Term
+
 case class TmVar(i: String) extends Term
+
 case class TmAbs(v: String, ty: Ty, t: Term) extends Term
+
 case class TmApp(t1: Term, t2: Term) extends Term
+
 case class TmRecord(fields: List[(String, Term)]) extends Term
+
 case class TmProj(t: Term, proj: String) extends Term
 
 object RcdSubBotParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
@@ -47,8 +55,8 @@ object RcdSubBotParsers extends StandardTokenParsers with PackratParsers with Im
 
   // TERMS
   lazy val term: PackratParser[Term] =
-    appTerm |
-      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) }
+  appTerm |
+    ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) }
   lazy val appTerm: PackratParser[Term] =
     appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
       pathTerm
@@ -70,7 +78,7 @@ object RcdSubBotParsers extends StandardTokenParsers with PackratParsers with Im
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
-    case t                 => error(t.toString)
+    case t => error(t.toString)
   }
 
 }

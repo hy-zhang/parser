@@ -6,11 +6,17 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 sealed trait Term
 
 case object TmTrue extends Term
+
 case object TmFalse extends Term
+
 case class TmIf(cond: Term, t1: Term, t2: Term) extends Term
+
 case object TmZero extends Term
+
 case class TmSucc(t: Term) extends Term
+
 case class TmPred(t: Term) extends Term
+
 case class TmIsZero(t: Term) extends Term
 
 object ArithParsers extends StandardTokenParsers with ImplicitConversions {
@@ -28,20 +34,22 @@ object ArithParsers extends StandardTokenParsers with ImplicitConversions {
 
   //  Atomic terms are ones that never require extra parentheses
   private def aTerm: Parser[Term] =
-    "(" ~> term <~ ")" |
-      "true" ^^ { _ => TmTrue } |
-      "false" ^^ { _ => TmFalse } |
-      numericLit ^^ { x => num(x.toInt) }
+  "(" ~> term <~ ")" |
+    "true" ^^ { _ => TmTrue } |
+    "false" ^^ { _ => TmFalse } |
+    numericLit ^^ { x => num(x.toInt) }
 
   private def num(x: Int): Term = x match {
     case 0 => TmZero
     case _ => TmSucc(num(x - 1))
   }
 
-  private def eof: Parser[String] = elem("<eof>", _ == lexical.EOF) ^^ { _.chars }
+  private def eof: Parser[String] = elem("<eof>", _ == lexical.EOF) ^^ {
+    _.chars
+  }
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
-    case t                 => error(t.toString)
+    case t => error(t.toString)
   }
 }

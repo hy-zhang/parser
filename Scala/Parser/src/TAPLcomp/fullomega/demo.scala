@@ -3,6 +3,7 @@ package TAPLcomp.fullomega
 import scala.io.Source
 
 object FullOmegaDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

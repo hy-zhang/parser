@@ -1,13 +1,14 @@
 package TAPLcomp.untyped
 
-import scala.util.parsing.combinator.ImplicitConversions
-import scala.util.parsing.combinator.PackratParsers
+import scala.util.parsing.combinator.{ImplicitConversions, PackratParsers}
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 sealed trait Term
 
 case class TmVar(i: String) extends Term
+
 case class TmAbs(v: String, t: Term) extends Term
+
 case class TmApp(t1: Term, t2: Term) extends Term
 
 // This parser is done exactly in the same way as in TAPL.
@@ -37,6 +38,6 @@ object UntypedParsers extends StandardTokenParsers with PackratParsers with Impl
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {
     case t if t.successful => t.get
-    case t                 => error(t.toString)
+    case t => error(t.toString)
   }
 }

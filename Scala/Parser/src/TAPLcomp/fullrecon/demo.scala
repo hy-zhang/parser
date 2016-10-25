@@ -3,6 +3,7 @@ package TAPLcomp.fullrecon
 import scala.io.Source
 
 object FullReconDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

@@ -4,6 +4,7 @@ import scala.text.Document
 
 // outer means that the term is the top-level term
 object PrettyPrinter {
+
   import TAPLcomp.Print._
 
   def ptyType(outer: Boolean, ty: Ty): Document = ty match {

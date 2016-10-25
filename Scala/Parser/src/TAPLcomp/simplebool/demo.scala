@@ -3,6 +3,7 @@ package TAPLcomp.simplebool
 import scala.io.Source
 
 object SimpleBoolDemo {
+
   import TAPLcomp.Print._
 
   val width = 60

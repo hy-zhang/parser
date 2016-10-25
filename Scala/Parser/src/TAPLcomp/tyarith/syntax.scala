@@ -1,9 +1,9 @@
 package TAPLcomp.tyarith
 
 import scala.text.Document
-import scala.text.Document._
 
 object PrettyPrinter {
+
   import TAPLcomp.Print._
 
   def ptyType(outer: Boolean, ty: Ty): Document = ty match {
@@ -12,8 +12,8 @@ object PrettyPrinter {
 
   def ptyAType(outer: Boolean, ty: Ty): Document = ty match {
     case TyBool => "Bool"
-    case TyNat  => "Nat"
-    case ty1    => "(" :: ptyAType(outer, ty1) :: ")"
+    case TyNat => "Nat"
+    case ty1 => "(" :: ptyAType(outer, ty1) :: ")"
   }
 
   def ptyTy(ty: Ty) = ptyType(true, ty)
