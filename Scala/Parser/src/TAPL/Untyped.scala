@@ -46,7 +46,7 @@ object VarApp {
       lazy val e = l.pE
 
       List(
-        ident ^^ alg.TmVar,
+        lcid ^^ alg.TmVar,
         e ~ e ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) },
         "(" ~> e <~ ")"
       ).reduce((a, b) => a ||| b)

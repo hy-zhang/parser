@@ -114,7 +114,7 @@ object TestFullOmega {
       "x",
       "if x then false else x",
       "\\x:A.x",
-      "\\X:Star=>Star.X",
+      "\\X:Star=>Star.unit as X Bool",
       "(\\X:Star.\\x:X.x) [All X:Star.X->X]",
       "\\x:({Some X:Star, {c:X, f:X->Nat}}).x",
       "{*All Y:Star.Y, \\x:All Y:Star.Y.x} as {Some X:Star, X->X}",
