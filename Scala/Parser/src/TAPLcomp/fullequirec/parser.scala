@@ -65,7 +65,7 @@ case object TmUnit extends Term
 
 case class TmFix(t: Term) extends Term
 
-object FullEquirecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+object FullEquiRecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "letrec", "Rec", "_")

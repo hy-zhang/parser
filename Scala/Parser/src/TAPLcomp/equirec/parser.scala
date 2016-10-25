@@ -19,7 +19,7 @@ case class TmAbs(v: String, ty: Ty, t: Term) extends Term
 
 case class TmApp(t1: Term, t2: Term) extends Term
 
-object EquirecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+object EquiRecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += "Rec"
   lexical.delimiters += ("(", ")", ";", ".", ":", "->", "=", "\\")
 

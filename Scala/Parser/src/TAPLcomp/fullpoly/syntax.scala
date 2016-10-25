@@ -3,7 +3,7 @@ package TAPLcomp.fullpoly
 import scala.text.Document
 import scala.text.Document._
 
-object PrettyPrinter {
+object FullPolyPrinter {
 
   import TAPLcomp.Print._
 

@@ -4,7 +4,7 @@ import scala.text.Document
 import scala.text.Document._
 
 // outer means that the term is the top-level term
-object PrettyPrinter {
+object RcdSubBotPrinter {
 
   import TAPLcomp.Print._
 

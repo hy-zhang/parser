@@ -3,7 +3,7 @@ package TAPLcomp.recon
 import scala.text.Document
 
 // outer means that the term is the top-level term
-object PrettyPrinter {
+object ReconPrinter {
 
   import TAPLcomp.Print._
 

@@ -3,7 +3,7 @@ package TAPLcomp.fullomega
 import scala.text.Document
 import scala.text.Document._
 
-object PrettyPrinter {
+object FullOmegaPrinter {
 
   import TAPLcomp.Print._
 

@@ -3,7 +3,7 @@ package TAPLcomp.simplebool
 import scala.text.Document
 
 // outer means that the term is the top-level term
-object PrettyPrinter {
+object SimpleBoolPrinter {
 
   import TAPLcomp.Print._
 

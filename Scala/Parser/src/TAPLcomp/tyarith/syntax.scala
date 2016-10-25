@@ -2,7 +2,7 @@ package TAPLcomp.tyarith
 
 import scala.text.Document
 
-object PrettyPrinter {
+object TyArithPrinter {
 
   import TAPLcomp.Print._
 

@@ -12,7 +12,7 @@ object Print {
 
   def g2(doc: Document) = group(nest(2, doc))
 
-  def print(d: Document, w: Int = 90): String = {
+  def printDoc(d: Document, w: Int = 90): String = {
     val sw = new StringWriter()
     d.format(w, sw)
     sw.toString

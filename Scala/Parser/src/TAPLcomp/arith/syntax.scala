@@ -2,7 +2,7 @@ package TAPLcomp.arith
 
 import scala.text.Document
 
-object PrettyPrinter {
+object ArithPrinter {
 
   import TAPLcomp.Print._
 

@@ -69,7 +69,7 @@ case class TmFold(ty: Ty) extends Term
 
 case class TmUnfold(ty: Ty) extends Term
 
-object FullIsorecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
+object FullIsoRecParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "Rec", "_", "fold", "unfold")
