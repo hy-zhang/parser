@@ -1,0 +1,18 @@
+"hello"
+unit
+\x:A. x
+let x=true in x
+{x=true, y=false} 
+{x=true, y=false}.x
+\x:Bool. x
+(\x:Bool->Bool. if x false then true else false) (\x:Bool. if x then false else true) 
+\x:Nat. succ x
+(\x:Nat. succ (succ x)) (succ 0) 
+\x:<a:Bool,b:Bool>. x
+\t:Rec P. {get:Nat, inc:Unit->P}.unit
+let create = fix (\cr: {x:Nat}->Counter.\s: {x:Nat}.fold [Counter] {get = s.x, inc = \k:Unit. cr {x=succ(s.x)}}) in create {x=0}
+(unfold [Counter] p).inc unit
+(unfold [Counter] p1).get
+\f:Nat->Nat. \x:Nat. f (f x)
+p
+(unfold [Counter] p)

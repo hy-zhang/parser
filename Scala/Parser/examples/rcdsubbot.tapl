@@ -1,0 +1,7 @@
+y
+\x:Top. x
+(\x:Top. x) (\x:Top. x)
+(\x:Top->Top. x) (\x:Top. x) 
+(\r:{x:Top->Top}. r.x r.x) {x=\z:Top.z, y=\z:Top.z}
+\x:Bot. x
+\x:Bot. x x 
