@@ -23,6 +23,7 @@ digraph G {
         FullEquiRec;
         FullIsoRec;
         EquiRec;
+        Recon;
         FullRecon;
         FullPoly;
         FullOmega;
