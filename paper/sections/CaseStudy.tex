@@ -2,7 +2,7 @@
 
 \subsection{Overview}\label{subsec:cs-overview}
 
-To demonstrate the utility of our modular parsing library, we implemented parsers of the first \textcolor{red}{18} calculi from book \textit{Types and Programming Languages}. In the book it introduces several calculi from simple to complex, by gradually adding new features to syntax. It is suitable for our case study for mainly two reason. First, the calculi are arguably practical as we want to show our library could be used in real world development. One of the most complex calculi in our case study is System F (with several extensions such as records and variants), which could be the foundation of practical functional programming languages. Second, the evolution of calculi in the book reveals the advantages of modular representation of abstract syntax and modular parsing, which is the key functionality of our library. By decomposing those calculi into smaller components and reusing the common ones, we can obtain considerably code reuse in parsing with little performance penalty, as shown later.
+To demonstrate the utility of our modular parsing library, we implemented parsers of the first 18 calculi from book \textit{Types and Programming Languages}. In the book it introduces several calculi from simple to complex, by gradually adding new features to syntax. It is suitable for our case study for mainly two reason. First, the calculi are arguably practical as we want to show our library could be used in real world development. One of the most complex calculi in our case study is System F (with several extensions such as records and variants), which could be the foundation of practical functional programming languages. Second, the evolution of calculi in the book reveals the advantages of modular representation of abstract syntax and modular parsing, which is the key functionality of our library. By decomposing those calculi into smaller components and reusing the common ones, we can obtain considerably code reuse in parsing with little performance penalty, as shown later.
 
 Using the modular parsing techniques discussed before, we extract reusable \textit{components} from syntax of all the calculi. Each component, which may contain several syntactical structures, is a reusable fragment representing a certain feature in the syntax. For example, \lstinline{VarApp} component represents the variable case and application case of expressions. In our case study, each component is represented by a Scala object which has three parts. \lstinline{Alg} is an object algebra interface for the abstract syntax. \lstinline{Print} is an object algebra implements that interface \lstinline{Alg}, for the pretty printing operation. It is not necessary for parsing, but we include it here for demonstration. \lstinline{Parser} is the modular parser for this piece of syntax.
 
@@ -68,14 +68,14 @@ In the next section we will show more examples and talk further about how we ext
 
 \subsection{Extensibility}\label{subsec:cs-extensibility}
 
-As mentioned before, we decompose all the calculi into reusable components for modularity. In this case study, we have \textcolor{red}{21} components in total. The graph below shows the dependency of all the components, representing by circles, and calculi, representing by boxes. An arrow starting from shape A to shape B denotes that B includes and thus reuses A.
-
-\textcolor{red}{graph here}
-
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{depGraph}
+    \caption{Dependency graph of all calculi and components}
+    \label{fig:dependency}
 \end{figure}
+
+As mentioned before, we decompose all the calculi into reusable components for modularity. Figure \ref{fig:dependency} shows the dependency of all the components and calculi in our case study. Gray boxes are calculi and white boxes are components. An arrow starting from box A to box B denotes that B includes and thus reuses A.
 
 As shown in the graph, some components such as \lstinline{VarApp} are created from scratch, while others such as \lstinline{Typed} are extended from existing components. The \lstinline{Typed} component extends from \lstinline{VarApp} and has two more syntactical structures which are typed lambda abstraction and function type (arrow type). It is the core of many calculi in this case study, and we use it here as an example for demonstrating the extensibility of components.
 
@@ -116,11 +116,28 @@ object FullRef {
 }
 \end{lstlisting}
 
-Using our modular parsing library, dividing the syntax into small pieces and bind them with corresponding parsers to form reusable language component is convenient. From the dependency graph we know that the common components such as \lstinline{VarApp} are reused in lots of calculi. Such reuse could shorten the codes considerably. We will show this advantage and exam the possible performance penalty in a quantitative way in the next section.
+Using our modular parsing library, dividing the syntax into small pieces and bind them with corresponding parsers to form reusable language component is convenient. From the dependency graph we know that the common components such as \lstinline{VarApp} are reused in lots of calculi. Such reuse could shorten the code considerably. We will show this advantage and exam the possible performance penalty in a quantitative way in the next section.
 
 \subsection{Comparison}\label{subsec:cs-comparison}
 
-\begin{itemize}
-\item Explain the TAPL case study
-\item Show various results SLOC; performance
-\end{itemize}
+We compared our implementation of the parsers with an implementation we found online, written by author Ilya Klyuchnikov. Ilya's implementation is very suitable for comparison, because it is also written in Scala using the same parser combinator library. Furthermore, it includes parsers of all the 18 calculi we have, but written in a non-modular way. Thus it is not able to reuse existing code of parsing common syntactical features.
+
+Because Ilya's implementation has extra code such as semantics of those calculi, we removed all irrelevant code and only keep abstract syntax definition, parser and pretty printer for each calculus, to ensure a fair comparison.
+
+The comparison is made from two aspects. First, we want to show that using our modular parsing library, the code can be reused in a significant way. For this propose, we measured source lines of code (SLOC) of the two implementations. All blank lines and comment lines are excluded, and we formatted the code of both implementations so that the length of each line does not exceed 120 characters. Second, users may concern the performance penalty caused by modularity. Thus we compared the execution time, as a major measurement of performance, between the two implementations. We prepared test files containing valid expressions in each calculus, then we used the corresponding parser to parse the file and the pretty printer to print the result. The execution time excluding reading input file was calculated.
+
+\begin{table}
+    \centering
+    \begin{tabular}{|l|r|r|r|}
+        \hline
+        \bfseries Calculus Name & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\%
+        \csvreader{../Scala/sloc.csv}{}
+        {\\\hline \csvcoli & \csvcolii & \csvcoliii & \csvcoliv}
+        %    \csvautotabular{../Scala/sloc.csv}
+        \\\hline
+    \end{tabular}
+    \caption{Comparison of SLOC and execution time}
+    \label{tab:comparison}
+\end{table}
+
+Table \ref{tab:comparison} shows the comparison result.
