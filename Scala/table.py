@@ -113,6 +113,34 @@ def write_csv(sloc1, sloc2, time1, time2):
         writer.writerow(row)
 
 
+def write_tex(file_name, sloc1, sloc2, time1, time2):
+    def cal_percent(old, new):
+        per_str = "{:+.1f}".format((new - old) / old * 100)
+        return per_str
+
+    def tex_line(name, s1, s2, t1, t2):
+        vals = [name,
+                s1, s2, cal_percent(s1, s2),
+                t1, t2, cal_percent(t1, t2)]
+        return " & ".join([str(v) for v in vals]) + " \\\\\n"
+
+    # write each case
+    print_hline()
+    print('WRITING RESULT TO', file_name)
+    print_hline()
+    with open(file_name, 'w') as f:
+        for (name, s1, s2, t1, t2) in zip(NAMES, sloc1, sloc2, time1, time2):
+            row = tex_line(name, s1, s2, t1, t2)
+            print(row, end='')
+            f.write(row)
+        # write total
+        s1, s2, t1, t2 = sum(sloc1), sum(sloc2), sum(time1), sum(time2)
+        row = tex_line('Total', s1, s2, t1, t2)
+        print(row, end='')
+        f.write('\\hline\n')
+        f.write(row)
+
+
 def main():
     # count SLOC
     sloc1 = count_theirs()
@@ -129,7 +157,9 @@ def main():
     assert(len(time1) == len(time2) == len(NAMES))
 
     # write to file
-    write_csv(sloc1, sloc2, time1, time2)
+    # write_csv(sloc1, sloc2, time1, time2)
+    tex_file = '../paper/resources/CaseStudyTable.tex'
+    write_tex(tex_file, sloc1, sloc2, time1, time2)
 
 
 if __name__ == '__main__':

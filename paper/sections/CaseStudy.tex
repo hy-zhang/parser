@@ -128,7 +128,13 @@ The comparison is made from two aspects. First, we want to show that using our m
 
 \begin{table}
     \centering
-    \input{resources/CaseStudyTable.tex}
+    \begin{tabular}{|l|r|r|r|r|r|r|}
+      \hline
+      \bfseries Calculus Name & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% \\
+      \hline
+      \input{resources/CaseStudyTable.tex}
+      \hline
+    \end{tabular}
     \caption{Comparison of SLOC and execution time}
     \label{tab:comparison}
 \end{table}
