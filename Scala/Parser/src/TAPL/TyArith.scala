@@ -58,3 +58,22 @@ object TyArith {
   }
 
 }
+
+object TestTyArith {
+
+  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
+    val pE = pe
+    val pT = pt
+  }
+
+  def parse[E, T](inp: String)(alg: TyArith.Alg[E, T]) = {
+    def parser(l: => List[E, T]): List[E, T] = {
+      val lang = new TyArith.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pTyArithE(alg)(l), lang.pTyArithT(alg)(l))
+    }
+    runParser(fix(parser).pE)(inp)
+  }
+
+  def parseAndPrint(inp: String) = parse(inp)(new TyArith.Print {})
+
+}

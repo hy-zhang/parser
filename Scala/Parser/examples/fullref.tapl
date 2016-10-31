@@ -11,7 +11,7 @@ unit
 let x=true in x
 {x=true, y=false} 
 {x=true, y=false}.x
-if true then {x=true,y=false,a=false} else {y=false,x={},b=false}
+if true then {x=true,y=false,a=false} else {y=false,x=true,b=true}
 \x:Bool. x
 (\x:Bool->Bool. if x false then true else false) (\x:Bool. if x then false else true)
 \x:Nat. succ x

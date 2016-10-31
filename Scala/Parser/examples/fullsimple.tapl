@@ -8,7 +8,7 @@ even (succ (succ (succ 0)))
 {firstlast="lambdamix", addr="Russia"} as PhysicalAddr
 \t:{name:String, email:String}.t
 \t:<physical:PhysicalAddr, virtual:VirtualAddr>.t
-\a:Addr. case a of <physical=x> ==> x.firstlast | <virtual=y> ==> y.name
+\a:Addr. case a of <physical=x> => x.firstlast | <virtual=y> => y.name
 "123"
 {firstlast= "lambdamix", addr="Russia"} as PhysicalAddr
 {name = "ilya", email = "ilya@ru"} as VirtualAddr

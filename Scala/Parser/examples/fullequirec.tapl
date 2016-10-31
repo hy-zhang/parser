@@ -25,7 +25,7 @@ let x=true in x
 unit
 <nil=unit> as Rec X. <nil:Unit, cons:{h:Nat,t:X}>
 \n:Nat. \l:NatList. <cons={h=n,t=l}> as Rec X. <nil:Unit, cons:{h:Nat,t:X}>
-\l:(Rec X. <nil:Unit, cons:{h:Nat,t:X}>). case l of <nil=u> ==> true | <cons=p> ==> false
-\l:(Rec X. <nil:Unit, cons:{h:Nat,t:X}>). case l of <nil=u> ==> 0 | <cons=p> ==> p.1
+\l:(Rec X. <nil:Unit, cons:{h:Nat,t:X}>). case l of <nil=u> => true | <cons=p> => false
+\l:(Rec X. <nil:Unit, cons:{h:Nat,t:X}>). case l of <nil=u> => 0 | <cons=p> => p.h
 fix (\p:Nat->Nat->Nat. \m:Nat. \n:Nat. if iszero m then n else succ (p (pred m) n))
 fix (\s:NatList->Nat. \l:NatList. if isnil l then 0 else plus (hd l) (s (tl l)))

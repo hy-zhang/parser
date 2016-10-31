@@ -67,7 +67,7 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|", "\\")
+  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", ",", "|", "\\")
 
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }
@@ -137,7 +137,7 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
   lazy val cases: PackratParser[List[(String, String, Term)]] =
     rep1sep(`case`, "|") ^^ { cs => cs.map { c => c } }
   lazy val `case`: PackratParser[(String, String, Term)] =
-    ("<" ~> lcid <~ "=") ~ (lcid <~ ">") ~ ("==>" ~> term) ^^ { case l1 ~ l2 ~ t => (l1, l2, t) }
+    ("<" ~> lcid <~ "=") ~ (lcid <~ ">") ~ ("=>" ~> term) ^^ { case l1 ~ l2 ~ t => (l1, l2, t) }
 
   lazy val fields: PackratParser[List[(String, Term)]] =
     repsep(field, ",")
