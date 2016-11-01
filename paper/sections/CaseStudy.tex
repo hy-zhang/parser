@@ -130,7 +130,8 @@ The comparison is made from two aspects. First, we want to show that using our m
     \centering
     \begin{tabular}{|l|r|r|r|r|r|r|}
       \hline
-      \bfseries Calculus Name & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% \\
+        \multirow{2}{*}{\bfseries Calculus Name} & \multicolumn{3}{ c| }{\bfseries SLOC} & \multicolumn{3}{ c| }{\bfseries Time (ms)} \\ \cline{2-7}
+        \multicolumn{1}{|c|}{} & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% \\
       \hline
       \input{resources/CaseStudyTable.tex}
       \hline
@@ -139,4 +140,4 @@ The comparison is made from two aspects. First, we want to show that using our m
     \label{tab:comparison}
 \end{table}
 
-Table \ref{tab:comparison} shows data of the comparison. The overall result of SLOC comparison is that 60\% of code in total is reduced using our library. That is because the code of some common syntax structures such as variable, lambda abstraction, etc., is reused several times in the whole project. We can see that the first two calculi \lstinline{Arith} and \lstinline{Untyped} we do worse than Ilya's implementation, because in such two cases we do not reuse any existing components. But in each of the following 16 calculi, we can compose our syntax definition, parser and pretty printer from extending reusable components, resulting considerably code reduction.
+Table \ref{tab:comparison} shows data of the comparison. The overall result of SLOC comparison is that 66.3\% of code is reduced using our library. That is because the code of some common syntax structures such as variable, lambda abstraction, etc., is reused several times in the whole project. We can see that the first two calculi \lstinline{Arith} and \lstinline{Untyped} we do worse than Ilya's implementation, because in such two cases we do not reuse any existing components. But in each of the following 16 calculi, we can compose our syntax definition, parser and pretty printer from extending reusable components, resulting considerably code reduction.
