@@ -50,7 +50,8 @@ object FullErrorParsers extends StandardTokenParsers with PackratParsers with Im
     "(" ~> `type` <~ ")" |
       "Bool" ^^ { _ => TyBool } |
       "Top" ^^ { _ => TyTop } |
-      "Bot" ^^ { _ => TyBot }
+      "Bot" ^^ { _ => TyBot } |
+      ucid ^^ { tn => TyVar(tn) }
 
   lazy val term: PackratParser[Term] =
     appTerm |

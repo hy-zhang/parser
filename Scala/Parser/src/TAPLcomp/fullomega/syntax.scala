@@ -76,6 +76,8 @@ object FullOmegaPrinter {
         _).getOrElse(empty) :: "}")
     case TyNat =>
       "Nat"
+    case TyFloat =>
+      "Float"
     case TySome(tyX, knK1, tyT2) =>
       g2("{Some " :: tyX :: prokn(knK1) :: "," :/: ptyType(false, tyT2) :: "}")
     case tyT =>

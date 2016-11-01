@@ -1,0 +1,24 @@
+let x = succ 0 in let y = succ x in y
+fix (\eo: {even: Nat -> Bool, odd: Nat -> Bool}.{even = \x: Nat. if iszero x then true else eo.odd (pred x), odd = \x: Nat. if iszero x then false else eo.even (pred x)})
+evenodd.even (succ 0)
+evenodd.even (succ (succ 0))
+\x: Nat.if iszero x then true else if iszero (pred x) then false else even (pred (pred x))
+even (succ (succ (succ 0)))
+\t:{firstlast:String, addr:String}.t
+{firstlast="lambdamix", addr="Russia"} as PhysicalAddr
+\t:{name:String, email:String}.t
+\t:<physical:PhysicalAddr, virtual:VirtualAddr>.t
+\a:Addr. case a of <physical=x> => x.firstlast | <virtual=y> => y.name
+"123"
+{firstlast= "lambdamix", addr="Russia"} as PhysicalAddr
+{name = "ilya", email = "ilya@ru"} as VirtualAddr
+<physical=pa> as Addr
+<virtual=va> as Addr
+getName addr1
+getName addr2
+\x: Unit. 5
+\x: Unit. 5
+let x = 5 in 7
+(\x:Bool->Bool.if x false then true else false) (\x:Bool.if x then false else true)
+inert [Bool->Nat]
+<l=unit> as <l:Unit, r:Unit>

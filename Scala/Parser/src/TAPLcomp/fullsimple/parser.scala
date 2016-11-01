@@ -21,6 +21,8 @@ case object TyString extends Ty
 
 case object TyNat extends Ty
 
+case object TyFloat extends Ty
+
 sealed trait Term
 
 case object TmTrue extends Term
@@ -81,7 +83,8 @@ object FullSimpleParsers extends StandardTokenParsers with PackratParsers with I
       "String" ^^ { _ => TyString } |
       "Unit" ^^ { _ => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |
-      "Nat" ^^ { _ => TyNat }
+      "Nat" ^^ { _ => TyNat } |
+      "Float" ^^ { _ => TyFloat }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
     repsep(fieldType, ",")

@@ -19,6 +19,8 @@ case object TyBool extends Ty
 
 case object TyString extends Ty
 
+case object TyFloat extends Ty
+
 case object TyNat extends Ty
 
 case class TyRef(ty: Ty) extends Ty
@@ -84,9 +86,9 @@ case class TmAssign(t1: Term, t2: Term) extends Term
 object FullRefParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
-    "as", "of", "fix", "iszero", "Top", "Bot", "Ref", "Source", "Sink", "ref")
-  lexical.delimiters += ("\\", "(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", "==>", ",", "|",
-    "!", ":=")
+    "as", "of", "fix", "iszero", "Top", "Bot", "Ref", "Source", "Sink", "ref", "inert")
+  lexical.delimiters += ("\\", "(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", ",", "|",
+    "!", ":=", "[", "]")
 
   // lower-case identifier
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
@@ -108,7 +110,8 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
       "String" ^^ { _ => TyString } |
       "Unit" ^^ { _ => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |
-      "Nat" ^^ { _ => TyNat }
+      "Nat" ^^ { _ => TyNat } |
+      "Float" ^^ { _ => TyFloat }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
     repsep(fieldType, ",")
@@ -167,7 +170,7 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
   lazy val cases: PackratParser[List[(String, String, Term)]] =
     rep1sep(`case`, "|")
   lazy val `case`: PackratParser[(String, String, Term)] =
-    ("<" ~> lcid <~ "=") ~ (lcid <~ ">") ~ ("==>" ~> term) ^^ { case l1 ~ l2 ~ t => (l1, l2, t) }
+    ("<" ~> lcid <~ "=") ~ (lcid <~ ">") ~ ("=>" ~> term) ^^ { case l1 ~ l2 ~ t => (l1, l2, t) }
 
   lazy val fields: PackratParser[List[(String, Term)]] =
     repsep(field, ",")

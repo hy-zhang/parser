@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from random import choice
+from random import randrange, choice
 import string
+from copy import copy
 
 TERM, TYPE, KIND = 0, 1, 2
 SORT = [TERM, TYPE, KIND]
@@ -18,15 +19,16 @@ class NonTerminal:
         self.template = template
 
     def gen(self, depth, g):
-        for i in range(0, len(self.template)):
-            if self.template[i] in SORT:
-                d = choice(list(range(0, depth)))
-                self.template[i] = g.gen(self.template[i], d, g)
-            elif self.template[i] == IDENT:
-                self.template[i] = choice(string.ascii_lowercase[:5])
-            elif self.template[i] == UIDENT:
-                self.template[i] = choice(string.ascii_uppercase[:5])
-        return '(' + " ".join(self.template) + ')'
+        temp = copy(self.template)
+        for i in range(0, len(temp)):
+            if temp[i] in SORT:
+                d = randrange(max(0, depth - 2), depth)
+                temp[i] = g.gen(temp[i], d, g)
+            elif temp[i] == IDENT:
+                temp[i] = choice(list(string.ascii_lowercase[:5]))
+            elif temp[i] == UIDENT:
+                temp[i] = choice(list(string.ascii_uppercase[:5]))
+        return '(' + " ".join(temp) + ')'
 
 
 class Generator:
@@ -35,7 +37,8 @@ class Generator:
         self.non_terminals = non_terminals
 
     def __add__(self, other):
-        terminals, non_terminals = self.terminals, self.non_terminals
+        terminals = copy(self.terminals)
+        non_terminals = copy(self.non_terminals)
         for i in SORT:
             terminals[i] += other.terminals[i]
             non_terminals[i] += other.non_terminals[i]
@@ -62,7 +65,7 @@ def gBool():
 
 
 def gNat():
-    ts = ['0', '1', '2', '3', '4']
+    ts = ['0', '1', '2']
     nts = [
         ['succ', TERM],
         ['pred', TERM],
@@ -76,7 +79,7 @@ def gArith():
 
 
 def gVarApp():
-    ts = list(string.ascii_lowercase[:5])
+    ts = list(string.ascii_lowercase[:3])
     nts = [[TERM, TERM]]
     return EGenerator(ts, nts)
 
@@ -106,7 +109,7 @@ def gLet():
 
 def gFloatString():
     # TODO
-    ts = ['\"apple\"', '\"boy\"', '\"cat\"', '\"dog\"']
+    ts = ['\"apple\"', '\"boy\"']
     return EGenerator(ts, [])
 
 
@@ -153,7 +156,7 @@ def gTypedRecord():
 
 
 def gTypeVar():
-    return ETGenerator([], list(string.ascii_uppercase[:5]), [], [])
+    return ETGenerator([], list(string.ascii_uppercase[:3]), [], [])
 
 
 def gVariant():
@@ -283,7 +286,7 @@ def gPoly():
     ]
     type_nts = [
         ['All', UIDENT, '.', TYPE],
-        ['Some', '{', UIDENT, ',', TYPE, '}']
+        ['{', 'Some', UIDENT, ',', TYPE, '}']
     ]
     return ETGenerator([], [], term_nts, type_nts)
 
@@ -342,15 +345,30 @@ def gen_by_id(id, times, depth):
     ret = []
     g = gens[id]
     for i in range(0, times):
-        ret.append(g.gen(TERM, depth, g))
+        t = g.gen(TERM, depth, g)
+        ret.append(t)
     return ret
 
 
 def main():
-    for i in range(0, len(NAMES)):
-        print(NAMES[i])
-        print(gen_by_id(i, 1, 10))
-        print('')
+    EXAMPLE_OLD = 'Parser/examples/old/{}.tapl'
+    EXAMPLE = 'Parser/examples/{}.tapl'
+    NUM_CASES = 500
+    MAX_DEPTH = 5
+    for i in range(len(NAMES)):
+        name = NAMES[i].lower()
+        print(name)
+        cases = []
+        old_file = EXAMPLE_OLD.format(name)
+        with open(old_file, 'r') as f:
+            cases = f.readlines()
+        # print(cases)
+        new_cases = gen_by_id(i, NUM_CASES - len(cases), MAX_DEPTH)
+        cases += [x + '\n' for x in new_cases]
+        # print(cases)
+        new_file = EXAMPLE.format(name)
+        with open(new_file, 'w') as f:
+            f.writelines(cases)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,11 @@
+\x:Bot. x
+\x:Bot. x x
+\x:Top. x
+(\x:Top. x) (\x:Top. x)
+(\x:Top->Top. x) (\x:Top. x)
+\x:Bool. x
+(\x:Bool->Bool. if x false then true else false) (\x:Bool. if x then false else true)
+if error then true else false
+error true
+(\x:Bool. x) error
+error

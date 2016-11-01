@@ -55,6 +55,8 @@ object FullRefPrinter {
         _).getOrElse(empty) :: "}")
     case TyNat =>
       "Nat"
+    case TyFloat =>
+      "Float"
     case tyT =>
       "(" :: ptyType(outer, tyT) :: ")"
   }

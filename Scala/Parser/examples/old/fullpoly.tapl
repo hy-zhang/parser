@@ -1,0 +1,16 @@
+"hello"
+unit
+\x:A. x
+let x=true in x
+\x:Bool. x
+(\x:Bool->Bool. if x false then true else false) (\x:Bool. if x then false else true) 
+\x:Nat. succ x
+(\x:Nat. succ (succ x)) (succ 0) 
+\f:T. \x:Nat. f (f x)
+\X. \x:X. x 
+(\X. \x:X. x) [All X.X->X] 
+{*All Y.Y, \x:(All Y.Y). x} as {Some X,X->X}
+{x=true, y=false} 
+{x=true, y=false}.x
+{*Nat, {c=0, f=\x:Nat. succ x}} as {Some X, {c:X, f:X->Nat}}
+let {X,ops} = {*Nat, {c=0, f=\x:Nat. succ x}} as {Some X, {c:X, f:X->Nat}} in (ops.f ops.c)

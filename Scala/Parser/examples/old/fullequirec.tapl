@@ -1,0 +1,31 @@
+\x :Unit. 0
+"hello"
+\x:A. x
+\x:Bool. x
+(\x:Bool->Bool. if x false then true else false) (\x:Bool. if x then false else true) 
+\x:Nat. succ x
+(\x:Nat. succ (succ x)) (succ 0) 
+\f:T. \x:Nat. f (f x)
+\f:Rec X.A->A. \x:A. f x
+{x=true, y=false} 
+{x=true, y=false}.x
+\x:<a:Bool,b:Bool>. x
+\t:Rec P. {get:Nat, inc:Unit->P}.unit
+let create = fix (\cr: {x:Nat}->Counter.\s: {x:Nat}. {get = s.x, inc = \t:Unit. cr {x=succ(s.x)}}) in create {x=0}
+p.inc unit
+p1.get
+\p:Counter. p.get
+\p:Counter. p.inc
+\t:Rec A. Nat -> A.unit
+fix (\f: Nat->Hungry.\n:Nat.f)
+\f:T->T. (\x:(Rec A.A->T). f (x x)) (\x:(Rec A.A->T). f (x x))
+\f:D->D. (\x:(Rec A.A->D). f (x x)) (\x:(Rec A.A->D). f (x x))
+\t:Unit. fix_D (\x:D. x)
+let x=true in x
+unit
+<nil=unit> as Rec X. <nil:Unit, cons:{h:Nat,t:X}>
+\n:Nat. \l:NatList. <cons={h=n,t=l}> as Rec X. <nil:Unit, cons:{h:Nat,t:X}>
+\l:(Rec X. <nil:Unit, cons:{h:Nat,t:X}>). case l of <nil=u> => true | <cons=p> => false
+\l:(Rec X. <nil:Unit, cons:{h:Nat,t:X}>). case l of <nil=u> => 0 | <cons=p> => p.h
+fix (\p:Nat->Nat->Nat. \m:Nat. \n:Nat. if iszero m then n else succ (p (pred m) n))
+fix (\s:NatList->Nat. \l:NatList. if isnil l then 0 else plus (hd l) (s (tl l)))

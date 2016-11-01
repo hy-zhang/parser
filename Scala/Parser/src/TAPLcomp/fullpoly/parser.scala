@@ -19,6 +19,8 @@ case object TyBool extends Ty
 
 case object TyNat extends Ty
 
+case object TyFloat extends Ty
+
 case class TySome(n: String, ty: Ty) extends Ty
 
 case class TyAll(n: String, ty: Ty) extends Ty
@@ -93,6 +95,7 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
       "Unit" ^^ { _ => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |
       "Nat" ^^ { _ => TyNat } |
+      "Float" ^^ { _ => TyFloat } |
       (("{" ~ "Some") ~> ucid) ~ ("," ~> `type` <~ "}") ^^ { case id ~ ty => TySome(id, ty) }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =

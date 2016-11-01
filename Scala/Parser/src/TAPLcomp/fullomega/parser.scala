@@ -27,6 +27,8 @@ case object TyBool extends Ty
 
 case object TyNat extends Ty
 
+case object TyFloat extends Ty
+
 case class TyApp(ty1: Ty, ty2: Ty) extends Ty
 
 case class TyAbs(v: String, k: Kind, ty: Ty) extends Ty
@@ -94,7 +96,7 @@ object FullOmegaParsers extends StandardTokenParsers with PackratParsers with Im
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
     "as", "of", "fix", "iszero", "Star", "_", "All", "Some", "Ref", "ref")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=",
+  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", ":=", "!",
     "<", ">", "{", "}", "=>", ",", "|", "*", "[", "]", "\\")
 
   // lower-case identifier
@@ -133,6 +135,7 @@ object FullOmegaParsers extends StandardTokenParsers with PackratParsers with Im
       "Unit" ^^ { _ => TyUnit } |
       "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |
       "Nat" ^^ { _ => TyNat } |
+      "Float" ^^ { _ => TyFloat } |
       (("{" ~ "Some") ~> ucid) ~ oKind ~ ("," ~> `type` <~ "}") ^^ { case id ~ k ~ ty => TySome(id, k, ty) }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
