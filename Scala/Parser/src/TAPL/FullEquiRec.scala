@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 /* <12> */
 object RecType {

@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 object Top {
 
@@ -72,13 +72,4 @@ object TestBot {
 
   def parseAndPrint(inp: String) = parse(inp)(new Bot.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\x:Top.x",
-      "(\\x:Top.x) \\x:Top.x",
-      "(\\x:Top->Top.x) (\\x:Top.x)",
-      "\\x:Bot.x",
-      "\\x:Bot.x x"
-    ).foreach(parseAndPrint)
-  }
 }

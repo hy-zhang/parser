@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 /* <9> */
 object RcdSubBot {

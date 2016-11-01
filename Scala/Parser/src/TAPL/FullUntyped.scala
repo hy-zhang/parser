@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 /* <3> */
 object Record {
@@ -123,16 +123,4 @@ object TestFullUntyped {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullUntyped.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\x.x (x \\x.x)",
-      "{x = 0, y = \\x. x x}.y",
-      "\"\\x.x\"",
-      "let x = false in \\y. y x",
-      "(\\x.x) * succ 1",
-      "succ (pred 0)",
-      "iszero (pred (succ (succ 0)))",
-      "1.2"
-    ).foreach(parseAndPrint)
-  }
 }

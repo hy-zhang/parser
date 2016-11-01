@@ -1,6 +1,6 @@
 package TAPL
 
-import Util._
+import TAPL.Util._
 
 /* <6> */
 object TypedRecord {
@@ -192,17 +192,4 @@ object TestFullSimple {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullSimple.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)",
-      "\\f:T. \\x:Nat. f (f x)",
-      "<l=unit> as <l:Unit, r:Unit>",
-      "\\a:Unit.fix (\\x:T.x)",
-      "case a of <phy=x> => x.first | <vir=y> => y.name",
-      "succ (pred 0)",
-      "iszero (pred (succ (succ 0)))",
-      "inert [Bool->Nat]",
-      "let x = false in \\y:Bool->Nat. y x"
-    ).foreach(parseAndPrint)
-  }
 }

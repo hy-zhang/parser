@@ -1,5 +1,7 @@
 y true
 \z: Bool. y z
 \x: Bool. x
+if false then true else false
+if x then true else false
 (\x: Bool -> Bool. if x false then true else false)
 (\x: Bool -> Bool. if x false then true else false) (\x: Bool. if x then false else true)
