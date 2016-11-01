@@ -18,3 +18,8 @@ if true then {x=true,y=false,a=false} else {y=false,x=true,b=true}
 (\x:Nat. succ (succ x)) (succ 0) 
 \f:Nat->Nat. \x:Nat. f (f x)
 let x = ref 1 in {get = \t:Unit. !x, inc = \t:Unit. x := succ(!x)}
+\a:Ref (Nat->Nat).\n:Nat.(!a n)
+\a:Unit.ref (\n:Nat.0)
+\a:Ref (Nat->Nat).\m:Nat.\n:Nat.let oldf = !a in a := (\n:Nat.if true then v else (oldf n))
+\x:Sink Bool.unit
+(\x:Bool->Bool.if x false then true else false) (\x:Bool.if x then false else true)

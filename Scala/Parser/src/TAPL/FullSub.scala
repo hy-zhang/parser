@@ -33,29 +33,4 @@ object TestFullSub {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullSub.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "x",
-      "if x then false else x",
-      "\\x:A.x",
-      "\"hello\"",
-      "0",
-      "succ (pred 0)",
-      "iszero (pred (succ (succ 0)))",
-      "true",
-      "if false then true else false",
-      "if (x) then true else false",
-      "\\x:Bool.x",
-      "(\\x:Bool->Bool.x)",
-      "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)",
-      "\\x:Nat.succ x",
-      "(\\x:Nat. succ (succ x)) (succ 0)",
-      "\\f:T. \\x:Nat. f (f x)",
-      "let x=true in x",
-      "unit",
-      "unit as Unit",
-      "\\x:Top.x",
-      "(\\r:{x:Top->Top}. r.x r.x) {x=\\z:Top.z, y=\\z:Top.z}"
-    ).foreach(parseAndPrint)
-  }
 }

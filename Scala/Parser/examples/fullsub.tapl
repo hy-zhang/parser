@@ -4,6 +4,7 @@
 (\r:{x:Top->Top}. r.x r.x) {x=\z:Top.z, y=\z:Top.z}
 "hello"
 unit
+unit as Unit
 \x:A. x
 let x=true in x
 {x=true, y=false} 

@@ -33,16 +33,4 @@ object TestFullRecon {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullRecon.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\x:Bool. x",
-      "(\\x:Bool->Bool. if x false then true else false)",
-      "(\\x: Bool.if x then false else true)",
-      "\\x: Nat.succ x",
-      "(\\x: Nat.succ (succ x)) (succ 0)",
-      "(\\x: X.\\y: X -> X.y x)",
-      "(\\x: X -> X.x 0) (\\y: Nat.y)",
-      "let f = \\x:A.x in true"
-    ).foreach(parseAndPrint)
-  }
 }

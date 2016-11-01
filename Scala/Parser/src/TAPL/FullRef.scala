@@ -103,13 +103,4 @@ object TestFullRef {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullRef.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\a:Ref (Nat->Nat).\\n:Nat.(!a n)",
-      "\\a:Unit.ref (\\n:Nat.0)",
-      "\\a:Ref (Nat->Nat).\\m:Nat.\\n:Nat.let oldf = !a in a := (\\n:Nat.if true then v else (oldf n))",
-      "\\x:Sink Bool.unit",
-      "(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)"
-    ).foreach(parseAndPrint)
-  }
 }

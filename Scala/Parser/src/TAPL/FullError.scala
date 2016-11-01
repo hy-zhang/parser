@@ -62,12 +62,4 @@ object TestFullError {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullError.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\x:Top.if error then (try x with true) else false",
-      "error true",
-      "(\\x:Bool.x) error",
-      "\\x:A.x"
-    ).foreach(parseAndPrint)
-  }
 }

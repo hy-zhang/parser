@@ -66,8 +66,8 @@ case class TmInert(ty: Ty) extends Term
 object FullSimpleParsers extends StandardTokenParsers with PackratParsers with ImplicitConversions {
   lexical.reserved += ("Bool", "true", "false", "if", "then", "else",
     "Nat", "String", "Unit", "Float", "unit", "case", "let", "in", "succ", "pred",
-    "as", "of", "fix", "iszero")
-  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", ",", "|", "\\")
+    "as", "of", "fix", "iszero", "inert")
+  lexical.delimiters += ("(", ")", ";", "/", ".", ":", "->", "=", "<", ">", "{", "}", "=>", ",", "|", "\\", "[", "]")
 
   lazy val lcid: PackratParser[String] = ident ^? { case id if id.charAt(0).isLower => id }
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }

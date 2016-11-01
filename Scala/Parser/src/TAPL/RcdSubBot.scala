@@ -34,11 +34,4 @@ object TestRcdSubBot {
 
   def parseAndPrint(inp: String) = parse(inp)(new RcdSubBot.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\x:Top.x",
-      "(\\r:{x:Top->Top}. r.x r.x) {x=\\z:Top.z, y=\\z:Top.z}",
-      "\\x:Bot. x x"
-    ).foreach(parseAndPrint)
-  }
 }

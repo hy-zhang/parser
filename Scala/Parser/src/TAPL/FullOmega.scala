@@ -109,17 +109,4 @@ object TestFullOmega {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullOmega.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "x",
-      "if x then false else x",
-      "\\x:A.x",
-      "\\X:Star=>Star.unit as X Bool",
-      "(\\X:Star.\\x:X.x) [All X:Star.X->X]",
-      "\\x:({Some X:Star, {c:X, f:X->Nat}}).x",
-      "{*All Y:Star.Y, \\x:All Y:Star.Y.x} as {Some X:Star, X->X}",
-      "{*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}}",
-      "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ (x)}} as {Some X:Star, {c:X, f:X->Nat}} in (ops.f ops.c)"
-    ).foreach(parseAndPrint)
-  }
 }

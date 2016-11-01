@@ -19,6 +19,6 @@ getName addr2
 \x: Unit. 5
 \x: Unit. 5
 let x = 5 in 7
-(\\x:Bool->Bool.if x false then true else false) (\\x:Bool.if x then false else true)
+(\x:Bool->Bool.if x false then true else false) (\x:Bool.if x then false else true)
 inert [Bool->Nat]
 <l=unit> as <l:Unit, r:Unit>

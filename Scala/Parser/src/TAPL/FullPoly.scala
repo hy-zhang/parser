@@ -110,16 +110,4 @@ object TestFullPoly {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullPoly.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "x",
-      "if x then false else x",
-      "\\x:A.x",
-      "(\\X.\\x:X.x) [All X.X->X]",
-      "\\x:({Some X, {c:X, f:X->Nat}}).x",
-      "{*All Y.Y, \\x:(All Y.Y).x} as {Some X, X->X}",
-      "{*Nat, {c=0, f=\\x:Nat. succ x}} as {Some X, {c:X, f:X->Nat}}",
-      "let {X,ops} = {*Nat, {c=0, f=\\x:Nat.succ x}} as {Some X, {c:X, f:X->Nat}} in (ops.f ops.c)"
-    ).foreach(parseAndPrint)
-  }
 }

@@ -6,6 +6,7 @@ import string
 TERM, TYPE, KIND = 0, 1, 2
 SORT = [TERM, TYPE, KIND]
 IDENT = -1
+UIDENT = -2
 NAMES = ["Arith", "Untyped", "FullUntyped", "TyArith", "SimpleBool",
          "FullSimple", "Bot", "FullRef", "FullError", "RcdSubBot", "FullSub",
          "FullEquiRec", "FullIsoRec", "EquiRec", "Recon", "FullRecon",
@@ -17,15 +18,14 @@ class NonTerminal:
         self.template = template
 
     def gen(self, depth, g):
-        def ident():
-            return choice(string.ascii_lowercase)
-
         for i in range(0, len(self.template)):
             if self.template[i] in SORT:
                 d = choice(list(range(0, depth)))
                 self.template[i] = g.gen(self.template[i], d, g)
             elif self.template[i] == IDENT:
-                self.template[i] = ident()
+                self.template[i] = choice(string.ascii_lowercase[:5])
+            elif self.template[i] == UIDENT:
+                self.template[i] = choice(string.ascii_uppercase[:5])
         return '(' + " ".join(self.template) + ')'
 
 
@@ -198,6 +198,125 @@ def gBot():
     return gTyped() + gTopBot()
 
 
+def gRef():
+    term_nts = [
+        ['ref', TERM],
+        ['!', TERM],
+        [TERM, ':=', TERM]
+    ]
+    type_nts = [['Ref', TYPE]]
+    return ETGenerator([], [], term_nts, type_nts)
+
+
+def gSourceSink():
+    type_nts = [
+        ['Source', TYPE],
+        ['Sink', TYPE]
+    ]
+    return ETGenerator([], [], [], type_nts)
+
+
+def gFullRef():
+    return gFullSimple() + gTopBot() + gRef() + gSourceSink()
+
+
+def gError():
+    return ETGenerator(['error'], [], [['try', TERM, 'with', TERM]], [])
+
+
+def gFullError():
+    return gBot() + gTypedBool() + gError() + gTypeVar()
+
+
+def gRcdSubBot():
+    return gBot() + gTypedRecord()
+
+
+def gFullSub():
+    return gSimple() + gTop()
+
+
+def gRecType():
+    return ETGenerator([], [], [], [['Rec', UIDENT, '.', TYPE]])
+
+
+def gFullEquiRec():
+    return gFullSimple() + gRecType()
+
+
+def gFold():
+    term_nts = [
+        ['fold', '[', TYPE, ']', TERM],
+        ['unfold', '[', TYPE, ']', TERM]
+    ]
+    return ETGenerator([], [], term_nts, [])
+
+
+def gFullIsoRec():
+    return gFullEquiRec() + gFold()
+
+
+def gEquiRec():
+    return gTyped() + gRecType() + gTypeVar()
+
+
+def gRecon():
+    return gTyped() + gTyArith() + gTypeVar()
+
+
+def gFullRecon():
+    return gRecon() + gLet()
+
+
+def gPack():
+    term_nts = [
+        ['{', '*', TYPE, ',', TERM, '}', 'as', TYPE],
+        ['let', '{', UIDENT, ',', IDENT, '}', '=', TERM, 'in', TERM]
+    ]
+    return ETGenerator([], [], term_nts, [])
+
+
+def gPoly():
+    term_nts = [
+        ['\\', UIDENT, '.', TERM],
+        [TERM, '[', TYPE, ']']
+    ]
+    type_nts = [
+        ['All', UIDENT, '.', TYPE],
+        ['Some', '{', UIDENT, ',', TYPE, '}']
+    ]
+    return ETGenerator([], [], term_nts, type_nts)
+
+
+def gFullPoly():
+    return gSimple() + gPoly() + gPack()
+
+
+def gOmega():
+    terminals = [[], [], ['Star']]
+    term_nts = [
+        ['\\', UIDENT, ':', KIND, '.', TERM],
+        [TERM, '[', TYPE, ']']
+    ]
+    type_nts = [
+        ['All', UIDENT, ':', KIND, '.', TYPE],
+        ['{', 'Some', UIDENT, ':', KIND, ',', TYPE, '}'],
+        ['\\', UIDENT, ':', KIND, '.', TYPE],
+        [TYPE, TYPE]
+    ]
+    kind_nts = [[KIND, '=>', KIND]]
+    non_terminals = [
+        [NonTerminal(x) for x in term_nts],
+        [NonTerminal(x) for x in type_nts],
+        [NonTerminal(x) for x in kind_nts]
+    ]
+    return Generator(terminals, non_terminals)
+
+
+def gFullOmega():
+    return gSimple() + gRef() + gPack() + gOmega()
+
+
 def gen_by_id(id, times, depth):
     gens = [
         gArith(),
@@ -206,8 +325,20 @@ def gen_by_id(id, times, depth):
         gTyArith(),
         gSimpleBool(),
         gFullSimple(),
-        gBot()
+        gBot(),
+        gFullRef(),
+        gFullError(),
+        gRcdSubBot(),
+        gFullSub(),
+        gFullEquiRec(),
+        gFullIsoRec(),
+        gEquiRec(),
+        gRecon(),
+        gFullRecon(),
+        gFullPoly(),
+        gFullOmega()
     ]
+    assert(len(gens) == len(NAMES))
     ret = []
     g = gens[id]
     for i in range(0, times):
@@ -216,7 +347,7 @@ def gen_by_id(id, times, depth):
 
 
 def main():
-    for i in range(0, 7):
+    for i in range(0, len(NAMES)):
         print(NAMES[i])
         print(gen_by_id(i, 1, 10))
         print('')

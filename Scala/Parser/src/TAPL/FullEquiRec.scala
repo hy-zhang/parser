@@ -57,15 +57,4 @@ object TestFullEquiRec {
 
   def parseAndPrint(inp: String) = parse(inp)(new FullEquiRec.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\f:(Rec X.A->A).\\x:A.f x",
-      "\\x:<a:Bool, b:Bool>.x",
-      "\\x:(Rec P.{get:Nat, inc:Unit->P}).x",
-      "\\x:(Rec A.Nat->A).x",
-      "let g = fix (\\f:Nat->(Rec A.Nat->A).\\n:Nat.f) in unit",
-      "\\l:NList.case l of <nil=u> => true | <cons=p> => false",
-      "fix (\\p:Nat->Nat->Nat.\\m:Nat.\\n:Nat.if iszero m then n else succ (p (pred m) n))"
-    ).foreach(parseAndPrint)
-  }
 }

@@ -33,10 +33,4 @@ object TestEquiRec {
 
   def parseAndPrint(inp: String) = parse(inp)(new EquiRec.Print {})
 
-  def main(args: Array[String]) = {
-    List(
-      "\\x:A.x",
-      "\\f:(Rec X.A->A).\\x:A.f x"
-    ).foreach(parseAndPrint)
-  }
 }
