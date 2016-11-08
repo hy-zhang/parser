@@ -1,5 +1,16 @@
 \section{Overview}\label{sec:overview}
 
+Our modular parsing library consists of four parts, and we will go through them in this section. The first is underlying parsing technique we used. Parsing has been heavily studied over the years, especially for context-free grammars and its subsets. However, the choice of parsing techniques is not a minor issue here, because of modularity. To achieve modularity, the parsers must be written in a way that can be composed, and different parsing techniques have different suitability for that.
+
+Although every parsing algorithm is able to implement by hand in principle, some of them are not friendly for that. A parser generator is a tool to generate parsers automatically or semi-automatically, from a grammar given by the user. There is no restriction on the algorithm, however most of them adopts LL and LR parsing algorithms, which are table-based.
+
+\huang{TALK ABOUT PREVIOUS WORKS USING PARSER GENERATORS, AND ALSO THE DISADVTANGES OF THEM}
+
+Comparing with the parser generators, a parser combinator takes several parsers and produce a new parser as its output. It is popular in functional programming, where the parsers are represented by functions and parser combinators are higher-order functions accepts them. Parser combinators are very suitable for our purpose, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to composed them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and also are the parsers it takes. Thus in a statically typed programming language they can be type-checked during compile time.
+
+There are variants in the category of parser combinators. Almost all of them adopt top-down, recursive descent parsing, which uses backtracking to search through the possible branches. Simple backtracking parser combinators, such as the famous library Parsec in Haskell, have some drawbacks. One is that they cannot support left-recursive grammars. The common solution is to rewrite a left-recursive grammar into an equivalent one, so called left-recursion elimination. This solution requires the whole grammar, so that it cannot be applied in a modular setting because we only have parts of the grammar. Another drawback is performance.
+
+
 \begin{itemize}
 \item Choosing the Parsing Technology
     \begin{itemize}
