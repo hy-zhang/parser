@@ -1,13 +1,7 @@
-\subsection{Parsing Library}\label{subsec:parsinglibrary}
+\subsection{Fusion of Components/Concepts}
 
 In the previous sections we have talked about open recursion and Object Algebras. These concepts will later be composed together for our
 initial goal, which is to build extensible parsers, but surely it cannot live without a parsing library. But we want to argue here that besides
 open recursion, which constructs the basis of extensibility in parsing, the other aspects are totally orthogonal, and hence can have their alternatives.
 For example, Object Algebras are helpful to build extensible data structures, whereas an alternative with the same function can still be used. And a better
 parsing library would introduce a lot of fancy features, nevertheless, it is independent from our key idea.
-
-In Scala we select Packrat Parsing for our prototype implementation. It is practical not only because of the performance, and its parser combinators, but also due to its support for direct left-recursion. From theoretical point of view, the algorithm behind Packrat parsers supports both direct and indirect left-recursion. The current version of the library is still buggy in some cases with indirect left-recursion, but we believe that they will fix it in the future, and with direct left-recursion it is already practical to use.
-
-Moreover, the Scala parsing library provides us with a number of useful parser combinators, with which the syntax for parsing looks concise and clear. Besides \lstinline{|} for alternation and \lstinline{~} for sequential composition, we also have \lstinline{rep} and \lstinline{repsep} for repetitions, \lstinline{chainl1} for left-associative grammar rules, and so on. Specifically, a new combinator \lstinline{|||} is available, also for alternative but with longest match composition. Imagine that we are composing a list of parsers using alternative \lstinline{|}, in an order. A parser in the front might be successful in parsing a substring of the input, but then it unexpectedly stops the parsing and discards the rest, while another parser might be able to parse the whole input. In that case, using \lstinline{|||} we no longer need to worry about the order of composition, which encourages its extensibility. A concrete example will be illustrated for this later.
-
-Generally, a Packrat parser has the type \lstinline{PackratParser[E]} for some \lstinline{E}. Whereas our modular parser has a different type, which implies that we will not apply \lstinline{|||} for composition directly, but use \lstinline{|||} to implement a new combinator for convenience. It will also be introduced afterwards. 

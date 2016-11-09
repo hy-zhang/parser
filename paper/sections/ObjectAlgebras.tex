@@ -1,6 +1,11 @@
-\subsection{Object Algebras}\label{subsec:objectalgebras}
+\section{Object Algebras and Parsing}\label{sec:algebrasandparsing}
 
-Object Algebras captures a design pattern to address the famous \textit{Expression Problem} nicely,
+Object Algebras, first introduced by ... et al as a solution to the famous \textit{Expression Problem}, provide extensibility on
+both data variants and operations for structures like abstract syntax trees. We integrate Object Algebras directly to enhance the
+extensibility of open parsers.
+
+\subsection{Object Algebras}\label{sec:objectalgebras}
+Object Algebras captures a design pattern to address the Expression Problem nicely,
 achieving two dimensions of extensibility (data variants and operations) in a modular and type-safe way.
 Because of this, the definition of data structures is separated from behaviors on them, and future extensions
 to both sides no longer require existing code to be modified, supporting separate compilation.
