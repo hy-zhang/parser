@@ -4,75 +4,126 @@ Object Algebras, first introduced by ... et al as a solution to the famous \text
 both data variants and operations for structures like abstract syntax trees. We integrate Object Algebras directly to enhance the
 extensibility of open parsers.
 
-\subsection{Object Algebras}\label{sec:objectalgebras}
+\subsection{Object Algebras}\label{subsec:objectalgebras}
 Object Algebras captures a design pattern to address the Expression Problem nicely,
 achieving two dimensions of extensibility (data variants and operations) in a modular and type-safe way.
 Because of this, the definition of data structures is separated from behaviors on them, and future extensions
 to both sides no longer require existing code to be modified, supporting separate compilation.
 
 In Object Algebras, ASTs as recursive data structures are defined using traits, where each constructor corresponds
-to an abstract method inside. The recursive types are represented using generics. Here we show the example of a simple
-expression language:
+to an abstract method inside. The example from Section~\ref{subsec:parsingwithopen} is again used here for illustration.
+At first the language only supports variables and applications:
 \begin{lstlisting}
-trait ExpAlg[E] {
-    def lit(i : Int) : E
-    def add(e1 : E, e2 : E) : E
+trait ExprAlg[E] {
+    def varE(x : String) : E
+    def appE(e1 : E, e2 : E) : E
 }
 \end{lstlisting}
-The language has two constructors: literals and additions. The trait \lstinline{ExpAlg} is called an \textit{Object Algebra interface},
+The language has two constructors: literals and additions. The trait \lstinline{ExprAlg} is called an \textit{Object Algebra interface},
 whereas as a factory, it cannot produces objects for the expressions directly like traditional approaches, but abstract the results in its
 type parameter \lstinline{E} instead. To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
-provides implementations for all cases. Below is an example of evaluation:
+provides implementations for all cases. Below is an example of collecting all free variables in an expression:
 \begin{lstlisting}
-trait Eval extends ExpAlg[Int] {
-    def lit(i : Int) = i
-    def add(e1 : Int, e2 : Int) = e1 + e2
+trait FreeVars extends ExprAlg[List[String]] {
+    def varE(x : String) = List(x)
+    def appE(e1 : List[String], e2 : List[String]) = e1 ++ e2
 }
 \end{lstlisting}
-Here \lstinline{Eval} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns an integer as the result.
+Here \lstinline{FreeVars} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a list of strings as the result.
 Furthermore, one can define a new trait to implement pretty-printing on expressions:
 \begin{lstlisting}
-trait Print extends ExpAlg[String] {
-    def lit(i : Int) = "" + i
-    def add(e1 : String, e2 : String) = e1 + " + " + e2
+trait ExprPrint extends ExprAlg[String] {
+    def varE(x : String) = x
+    def appE(e1 : String, e2 : String) = "(" + e1 + " " + e2 + ")"
 }
 \end{lstlisting}
-On the other hand, the data variants can be extended by inheriting \lstinline{ExpAlg} and adding new cases only. Suppose we want to
-have subtraction in expressions, a new Object Algebra interface \lstinline{SubAlg} is defined as follows:
+On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Suppose we want to
+have literals in expressions, a new Object Algebra interface \lstinline{LitAlg} is defined as follows:
 \begin{lstlisting}
-trait SubAlg[E] extends ExpAlg[E] {
-    def sub(e1 : E, e2 : E) : E
+trait LitAlg[E] extends ExprAlg[E] {
+    def litE(n : Int) : E
 }
 \end{lstlisting}
-Now evaluation on the new language can be realized by code reuse, and without modifying existing code:
+Now pretty-printing on the new language can be realized by code reuse, without modifying existing code:
 \begin{lstlisting}
-trait SubEval extends Eval {
-    def sub(e1 : Int, e2 : Int) = e1 - e2
+trait LitPrint extends ExprPrint {
+    def litE(n : Int) = n.toString
 }
 \end{lstlisting}
-On this, to create an expression of \lstinline{SubAlg}, a generic method is defined as follows:
+On this, to create an expression of \lstinline{LitAlg}, a generic method is defined as follows:
 \begin{lstlisting}
-def build[E](alg : SubAlg[E]) : E =
-    alg.sub(alg.add(alg.lit(2), alg.lit(3)), alg.lit(4))
+def build[E](alg : LitAlg[E]) : E =
+    alg.appE(alg.varE("x"), alg.litE(3))
 \end{lstlisting}
-Such a method implicitly represents the expression \lstinline{"2 + 3 - 4"}. The code
+Such a method implicitly represents the expression \lstinline{"x 3"}. The code
 \begin{lstlisting}
-build(new Eval(){})
+build(new LitPrint(){})
 \end{lstlisting}
-results in \lstinline{1}, as the result of evaluation. Now we observe that an ``object'' of expression actually
-has the function type \lstinline{SubAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
+results in \lstinline{"(x 3)"}, as the result of pretty-printing. Now we observe that an ``object'' of expression actually
+has the function type \lstinline{LitAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
 that it is illusory compared to traditional objects, and since we are struggling against the parsing problem, if a parser
 produces structures as functions, it could be hardly be further processed like objects, especially, in the design of a compiler
 there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
-in a very clever way. For example, if one wants to refactor an \lstinline{ExpAlg} expression to a \lstinline{SubAlg} expression by
-replacing all negative numbers with subtraction, a transformation algebra can be implemented as follows:
+in a very clever way. For example, if one wants to transform an \lstinline{ExprAlg} expression to a \lstinline{LitAlg} expression by
+replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:
 \begin{lstlisting}
-trait Refactor[E] extends ExpAlg[E] {
+trait Refactor[E] extends ExprAlg[E] {
     def alg : SubAlg[E]
-    def lit(i : Int) = if (i > 0) alg.lit(i) else alg.sub(alg.lit(0), alg.lit(-i))
-    def add(e1 : E, e2 : E) = alg.add(e1, e2)
+    def env : Map[String, Int]
+    def varE(x : String) = if (env.contains(x)) alg.litE(env(x)) else alg.varE(x)
+}
+\end{lstlisting}\haoyuan{Is this example OK?}
+When \lstinline{env = Map("y"} \lstinline{-> 3)}, the \lstinline{ExprAlg} expression \lstinline{"x y"} is changed to \lstinline{LitAlg} expression \lstinline{"x 3"}. The abstract method
+\lstinline{alg} in \lstinline{Refactor} can be any algebra of \lstinline{SubAlg}, simply for delegation. By passing a concrete implementation
+to \lstinline{alg}, \lstinline{Refactor} will be able to apply transformation to an \lstinline{ExprAlg} expression before \lstinline{alg} returns the result.
+
+\subsection{Parsing with Object Algebras}\label{subsec:parsingwithoa}
+
+Just as shown above, \lstinline{ExprAlg} is defined for a small language in an Object-Algebra style. Furthermore,
+A parser can be defined for this whole language at once. Since Object Algebras represent ``objects'' implicitly as functions like \lstinline{ExprAlg[E] =>} \lstinline{E} for generic \lstinline{E}, such a parser should consume an algebra from its parameter, then return a value of \lstinline{Fix[Parser[E]]} as in open recursion, where \lstinline{E} is abstract.
+\begin{lstlisting}
+trait ExprParser[E] {
+    val pE : ExprAlg[E] => Fix[Parser[E]] = alg => p =>
+        ident ^^ alg.varE |||
+        p ~ p ^^ { case e1 ~ e2 => alg.appE(e1, e2) }
 }
 \end{lstlisting}
-With \lstinline{Refactor}, the expression \lstinline{"1 + (-2)"} is refactored to \lstinline{"1 + (0 - 2)"}. The abstract method
-\lstinline{alg} in \lstinline{Refactor} can be any algebra of \lstinline{SubAlg}, simply for delegation. By passing a concrete implementation
-to \lstinline{alg}, \lstinline{Refactor} will be able to apply refactoring to an \lstinline{ExpAlg} expression before \lstinline{alg} returns the result.
+It is observed that \lstinline{pE} is in fact a parser generator, where \lstinline{alg} appears as a parameter, which can be any algebra, and after \lstinline{alg} is fed, it returns a \lstinline{Fix[Parser[E]]}. Again \lstinline{p} is the explicit self-reference of the open parser. Inside the body, the algebra is invoked correspondingly for all cases right after parsing. Note that the two cases are combined using the original \lstinline{|||} operator. To make \lstinline{alg} as a generic algebra, the enclosing trait of the parser, namely \lstinline{ExprParser}, is abstracted over \lstinline{E}. Behaviors, or algebras that can be fed to such a parser, are expected to be defined independently from the Object Algebra interface, just like the algebra \lstinline{ExprPrint} in Section~\ref{subsec:objectalgebras}.
+
+To explain the modularity, we again add literals to expressions, but instead of using inheritance as Section~\ref{subsec:objectalgebras}, \lstinline{LitAlg} is defined independently together with its own parser and algebra:
+\begin{lstlisting}
+trait LitAlg[E] {
+    def litE(n : Int) : E
+}
+
+trait LitPrint {
+    def litE(n : Int) = n.toString
+}
+
+trait LitParser[E] {
+    val pE : LitAlg[E] => Fix[Parser[E]] = alg => p =>
+        numericLit ^^ alg.litE
+}
+\end{lstlisting}
+In this case, \lstinline{LitAlg} is yet another small language, which is self-contained. To merge the two languages together, we require their grammars
+to be merged, and we obtain a combined language, whose parser integrates the two small parsers using alternative. In Scala we use compound types, namely use \lstinline{"with"} for two Object Algebra interface types, to avoid polluting the namespace.
+
+\begin{lstlisting}
+trait ExprLitParser[E] {
+    val pE : (ExprAlg[E] with LitAlg[E]) => Fix[Parser[E]] = alg => p => {
+        val pExprE = new ExprParser[E](){}.pE(alg)(p)
+        val pLitE = new LitParser[E](){}.pE(alg)(p)
+        pExprE ||| pLitE
+    }
+}
+\end{lstlisting}
+
+%But we can only abstract over the whole interface type, instead of working on its type parameters, as the number of type parameters is not fixed, where we will discuss more on multiple syntax later. In summary, \lstinline{"|||"} produces a combined parser, which takes a compound algebra as its parameter.
+
+In client code, a user can either define a new function with type \lstinline{(ExprAlg[E] with LitAlg[E]) =>} \lstinline{Parser[E]} based on \lstinline{pE}, which implies an algebra is applied after \lstinline{fix}, or simply feed an algebra to \lstinline{pE} at first, then obtain the result from \lstinline{fix}:
+\begin{lstlisting}
+trait ExprLitPrint extends ExprPrint with LitPrint
+val parsePrint = fix(new ExprLitParser[String](){}.pE(new ExprLitPrint(){}))
+val result = runParser(parsePrint)("x 3") // prints "(x 3)"
+\end{lstlisting}
+\haoyuan{Is there a way to avoid defining ExprLitPrint?}

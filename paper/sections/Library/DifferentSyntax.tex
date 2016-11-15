@@ -1,8 +1,8 @@
-\subsection{Object Algebras for Different Syntax}\label{subsec:differentsyntax}
+\subsection{Parsing with Multiple Syntax}\label{subsec:differentsyntax}
 
-\haoyuan{To be split into Parsing with OA, and Different Syntax.}
+\haoyuan{Another way to organize the paper is to introduce the lack support of class approach for multiple different syntax, and directly extend var and app with lam.}
 
-Such extensibility becomes fragile when it comes to grammars with different syntax. Now suppose we would like to have types in the grammar. Firstly the new grammar is shown below, where the \lstinline{IntT} type and lambda expressions with annotation have been added:
+Back to the class approach, the only little extensibility is just fragile when it comes to grammars with different syntax. Suppose we would like to have types in the expression language. Firstly the new grammar is shown below, where the \lstinline{Int} type and lambda expressions with annotation have been added to class \lstinline{Expr}:
 \begin{lstlisting}
 e ::= x | e ' ' e | \x:t.e
 t ::= "Int"
@@ -37,32 +37,10 @@ In that case the parsers are consistent, and hence can be composed using the com
 The last value \lstinline{pET} integrates the four single parsers defined before, where parsers for expressions and parsers for types are composed respectively. Furthermore, we use \lstinline{fix(p)} to obtain the pair of two parsers we want: one for expressions, the other for types. The parser \lstinline{fix(p)._1} parsers expressions like \lstinline{"\x:Int.x x"} successfully. Yet meanwhile, some drawbacks of this approach come into sight. With different syntax, it
 is necessary to extend the fix-point to contain more parsers, in which case usually some structures like tuples are used,
 making code tedious and less elegant. Moreover, we need to update such a fix-point in the arguments of all previously defined parsers, so as to make parsers consistent for the combinator (things get even worse without that combinator).
-On the other hand, the modularity is quite restricted; only parsing and datatypes are extensible.
-Suppose now we want to realize some behaviors on those data structures, for example pretty-printing, then whenever we introduce a new behavior,
-it needs implementations in every class body, requiring existing code to be modified. At this point, Object Algebras are adopted for data structures
-instead.
 
-One intuition of using Object Algebras is to separate data structures from behaviors, so as to modularize the design, and both parts are even more modular and reusable. We can simply add new variants corresponding to the new cases in the grammar, or realize different operations on structures, without modifying existing code, meanwhile separate compilation is supported. Another one is that Object Algebras benefit us from using generics, where we can abstract different syntax in the type parameters, and define less classes, simplifying code comparatively. Below we present the code using Object Algebras, where we start from \lstinline{varE} and \lstinline{appE} only, later we will extend them with \lstinline{intT} and \lstinline{lamE}:
+One intuition of using Object Algebras, as illustrated above, is to separate data structures from behaviors, so as to modularize the design, and both parts are even more modular and reusable. We can simply add new variants corresponding to the new cases in the grammar, or realize different operations on structures, without modifying existing code, meanwhile separate compilation is supported. Another one is that Object Algebras benefit us from using generics, where we can abstract different syntax in the type parameters, and define less classes, simplifying code comparatively. Below we present the code using Object Algebras, where we start from \lstinline{ExprAlg} (with \lstinline{varE} and \lstinline{appE} only), and define a new Object Algebra interface with \lstinline{intT} and \lstinline{lamE}:
 \begin{lstlisting}
-trait OldAlg[E] {
-    def varE(x : String) : E
-    def appE(e1 : E, e2 : E) : E
-}
-
-trait OldParser[E] {
-    val pE : OldAlg[E] => (=> Parser[E]) => Parser[E] = alg => p =>
-        ident ^^ { x => alg.varE(x) } |||
-        p ~ p ^^ { case e1 ~ e2 => alg.appE(e1, e2) }
-}
-\end{lstlisting}
-Here \lstinline{OldAlg} is an Object Algebra interface. An Object Algebra interface is more like a small language, where several cases (constructors) are put together. Since with Object Algebras structures are implicit, a parser of \lstinline{OldAlg} should generate ``structures'' with
-type \lstinline{"OldAlg[E] =>} \lstinline{E"} for any \lstinline{E}. In \lstinline{OldParser}, \lstinline{alg} of type
-\lstinline{OldAlg[E]} can be any algebra, which appears as a parameter of \lstinline{pE}, then in the body of \lstinline{pE} the algebra
-is invoked correspondingly right after parsing. It means we do not get any explicit objects generated from parsers, but they are immediately applied with algebras and return the results. To make \lstinline{alg} as a generic algebra, the enclosing trait of the parser, namely \lstinline{OldParser}, is generic.
-
-Now we move on to declare \lstinline{intT} and \lstinline{lamE} in a new trait:
-\begin{lstlisting}
-trait NewAlg[E, T] {
+trait LamAlg[E, T] {
     def intT() : T
     def lamE(x : String, t : T, e : E) : E
 }
