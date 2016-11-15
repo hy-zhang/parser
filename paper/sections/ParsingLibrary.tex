@@ -1,0 +1,11 @@
+\section{Implementation}\label{sec:implementation}
+
+\subsection{Fusion of Concepts}\label{subsec:fusion}
+
+In the previous sections we have talked about Packrat Parsing, open recursion and Object Algebras. These components fuse together in our library implementation, for the initial goal, which is to build extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives. For example, Object Algebras are helpful to build extensible data structures, whereas in functional programming, there has been a large amount of related work on extensible datatypes, including DTC and MRM for the Haskell language. And a better
+parsing library would potentially introduce a lot of fancy features and parser combinators, run with high efficiency, or even support indirect left-recursion. 
+\haoyuan{Open recursion could also have alternatives?} For now, our implementation integrates the existing ones, and has turned out to be practical in various applications.
+
+\subsection{Framework of a Language Component}\label{subsec:framework}
+
+\subsection{More modularity}

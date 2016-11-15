@@ -118,8 +118,6 @@ trait ExprLitParser[E] {
 }
 \end{lstlisting}
 
-%But we can only abstract over the whole interface type, instead of working on its type parameters, as the number of type parameters is not fixed, where we will discuss more on multiple syntax later. In summary, \lstinline{"|||"} produces a combined parser, which takes a compound algebra as its parameter.
-
 In client code, a user can either define a new function with type \lstinline{(ExprAlg[E] with LitAlg[E]) =>} \lstinline{Parser[E]} based on \lstinline{pE}, which implies an algebra is applied after \lstinline{fix}, or simply feed an algebra to \lstinline{pE} at first, then obtain the result from \lstinline{fix}:
 \begin{lstlisting}
 trait ExprLitPrint extends ExprPrint with LitPrint
@@ -127,3 +125,46 @@ val parsePrint = fix(new ExprLitParser[String](){}.pE(new ExprLitPrint(){}))
 val result = runParser(parsePrint)("x 3") // prints "(x 3)"
 \end{lstlisting}
 \haoyuan{Is there a way to avoid defining ExprLitPrint?}
+
+\subsection{Parsing with Multiple Syntax}\label{subsec:differentsyntax}
+
+One intuition of using Object Algebras, as illustrated above, is to separate data structures from behaviors, so as to modularize the design, and both parts are even more modular and reusable. We can simply add new variants corresponding to the new cases in the grammar, or realize different operations on structures, without modifying existing code, meanwhile separate compilation is supported. Another one is that Object Algebras benefit us from using generics, where we can abstract multiple syntax in the type parameters, and define less classes, simplifying code comparatively. Below we refactor the last example in Section~\ref{subsec:parsingwithopen}, by defining a new Object Algebra interface with two cases \lstinline{intT} and \lstinline{lamE}. Meanwhile a parser is implemented for that language.
+\begin{lstlisting}
+trait LamAlg[E, T] {
+    def intT() : T
+    def lamE(x : String, t : T, e : E) : E
+}
+
+trait LamParser[E, T] {
+    type Pair = (Parser[E], Parser[T])
+    val pE : LamAlg[E, T] => (=> Pair) => Parser[E] = alg => p =>
+        ("\\" ~> ident) ~ (":" ~> p._2) ~ ("." ~> p._1)
+            ^^ { case x ~ t ~ e => alg.lamE(x, t, e) }
+    val pT : LamAlg[E, T] => (=> Pair) => Parser[T] = alg => p =>
+        "Int" ^^ { _ => alg.intT() }
+}
+\end{lstlisting}
+\lstinline{LamParser} contains parsers for both expressions and types. From the code we observe that the multi-sorts of Object Algebra interface
+exactly express multiple syntax. At this point, to combine these two small components together we need some ``glue code''. But instead of writing composition by hand, we reimplement the combinator \lstinline{|||}, to compose one parser with type \lstinline{Alg1 =>} \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} and another one with type \lstinline{Alg2 =>} \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} using alternative. Note that we can only abstract over the whole algebra interface type, instead of working on its type parameters, as the number of type parameters is not fixed. In summary, \lstinline{"|||"} produces a combined parser, which takes a compound algebra as its parameter:
+\begin{lstlisting}
+implicit class Combinator[Alg1, Alg2, R, E](x : Alg1 => (=> R) => Parser[E]) {
+    def |||(y : Alg2 => (=> R) => Parser[E]): (Alg1 with Alg2) => (=> R) => Parser[E]
+        = alg => l => x(alg)(l) ||| y(alg)(l)
+}
+\end{lstlisting}
+Now it is sufficient to merge \lstinline{ExprParser} and \lstinline{LamParser} together:
+\begin{lstlisting}
+trait ExprLamParser[E, T] {
+    val pExpr = new ExprParser[E](){}
+    val pLam = new LamParser[E, T](){}
+    val pExprE : ExprAlg[E] => (=> pLam.Pair) => Parser[E] =
+        alg => p => pExpr.pE(alg)(p._1)
+
+    val pE = pExprE ||| pLam.pE
+    val pT = pLam.pT
+}
+\end{lstlisting}
+Parsers for expressions and types are connected using \lstinline{|||}, respectively. Hence the isolation for different syntax
+is guaranteed by the type system. The only left problem is that we still need to replace the parser in \lstinline{ExprParser} with \lstinline{pExprE}
+by updating the fix-point parameter. In the next section we will address this problem, and meanwhile our implementation enhances modularity in various aspects.
+
