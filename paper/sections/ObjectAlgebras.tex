@@ -57,7 +57,7 @@ def build[E](alg : LitAlg[E]) : E =
 \end{lstlisting}
 Such a method implicitly represents the expression \lstinline{"x 3"}. The code
 \begin{lstlisting}
-build(new LitPrint(){})
+build(new LitPrint{})
 \end{lstlisting}
 results in \lstinline{"(x 3)"}, as the result of pretty-printing. Now we observe that an ``object'' of expression actually
 has the function type \lstinline{LitAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
@@ -111,20 +111,18 @@ to be merged, and we obtain a combined language, whose parser integrates the two
 \begin{lstlisting}
 trait ExprLitParser[E] {
     val pE : (ExprAlg[E] with LitAlg[E]) => Fix[Parser[E]] = alg => p => {
-        val pExprE = new ExprParser[E](){}.pE(alg)(p)
-        val pLitE = new LitParser[E](){}.pE(alg)(p)
+        val pExprE = new ExprParser[E]{}.pE(alg)(p)
+        val pLitE = new LitParser[E]{}.pE(alg)(p)
         pExprE ||| pLitE
     }
 }
 \end{lstlisting}
 
-In client code, a user can either define a new function with type \lstinline{(ExprAlg[E] with LitAlg[E]) =>} \lstinline{Parser[E]} based on \lstinline{pE}, which implies an algebra is applied after \lstinline{fix}, or simply feed an algebra to \lstinline{pE} at first, then obtain the result from \lstinline{fix}:
+In client code, a user can either define a new function with type \lstinline{(ExprAlg[E] with LitAlg[E])} \lstinline{=>} \lstinline{Parser[E]} based on \lstinline{pE}, which implies an algebra is applied after \lstinline{fix}, or simply feed an algebra to \lstinline{pE} at first, then obtain the result from \lstinline{fix}:
 \begin{lstlisting}
-trait ExprLitPrint extends ExprPrint with LitPrint
-val parsePrint = fix(new ExprLitParser[String](){}.pE(new ExprLitPrint(){}))
+val parsePrint = fix(new ExprLitParser[String]{}.pE(new ExprPrint with LitPrint{}))
 val result = runParser(parsePrint)("x 3") // prints "(x 3)"
 \end{lstlisting}
-\haoyuan{Is there a way to avoid defining ExprLitPrint?}
 
 \subsection{Parsing with Multiple Syntax}\label{subsec:differentsyntax}
 
@@ -141,10 +139,10 @@ trait LamParser[E, T] {
         ("\\" ~> ident) ~ (":" ~> p._2) ~ ("." ~> p._1)
             ^^ { case x ~ t ~ e => alg.lamE(x, t, e) }
     val pT : LamAlg[E, T] => (=> Pair) => Parser[T] = alg => p =>
-        "Int" ^^ { _ => alg.intT() }
+        "Int" ^^^ alg.intT
 }
 \end{lstlisting}
-\lstinline{LamParser} contains parsers for both expressions and types. From the code we observe that the multi-sorts of Object Algebra interface
+Note that we are omitting its lexer here. \lstinline{LamParser} contains parsers for both expressions and types. From the code we observe that the multi-sorts of Object Algebra interface
 exactly express multiple syntax. At this point, to combine these two small components together we need some ``glue code''. But instead of writing composition by hand, we reimplement the combinator \lstinline{|||}, to compose one parser with type \lstinline{Alg1 =>} \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} and another one with type \lstinline{Alg2 =>} \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} using alternative. Note that we can only abstract over the whole algebra interface type, instead of working on its type parameters, as the number of type parameters is not fixed. In summary, \lstinline{"|||"} produces a combined parser, which takes a compound algebra as its parameter:
 \begin{lstlisting}
 implicit class Combinator[Alg1, Alg2, R, E](x : Alg1 => (=> R) => Parser[E]) {
@@ -155,8 +153,8 @@ implicit class Combinator[Alg1, Alg2, R, E](x : Alg1 => (=> R) => Parser[E]) {
 Now it is sufficient to merge \lstinline{ExprParser} and \lstinline{LamParser} together:
 \begin{lstlisting}
 trait ExprLamParser[E, T] {
-    val pExpr = new ExprParser[E](){}
-    val pLam = new LamParser[E, T](){}
+    val pExpr = new ExprParser[E]{}
+    val pLam = new LamParser[E, T]{}
     val pExprE : ExprAlg[E] => (=> pLam.Pair) => Parser[E] =
         alg => p => pExpr.pE(alg)(p._1)
 

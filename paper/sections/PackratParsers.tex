@@ -38,6 +38,11 @@ def ^^[U](f: (T) => U): Parser[U]
 \hspace{.2in}- A parser combinator for function application. \\
 \hline
 \begin{lstlisting}
+def ^^^[U](v: => U): Parser[U]
+\end{lstlisting} \\
+\hspace{.2in}- A parser combinator that changes a successful result into the specified value. \\
+\hline
+\begin{lstlisting}
 def <~[U](q: => Parser[U]): Parser[T]
 \end{lstlisting} \\
 \hspace{.2in}- A parser combinator for sequential composition which keeps only the left result. \\
@@ -73,7 +78,7 @@ def |||[U >: T](q0: => Parser[U]): Parser[U]
 \hspace{.2in}- A parser combinator for alternative with longest match composition. \\
 \hline \\
 \end{tabular}
-\caption{AAA}\label{tab1}
+\caption{Some frequently used functions in Scala parser API.}\label{tab1}
 \end{table}
 
 Furthermore, Table~\ref{tab1} shows some common parser combinators that are used in our implementation.

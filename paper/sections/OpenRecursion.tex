@@ -160,7 +160,7 @@ Furthermore, in above code we use \lstinline{|||} for alternative instead of \ls
 
 But our story does not tend to stop here, as we have observed some limitations of the current approach. Specifically, one is that extensibility of data operations is not guaranteed, though we obtain the extensibility of data variants by defining an arbitrarily large number of new case classes. Suppose we want new operations like pretty-printing on expressions, we may 1) add a method \lstinline{print} to all case classes with their own interpretations; 2) define a single method \lstinline{print} and do pattern-matching on case classes inside. When adding new data variants and operations, both require existing code to be modified, thus affect code reuse and modularity.
 
-Another weakness is that the only little extensibility is just fragile when it comes to grammars with multiple different syntax. For instance, in the beginning we only have variables and applications in \lstinline{Expr}, to have types in our language, the \lstinline{Int} type and lambda expressions with annotation are added. See the new grammar below:
+Another weakness is that the only little extensibility is just fragile when it comes to grammars with multiple different syntax. For instance, in the beginning we only have variables and applications in \lstinline{Expr}, to have types in our language, the \lstinline{Int} type and lambda expressions with annotation are added. See the grammar below:
 \begin{lstlisting}
 e ::= x | e ' ' e | \x:t.e
 t ::= "Int"
@@ -172,9 +172,9 @@ Hence we use a pair in the parameter:
 type Pair = (Parser[Expr], Parser[Type])
 
 abstract class Type
-case class IntT extends Type
+case class IntT() extends Type
 val pInt : (=> Pair) => Parser[Type] =
-    p => "Int" ^^ { _ => IntT() }
+    p => "Int" ^^^ IntT()
 
 case class Lam(x : String, t : Type, e : Expr) extends Expr
 val pLam : (=> Pair) => Parser[Expr] =
