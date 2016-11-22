@@ -38,9 +38,9 @@ object RcdSubBotParsers extends StandardTokenParsers with PackratParsers with Im
 
   lazy val `type`: PackratParser[Ty] = arrowType
   lazy val aType: PackratParser[Ty] =
-    "(" ~> `type` <~ ")" |
-      "Bot" ^^ { _ => TyBot } |
-      "Top" ^^ { _ => TyTop } |
+    "(" ~> `type` <~ ")" |||
+      "Bot" ^^ { _ => TyBot } |||
+      "Top" ^^ { _ => TyTop } |||
       "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
@@ -50,25 +50,25 @@ object RcdSubBotParsers extends StandardTokenParsers with PackratParsers with Im
     lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (id, ty) }
 
   lazy val arrowType: PackratParser[Ty] =
-    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |
+    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
       aType
 
   // TERMS
   lazy val term: PackratParser[Term] =
-  appTerm |
+  appTerm |||
     ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) }
   lazy val appTerm: PackratParser[Term] =
-    appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
+    appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
       pathTerm
 
   lazy val pathTerm: PackratParser[Term] =
-    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |
-      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |
+    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |||
+      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |||
       aTerm
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> term <~ ")" |
-      lcid ^^ { i => TmVar(i) } |
+    "(" ~> term <~ ")" |||
+      lcid ^^ { i => TmVar(i) } |||
       "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) }
 
   lazy val fields: PackratParser[List[(String, Term)]] =

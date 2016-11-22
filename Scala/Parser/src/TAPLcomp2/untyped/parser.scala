@@ -26,14 +26,14 @@ object UntypedParsers extends StandardTokenParsers with PackratParsers with Impl
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }
 
   lazy val term: PackratParser[Term] =
-    appTerm |
+    appTerm |||
       ("\\" ~> lcid) ~ ("." ~> term) ^^ { case v ~ t => TmAbs(v, t) }
 
   lazy val appTerm: PackratParser[Term] =
-    (appTerm ~ aTerm) ^^ { case t1 ~ t2 => TmApp(t1, t2) } | aTerm
+    (appTerm ~ aTerm) ^^ { case t1 ~ t2 => TmApp(t1, t2) } ||| aTerm
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> term <~ ")" |
+    "(" ~> term <~ ")" |||
       lcid ^^ { i => TmVar(i) }
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {

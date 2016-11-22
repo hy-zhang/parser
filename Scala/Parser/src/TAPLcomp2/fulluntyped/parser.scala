@@ -45,29 +45,29 @@ object FullUntypedParsers extends StandardTokenParsers with PackratParsers with 
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }
 
   lazy val term: PackratParser[Term] =
-    appTerm |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |
-      ("\\" ~> lcid) ~ ("." ~> term) ^^ { case v ~ t => TmAbs(v, t) } |
+    appTerm |||
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |||
+      ("\\" ~> lcid) ~ ("." ~> term) ^^ { case v ~ t => TmAbs(v, t) } |||
       ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) }
   lazy val appTerm: PackratParser[Term] =
-    appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
-      "succ" ~> pathTerm ^^ { t => TmSucc(t) } |
-      "pred" ~> pathTerm ^^ { t => TmPred(t) } |
-      "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |
+    appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
+      "succ" ~> pathTerm ^^ { t => TmSucc(t) } |||
+      "pred" ~> pathTerm ^^ { t => TmPred(t) } |||
+      "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |||
       pathTerm
 
   lazy val pathTerm: PackratParser[Term] =
-    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |
-      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |
+    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |||
+      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |||
       aTerm
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> term <~ ")" |
-      "true" ^^ { _ => TmTrue } |
-      "false" ^^ { _ => TmFalse } |
-      lcid ^^ { i => TmVar(i) } |
-      stringLit ^^ { l => TmString(l) } |
-      "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) } |
+    "(" ~> term <~ ")" |||
+      "true" ^^ { _ => TmTrue } |||
+      "false" ^^ { _ => TmFalse } |||
+      lcid ^^ { i => TmVar(i) } |||
+      stringLit ^^ { l => TmString(l) } |||
+      "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) } |||
       numericLit ^^ { x => num(x.toInt) }
 
   lazy val fields: PackratParser[List[(String, Term)]] =

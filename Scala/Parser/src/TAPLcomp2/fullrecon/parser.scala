@@ -52,9 +52,9 @@ object FullReconParsers extends StandardTokenParsers with PackratParsers with Im
   // TYPES
   lazy val `type`: PackratParser[Ty] = arrowType
   lazy val aType: PackratParser[Ty] =
-    "(" ~> `type` <~ ")" |
-      ucid ^^ { tn => TyVar(tn) } |
-      "Bool" ^^ { _ => TyBool } |
+    "(" ~> `type` <~ ")" |||
+      ucid ^^ { tn => TyVar(tn) } |||
+      "Bool" ^^ { _ => TyBool } |||
       "Nat" ^^ { _ => TyNat }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
@@ -64,27 +64,27 @@ object FullReconParsers extends StandardTokenParsers with PackratParsers with Im
     lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (id, ty) }
 
   lazy val arrowType: PackratParser[Ty] =
-    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |
+    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
       aType
 
   lazy val term: PackratParser[Term] =
-    appTerm |
-      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |
-      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, Some(ty), t) } |
+    appTerm |||
+      ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |||
+      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, Some(ty), t) } |||
       ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) }
 
   lazy val appTerm: PackratParser[Term] =
-    appTerm ~ aTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
-      "succ" ~> aTerm ^^ { t => TmSucc(t) } |
-      "pred" ~> aTerm ^^ { t => TmPred(t) } |
-      "iszero" ~> aTerm ^^ { t => TmIsZero(t) } |
+    appTerm ~ aTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
+      "succ" ~> aTerm ^^ { t => TmSucc(t) } |||
+      "pred" ~> aTerm ^^ { t => TmPred(t) } |||
+      "iszero" ~> aTerm ^^ { t => TmIsZero(t) } |||
       aTerm
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> term <~ ")" |
-      "true" ^^ { _ => TmTrue } |
-      "false" ^^ { _ => TmFalse } |
-      lcid ^^ { i => TmVar(i) } |
+    "(" ~> term <~ ")" |||
+      "true" ^^ { _ => TmTrue } |||
+      "false" ^^ { _ => TmFalse } |||
+      lcid ^^ { i => TmVar(i) } |||
       numericLit ^^ { x => num(x.toInt) }
 
   private def num(x: Int): Term = x match {

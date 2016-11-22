@@ -85,17 +85,17 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
 
   // TYPES
   lazy val `type`: PackratParser[Ty] =
-  arrowType |
+  arrowType |||
     ("All" ~> ucid) ~ ("." ~> `type`) ^^ { case id ~ ty => TyAll(id, ty) }
   lazy val aType: PackratParser[Ty] =
-    "(" ~> `type` <~ ")" |
-      ucid ^^ { tn => TyVar(tn) } |
-      "Bool" ^^ { _ => TyBool } |
-      "String" ^^ { _ => TyString } |
-      "Unit" ^^ { _ => TyUnit } |
-      "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |
-      "Nat" ^^ { _ => TyNat } |
-      "Float" ^^ { _ => TyFloat } |
+    "(" ~> `type` <~ ")" |||
+      ucid ^^ { tn => TyVar(tn) } |||
+      "Bool" ^^ { _ => TyBool } |||
+      "String" ^^ { _ => TyString } |||
+      "Unit" ^^ { _ => TyUnit } |||
+      "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |||
+      "Nat" ^^ { _ => TyNat } |||
+      "Float" ^^ { _ => TyFloat } |||
       (("{" ~ "Some") ~> ucid) ~ ("," ~> `type` <~ "}") ^^ { case id ~ ty => TySome(id, ty) }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
@@ -105,52 +105,52 @@ object FullPolyParsers extends StandardTokenParsers with PackratParsers with Imp
     lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (id, ty) }
 
   lazy val arrowType: PackratParser[Ty] =
-    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |
+    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
       aType
 
   // TERMS
   lazy val term: PackratParser[Term] =
-  appTerm |
-    ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |
-    (("lambda" | "\\") ~> (lcid | "_")) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |
-    ("let" ~> (lcid | "_")) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) } | {
+  appTerm |||
+    ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |||
+    (("lambda" ||| "\\") ~> (lcid ||| "_")) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |||
+    ("let" ~> (lcid ||| "_")) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) } ||| {
     (("let" ~ "{") ~> ucid) ~ ("," ~> lcid <~ "}") ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id1 ~ id2 ~ t1 ~ t2 =>
       TmUnPack(id1, id2, t1, t2) }
-  } |
-    (("lambda" | "\\") ~> ucid) ~ ("." ~> term) ^^ { case id ~ t => TmTAbs(id, t) }
+  } |||
+    (("lambda" ||| "\\") ~> ucid) ~ ("." ~> term) ^^ { case id ~ t => TmTAbs(id, t) }
 
   lazy val appTerm: PackratParser[Term] =
-    (appTerm <~ "[") ~ (`type` <~ "]") ^^ { case t ~ ty => TmTApp(t, ty) } |
-      appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
-      "fix" ~> pathTerm ^^ { t => TmFix(t) } |
-      "succ" ~> pathTerm ^^ { t => TmSucc(t) } |
-      "pred" ~> pathTerm ^^ { t => TmPred(t) } |
-      "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |
+    (appTerm <~ "[") ~ (`type` <~ "]") ^^ { case t ~ ty => TmTApp(t, ty) } |||
+      appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
+      "fix" ~> pathTerm ^^ { t => TmFix(t) } |||
+      "succ" ~> pathTerm ^^ { t => TmSucc(t) } |||
+      "pred" ~> pathTerm ^^ { t => TmPred(t) } |||
+      "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |||
       pathTerm
 
   lazy val ascribeTerm: PackratParser[Term] =
-    aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => TmAscribe(t, ty) } |
+    aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => TmAscribe(t, ty) } |||
       aTerm
 
   lazy val pathTerm: PackratParser[Term] =
-    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |
-      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |
+    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |||
+      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |||
       ascribeTerm
 
   lazy val termSeq: PackratParser[Term] =
-    term ~ (";" ~> termSeq) ^^ { case t ~ ts => TmApp(TmAbs("_", TyUnit, ts), t) } |
+    term ~ (";" ~> termSeq) ^^ { case t ~ ts => TmApp(TmAbs("_", TyUnit, ts), t) } |||
       term
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> termSeq <~ ")" |
-      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => TmInert(ty) } |
-      "true" ^^ { _ => TmTrue } |
-      "false" ^^ { _ => TmFalse } |
-      lcid ^^ { i => TmVar(i) } |
-      stringLit ^^ { l => TmString(l) } |
-      "unit" ^^ { _ => TmUnit } |
-      "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) } |
-      numericLit ^^ { x => num(x.toInt) } |
+    "(" ~> termSeq <~ ")" |||
+      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => TmInert(ty) } |||
+      "true" ^^ { _ => TmTrue } |||
+      "false" ^^ { _ => TmFalse } |||
+      lcid ^^ { i => TmVar(i) } |||
+      stringLit ^^ { l => TmString(l) } |||
+      "unit" ^^ { _ => TmUnit } |||
+      "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) } |||
+      numericLit ^^ { x => num(x.toInt) } |||
       (("{" ~ "*") ~> `type`) ~ ("," ~> term <~ "}") ~ ("as" ~> `type`) ^^ { case ty1 ~ t ~ ty2 => TmPack(ty1, t, ty2) }
 
   lazy val fields: PackratParser[List[(String, Term)]] =

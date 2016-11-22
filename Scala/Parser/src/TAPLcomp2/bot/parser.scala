@@ -32,8 +32,8 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
 
   lazy val `type`: PackratParser[Ty] = arrowType
   lazy val aType: PackratParser[Ty] =
-    "(" ~> `type` <~ ")" |
-      "Bot" ^^ { _ => TyBot } |
+    "(" ~> `type` <~ ")" |||
+      "Bot" ^^ { _ => TyBot } |||
       "Top" ^^ { _ => TyTop }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
@@ -43,19 +43,19 @@ object BotParsers extends StandardTokenParsers with PackratParsers with Implicit
     lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (id, ty) }
 
   lazy val arrowType: PackratParser[Ty] =
-    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |
+    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
       aType
 
   // TERMS
   lazy val term: PackratParser[Term] =
-  appTerm |
+  appTerm |||
     ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) }
   lazy val appTerm: PackratParser[Term] =
-    appTerm ~ aTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
+    appTerm ~ aTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
       aTerm
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> term <~ ")" |
+    "(" ~> term <~ ")" |||
       lcid ^^ { i => TmVar(i) }
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {

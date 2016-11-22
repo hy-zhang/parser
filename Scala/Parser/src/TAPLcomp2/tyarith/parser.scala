@@ -29,20 +29,20 @@ object TyArithParsers extends StandardTokenParsers with ImplicitConversions {
   lexical.reserved += ("true", "false", "if", "then", "else", "iszero", "succ", "pred")
   lexical.delimiters += ("(", ")", ";")
 
-  private def term: Parser[Term] = appTerm |
+  private def term: Parser[Term] = appTerm |||
     ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ TmIf
 
   private def appTerm: Parser[Term] =
-    aTerm |
-      "succ" ~> aTerm ^^ TmSucc |
-      "pred" ~> aTerm ^^ TmPred |
+    aTerm |||
+      "succ" ~> aTerm ^^ TmSucc |||
+      "pred" ~> aTerm ^^ TmPred |||
       "iszero" ~> aTerm ^^ TmIsZero
 
   //  Atomic terms are ones that never require extra parentheses
   private def aTerm: Parser[Term] =
-  "(" ~> term <~ ")" |
-    "true" ^^ { _ => TmTrue } |
-    "false" ^^ { _ => TmFalse } |
+  "(" ~> term <~ ")" |||
+    "true" ^^ { _ => TmTrue } |||
+    "false" ^^ { _ => TmFalse } |||
     numericLit ^^ { x => num(x.toInt) }
 
   private def num(x: Int): Term = x match {

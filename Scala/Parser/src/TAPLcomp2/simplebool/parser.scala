@@ -34,25 +34,25 @@ object SimpleBoolParsers extends StandardTokenParsers with PackratParsers with I
 
   lazy val `type`: PackratParser[Ty] = arrowType
   lazy val arrowType: PackratParser[Ty] =
-    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |
+    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
       aType
   lazy val aType: PackratParser[Ty] =
-    "(" ~> `type` <~ ")" |
+    "(" ~> `type` <~ ")" |||
       "Bool" ^^ { _ => TyBool }
 
   lazy val term: PackratParser[Term] =
-    appTerm |
-      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |
+    appTerm |||
+      ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |||
       ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) }
 
   lazy val appTerm: PackratParser[Term] =
-    (appTerm ~ aTerm) ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
+    (appTerm ~ aTerm) ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
       aTerm
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> term <~ ")" |
-      lcid ^^ { i => TmVar(i) } |
-      "true" ^^ { _ => TmTrue } |
+    "(" ~> term <~ ")" |||
+      lcid ^^ { i => TmVar(i) } |||
+      "true" ^^ { _ => TmTrue } |||
       "false" ^^ { _ => TmFalse }
 
   def input(s: String) = phrase(term)(new lexical.Scanner(s)) match {

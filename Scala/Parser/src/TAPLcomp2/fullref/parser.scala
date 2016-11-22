@@ -96,21 +96,21 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
   lazy val ucid: PackratParser[String] = ident ^? { case id if id.charAt(0).isUpper => id }
 
   // TYPES
-  lazy val `type`: PackratParser[Ty] = arrowType |
-    "Ref" ~> aType ^^ { ty => TyRef(ty) } |
-    "Source" ~> aType ^^ { ty => TySource(ty) } |
+  lazy val `type`: PackratParser[Ty] = arrowType |||
+    "Ref" ~> aType ^^ { ty => TyRef(ty) } |||
+    "Source" ~> aType ^^ { ty => TySource(ty) } |||
     "Sink" ~> aType ^^ { ty => TySink(ty) }
   lazy val aType: PackratParser[Ty] =
-    "(" ~> `type` <~ ")" |
-      ucid ^^ { tn => TyVar(tn) } |
-      "Bool" ^^ { _ => TyBool } |
-      "Top" ^^ { _ => TyTop } |
-      "Bot" ^^ { _ => TyBot } |
-      "<" ~> fieldTypes <~ ">" ^^ { ft => TyVariant(ft) } |
-      "String" ^^ { _ => TyString } |
-      "Unit" ^^ { _ => TyUnit } |
-      "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |
-      "Nat" ^^ { _ => TyNat } |
+    "(" ~> `type` <~ ")" |||
+      ucid ^^ { tn => TyVar(tn) } |||
+      "Bool" ^^ { _ => TyBool } |||
+      "Top" ^^ { _ => TyTop } |||
+      "Bot" ^^ { _ => TyBot } |||
+      "<" ~> fieldTypes <~ ">" ^^ { ft => TyVariant(ft) } |||
+      "String" ^^ { _ => TyString } |||
+      "Unit" ^^ { _ => TyUnit } |||
+      "{" ~> fieldTypes <~ "}" ^^ { ft => TyRecord(ft) } |||
+      "Nat" ^^ { _ => TyNat } |||
       "Float" ^^ { _ => TyFloat }
 
   lazy val fieldTypes: PackratParser[List[(String, Ty)]] =
@@ -120,51 +120,51 @@ object FullRefParsers extends StandardTokenParsers with PackratParsers with Impl
     lcid ~ (":" ~> `type`) ^^ { case id ~ ty => (id, ty) }
 
   lazy val arrowType: PackratParser[Ty] =
-    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |
+    (aType <~ "->") ~ arrowType ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
       aType
 
   // TERMS
   lazy val term: PackratParser[Term] =
-  ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |
-    ("case" ~> term) ~ ("of" ~> cases) ^^ { case t ~ cs => TmCase(t, cs) } |
-    ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |
-    ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) } |
-    (appTerm <~ ":=") ~ appTerm ^^ { case t1 ~ t2 => TmAssign(t1, t2) } |
+  ("if" ~> term) ~ ("then" ~> term) ~ ("else" ~> term) ^^ { case t1 ~ t2 ~ t3 => TmIf(t1, t2, t3) } |||
+    ("case" ~> term) ~ ("of" ~> cases) ^^ { case t ~ cs => TmCase(t, cs) } |||
+    ("\\" ~> lcid) ~ (":" ~> `type`) ~ ("." ~> term) ^^ { case v ~ ty ~ t => TmAbs(v, ty, t) } |||
+    ("let" ~> lcid) ~ ("=" ~> term) ~ ("in" ~> term) ^^ { case id ~ t1 ~ t2 => TmLet(id, t1, t2) } |||
+    (appTerm <~ ":=") ~ appTerm ^^ { case t1 ~ t2 => TmAssign(t1, t2) } |||
     appTerm
 
   lazy val appTerm: PackratParser[Term] =
-    appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |
-      "fix" ~> pathTerm ^^ { t => TmFix(t) } |
-      "ref" ~> pathTerm ^^ { t => TmRef(t) } |
-      "!" ~> pathTerm ^^ { t => TmDeref(t) } |
-      "succ" ~> pathTerm ^^ { t => TmSucc(t) } |
-      "pred" ~> pathTerm ^^ { t => TmPred(t) } |
-      "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |
+    appTerm ~ pathTerm ^^ { case t1 ~ t2 => TmApp(t1, t2) } |||
+      "fix" ~> pathTerm ^^ { t => TmFix(t) } |||
+      "ref" ~> pathTerm ^^ { t => TmRef(t) } |||
+      "!" ~> pathTerm ^^ { t => TmDeref(t) } |||
+      "succ" ~> pathTerm ^^ { t => TmSucc(t) } |||
+      "pred" ~> pathTerm ^^ { t => TmPred(t) } |||
+      "iszero" ~> pathTerm ^^ { t => TmIsZero(t) } |||
       pathTerm
 
   lazy val ascribeTerm: PackratParser[Term] =
-    aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => TmAscribe(t, ty) } |
+    aTerm ~ ("as" ~> `type`) ^^ { case t ~ ty => TmAscribe(t, ty) } |||
       aTerm
 
   lazy val pathTerm: PackratParser[Term] =
-    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |
-      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |
+    pathTerm ~ ("." ~> lcid) ^^ { case t1 ~ l => TmProj(t1, l) } |||
+      pathTerm ~ ("." ~> numericLit) ^^ { case t1 ~ l => TmProj(t1, l) } |||
       ascribeTerm
 
   lazy val termSeq: PackratParser[Term] =
-    term ~ (";" ~> termSeq) ^^ { case t ~ ts => TmApp(TmAbs("_", TyUnit, ts), t) } |
+    term ~ (";" ~> termSeq) ^^ { case t ~ ts => TmApp(TmAbs("_", TyUnit, ts), t) } |||
       term
 
   lazy val aTerm: PackratParser[Term] =
-    "(" ~> termSeq <~ ")" |
-      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => TmInert(ty) } |
-      "true" ^^ { _ => TmTrue } |
-      "false" ^^ { _ => TmFalse } |
-      ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> `type`) ^^ { case l ~ t ~ ty => TmTag(l, t, ty) } |
-      lcid ^^ { i => TmVar(i) } |
-      stringLit ^^ { l => TmString(l) } |
-      "unit" ^^ { _ => TmUnit } |
-      "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) } |
+    "(" ~> termSeq <~ ")" |||
+      ("inert" ~ "[") ~> `type` <~ "]" ^^ { ty => TmInert(ty) } |||
+      "true" ^^ { _ => TmTrue } |||
+      "false" ^^ { _ => TmFalse } |||
+      ("<" ~> lcid) ~ ("=" ~> term <~ ">") ~ ("as" ~> `type`) ^^ { case l ~ t ~ ty => TmTag(l, t, ty) } |||
+      lcid ^^ { i => TmVar(i) } |||
+      stringLit ^^ { l => TmString(l) } |||
+      "unit" ^^ { _ => TmUnit } |||
+      "{" ~> fields <~ "}" ^^ { fs => TmRecord(fs) } |||
       numericLit ^^ { x => num(x.toInt) }
 
   lazy val cases: PackratParser[List[(String, String, Term)]] =
