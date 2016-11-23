@@ -1,60 +1,113 @@
 \section{Overview}\label{sec:overview}
 
-Our modular parsing library consists of four parts, and we will go through them in this section. The first is underlying parsing technique we used. Parsing has been heavily studied over the years, especially for context-free grammars and its subsets. However, the choice of parsing techniques is not a minor issue here, because of modularity. To achieve modularity, the parsers must be written in a way that can be composed, and different parsing techniques have different suitability for that.
+\subsection{The Choice of Parsing Techniques}\label{subsec:overview-parsing}
 
-Although every parsing algorithm is able to implement by hand in principle, some of them are not friendly for that. A parser generator is a tool to generate parsers automatically or semi-automatically, from a grammar given by the user. There is no restriction on the algorithm, however most of them adopts LL and LR parsing algorithms, which are table-based.
+Parsing techniques have been heavily studied over the years, especially for context-free grammars and its subsets. However, the choice of parsing techniques is not a minor issue here, because of modularity. To achieve modularity, the parsers must be written in a way that can be composed, and different parsing techniques have different suitability for that.
+
+Although every parsing algorithm is able to implement by hand in principle, some of them are not friendly for that. A \textit{parser generator} is a tool to generate parsers automatically or semi-automatically, from a grammar given by the user. There is no restriction on the algorithm, however most of them adopts LL and LR parsing algorithms, which are table-based.
 
 \huang{TALK ABOUT PREVIOUS WORKS USING PARSER GENERATORS, AND ALSO THE DISADVTANGES OF THEM}
 
-Comparing with the parser generators, a parser combinator takes several parsers and produce a new parser as its output. It is popular in functional programming, where the parsers are represented by functions and parser combinators are higher-order functions accepts them. Parser combinators are very suitable for our purpose, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to composed them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and also are the parsers it takes. Thus in a statically typed programming language they can be type-checked during compile time.
+Comparing with the parser generators, a \textit{parser combinator} takes several parsers and produce a new parser as its output. It is popular in functional programming, where the parsers are represented by functions and parser combinators are higher-order functions accepts them. Parser combinators are very suitable for our purpose, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to composed them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and also are the parsers it takes. Thus in a statically typed programming language they can be type-checked during compile time.
 
 There are variants in the category of parser combinators. Almost all of them adopt top-down, recursive descent parsing, which uses backtracking to search through the possible branches. Simple backtracking parser combinators, such as the famous library Parsec in Haskell, have some drawbacks. One is that they cannot support left-recursive grammars. The common solution is to rewrite a left-recursive grammar into an equivalent one, so called left-recursion elimination. This solution requires information of the whole grammar, so that it cannot be applied in a modular setting because we only have parts of the grammar. Another drawback is performance. Take Parsec as an example, its choice combinator only tries the second alternative if the first fails without any token consumption. If two alternatives have a same non-empty prefix, an auxiliary function \lstinline{try} must be added to backtrack. However, if we want to extend our parsers later, we should always consider the worst case in which all alternatives share common prefixes. Then we need to add \lstinline{try} for all the branches, which results worst case exponential time complexity.
 
-Beyond the simple backtracking one, several advanced parser combinators were studied to resolve those issues. One of them is Packrat parsers, which is our choice. The details of Packrat parser are beyond the scope of this paper. In brief, Packrat parsers use memorization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated, and it supports left-recursive grammars. These properties are very suitable for modularity. Thus we use Packrat parsers as the underlying parsing technique in our library.
+Beyond the simple backtracking one, several advanced parser combinators were studied to resolve those issues. One of them is Packrat parsers, which is our choice. The details of Packrat parser are beyond the scope of this paper. In brief, Packrat parsers use memorization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated, and it supports left-recursive grammars. All of these properties are very suitable for modularity, thus we use Packrat parsers as the underlying parsing technique. In section \ref{sec:packratparsers}, we will talk more details about the Scala Packrat parsing library we used.
 
 It is worth mentioning that the choice of parser combinators will not affect the other parts of our library. One can choose other parser combinators like Parsec, in cases that the performance and supporting of left-recursion are not major concerns.
 
-The second part of our library is open recursion. It is introduced to deal with the problem of recursive calls in modular parsing. We use a simple example to demonstrate the problem, which is parsing a language of natural numbers. The language is defined below.
+\subsection{Modular Parsers, the First Look}\label{subsec:overview-firstlook}
+
+With Packrat parser combinators, we obtain the possibility of writing parsers in a modular way. Let's start by looking at how to build a parser for a simple language, which only has variables and applications at the beginning.
 
 \begin{lstlisting}[language=PlainCode]
-Expr := zero | succ Expr
+Expr := Var String | App Expr Expr
 \end{lstlisting}
 
-Firstly, we need to define the abstract syntax. Here we use Scala's case classes to save spaces, this can also be done using class inheritance.
+Firstly, we define the abstract syntax by Scala's convenient case classes. Expressions have type \lstinline{Expr}, and each of them is either \lstinline{Var} or \lstinline{App}.
 
 \begin{lstlisting}
 abstract class Expr
-case class Zero extends Expr
-case class Succ(v: Expr) extends Expr
+case class Var(x: String) extends Expr
+case class App(e1: Expr, e2: Expr) extends Expr
 \end{lstlisting}
 
-And then we write parsing functions for every cases. Some irrelevant details in the code are omitted to outline the main structure. Suppose we have \lstinline{choice} combinator for alternatives and the input tokens are global values which can be accessed by all these functions.
+And then we write parsing functions for each case.
 
 \begin{lstlisting}
-def parseExpr(): Expr = choice(parserZero, parseSucc)
+val pVar: PackratParser[Expr] =
+  ident ^^ Var
 
-def parserZero(): Expr = {...}
+val pApp: (=> PackratParser[Expr]) => PackratParser[Expr] =
+  e => e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
+\end{lstlisting}
 
-def parseSucc(): Expr = {
-  parseToken('succ')
-  val v = parseExpr()
-  Succ(v)
+The \lstinline{PackratParser} type and the combinators are imported from the Scala Packrat parsing library. Some details about these structures will be discussed in later sections, so that readers could only focus on the types of these functions at the first reading.
+
+\lstinline{pVar} is straight forward. It parses a single identifier, and its type \lstinline{PackratParser[Expr]} indicates the result is an \lstinline{Expr}. However the type of \lstinline{pApp} is different. It takes a parser of \lstinline{Expr} as an argument, which represents the parser of the whole expression. In this particular case, it is essentially the parser of both two cases. We can write equivalent code as below.
+
+\begin{lstlisting}
+val pApp2: PackratParser[Expr] = {
+  lazy val e = pApp2 | pVar
+  e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
 }
 \end{lstlisting}
 
-It works well, but later we want to extend the language to support addition.
+\lstinline{pApp2} works fine, but it does not have the extensibility as \lstinline{pApp} does. Since the parser of the whole expression in \lstinline{pApp2} is hard-coded, we have to edit the existing code if we extend \lstinline{Expr} to add a new case later. The parameterization technique used in \lstinline{pApp} is called \textit{open recursion}, which is discussed in section \ref{sec:openandparsing}.
 
-\begin{lstlisting}[language=PlainCode]
-Expr := zero | succ Expr | add Expr Expr
-\end{lstlisting}
-
-Extending the abstract syntax is easy.
+We use a trait to glue them together, and add \lstinline{pVarApp} as a combination of the two parsing functions. This piece of code is a modular parser.
 
 \begin{lstlisting}
-case class Add(a: Expr, b: Expr) extends Expr
+trait ExprParser {
+  lexical.delimiters += ("(", ")")
+  val pVar: PackratParser[Expr] =
+    ident ^^ Var
+  val pApp: (=> PackratParser[Expr]) => PackratParser[Expr] =
+    e => e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
+  val pVarApp: (=> PackratParser[Expr]) => PackratParser[Expr] =
+    e => pApp(e) | pVar | "(" ~> e <~ ")"
+}
 \end{lstlisting}
 
+Finally, we are able to parse \lstinline{Expr} frome strings as shown in the code below. It will print \lstinline{App(Var(x),Var(y))}. The \lstinline{fix} function here is just the standard \textit{fixpoint}, it is explained in section \ref{subsec:openrecursion}.
 
+\begin{lstlisting}
+def parseAndPrint(inp: String) = {
+  val p = fix(new ExprParser {}.pVarApp)
+  val t = phrase(p)(new lexical.Scanner(inp))
+  if (t.successful) println(t.get) else scala.sys.error(t.toString)
+}
+
+parseAndPrint("x y")
+\end{lstlisting}
+
+\subsection{Extend and Reuse Parsers}\label{subsec:overview-extend}
+
+We have done our modular parser, and it behaves just like normal parsers. To demonstrate the advantages of writing parsers in that way, we extend the language to add lambda abstractions as a new case of expressions. The language then actually becomes the famous \textit{untyped lambda calculus}.
+
+\begin{lstlisting}[language=PlainCode]
+Expr := Var String | App Expr Expr | Lam String Expr
+\end{lstlisting}
+
+With Scala's case classes, extending the abstract syntax \lstinline{Expr} is easy.
+
+\begin{lstlisting}
+case class Lam(x: String, e: Expr) extends Expr
+\end{lstlisting}
+
+Since we already have the parser for variables and applications, we can reuse it and build a new parser by extending it. Notice that the old code is not touched, hence separate compilation is obtained.
+
+\begin{lstlisting}
+trait LambdaParser extends ExprParser {
+  lexical.delimiters += ("\\", ".")
+  val pLam: (=> PackratParser[Expr]) => PackratParser[Expr] =
+    e => "\\" ~> ident ~ ("." ~> e) ^^ { case x ~ b => Lam(x, b) }
+  val pVarAppLam: (=> PackratParser[Expr]) => PackratParser[Expr] =
+    e => pLam(e) | pVarApp(e)
+}
+\end{lstlisting}
+
+In the code above, we write a parsing function \lstinline{pLam} for the lambda case. And compose it with \lstinline{pVarApp} we have in the old parser.
 
 \begin{itemize}
 \item Choosing the Parsing Technology
