@@ -64,6 +64,7 @@ type Fix[T] = (=>T) => T
 
 trait ExprParser {
   lexical.delimiters += ("(", ")")
+
   val pVar: PackratParser[Expr] =
     ident ^^ Var
   val pApp: Fix[PackratParser[Expr]] =
@@ -81,8 +82,7 @@ def parseAndPrint(p: Fix[PackratParser[Expr]])(inp: String) = {
   if (t.successful) println(t.get) else scala.sys.error(t.toString)
 }
 
-val p = new ExprParser {}.pVarApp
-parseAndPrint(p)("x y")
+parseAndPrint(new ExprParser {}.pVarApp)("x y")
 \end{lstlisting}
 
 It will print \lstinline{App(Var(x),Var(y))} as the parsing result of string \lstinline{"x y"}.
@@ -106,6 +106,7 @@ Since we already have the parser for variables and applications, we want to reus
 \begin{lstlisting}
 trait LambdaParser extends ExprParser {
   lexical.delimiters += ("\\", ".")
+
   val pLam: (=> PackratParser[Expr]) => PackratParser[Expr] =
     e => "\\" ~> ident ~ ("." ~> e) ^^ { case x ~ b => Lam(x, b) }
   val pVarAppLam: (=> PackratParser[Expr]) => PackratParser[Expr] =
@@ -116,8 +117,7 @@ trait LambdaParser extends ExprParser {
 In the new parser \lstinline{LambdaParser} extended from the old one, we write a new parsing function \lstinline{pLam} for the new case lambda abstraction. And compose it with \lstinline{pVarApp}, which we already have in the old parser \lstinline{ExprParser}. Open recursion is critical to achieve such type-safe compositions, because wherever we refer to the parser of the whole expression, it is updated to cover all of the three case we have now.
 
 \begin{lstlisting}
-val p = new LambdaParser {}.pVarAppLam
-parseAndPrint(p)("(\\x.x) y")
+parseAndPrint(new LambdaParser {}.pVarAppLam)("(\\x.x) y")
 \end{lstlisting}
 
 The code above will print result \lstinline{App(Lam(x,Var(x)),Var(y))} from parsing \lstinline{"(\\x.x)} \lstinline{y"}.
@@ -129,11 +129,56 @@ Instead of define the abstract syntax using Scala's case classes, we can use \te
 Using Object Algebras, the abstract syntax of the language of variables and applications is defined as below.
 
 \begin{lstlisting}
-trait VarApp[E] {
+trait Alg[E] {
   def Var(x: String): E
   def App(e1: E, e2: E): E
 }
 \end{lstlisting}
+
+Then we are able to define operations over the syntax in an extensible way. Here we write a pretty printing operation for this language.
+
+\begin{lstlisting}
+trait Print extends Alg[String] {
+  def Var(x: String) = x
+  def App(e1: String, e2: String) = "(" + e1 + " " + e2 + ")"
+}
+\end{lstlisting}
+
+And also parser for it as below. Notice the parsing function \lstinline{pVarApp} takes an argument of type \lstinline{Alg[E]}, that means it accepts any instance of the algebra interface \lstinline{Alg}.
+
+\begin{lstlisting}
+trait Parser[E] {
+  lexical.delimiters += ("(", ")")
+
+  val pVarApp: Alg[E] => Fix[PackratParser[E]] = alg => e =>
+    e ~ e ^^ { case e1 ~ e2 => alg.App(e1, e2) } | ident ^^ alg.Var | "(" ~> e <~ ")"
+}
+\end{lstlisting}
+
+We glue them together by defining an object.
+
+\begin{lstlisting}
+object VarApp {
+  trait Alg[E] {..}
+  trait Print extends Alg[String] {..}
+  trait Parser[E] {..}
+}
+\end{lstlisting}
+
+To use the parser, we must provide an algebra instance as the operation to construct the parsing result. As shown in the code below, we feed the pretty printing operation \lstinline{VarApp.Print} to the generic \lstinline{parse} function. It will print \lstinline{(x y)} as the result.
+
+\begin{lstlisting}
+def parse[E](inp: String)(alg: VarApp.Alg[E]): E = {
+  val p = new VarApp.Parser[E] {}.pVarApp(alg)
+  val t = phrase(fix(p))(new lexical.Scanner(inp))
+  if (t.successful) t.get else scala.sys.error(t.toString)
+}
+
+def parseAndPrint(inp: String) = println(parse(inp)(new VarApp.Print{}))
+
+parserAndPrint("x y")
+\end{lstlisting}
+
 
 % \begin{itemize}
 % \item Choosing the Parsing Technology
