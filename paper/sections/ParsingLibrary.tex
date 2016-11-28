@@ -43,9 +43,9 @@ Having pointed out that our goal is to realize modular and extensible parsers, w
 organized way. The framework we use for a language, or rather a language component in our case study, consists of the following three
 parts:
 \begin{itemize}
-\item \textbf{Object Algebra interface:} defined as a trait with several cases, corresponding to the grammar rules.
-\item \textbf{Parser:} implementation of the parser, using open recursion and Object Algebras, with its scoping trait abstracted over the type parameters.
-\item \textbf{Algebra:} some behaviors (operations) on the data structure, such as pretty-printing and so on.
+\item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax, with several methods corresponding to the production rules.
+\item \textbf{Parser:} implementation of the parser with lexing, using open recursion and Object Algebras, with its scoping trait abstracted over the type parameters.
+\item \textbf{Algebra (optional):} some behaviors (operations) on the data structure, such as pretty-printing and so on.
 \end{itemize}
 
 Figure~\ref{fig:objectexpr} shows how to encapsulate \lstinline{ExprAlg} and its related stuff in object \lstinline{Expr} using our library. Note that we use type bounds to address the issue remained in Section~\ref{subsec:differentsyntax}. \lstinline{List[E]} is a type synonym for a record type, while the type bound \lstinline{L} \lstinline{<:} \lstinline{List[E]} in \lstinline{AlgParser} states that the fix-point of our parser is a record, which contains at least \lstinline{pE} for parsing expressions. Hence it saves us from updating the type of fix-points all the time.
