@@ -20,44 +20,32 @@ It is worth mentioning that the choice of parser combinators will not affect the
 
 \subsection{Modular Parsers, the First Look}\label{subsec:overview-firstlook}
 
-With Packrat parser combinators, we obtain the possibility of writing parsers in a modular way. Let's start by looking at how to build a parser for a simple language, which only has variables and applications at the beginning.
+In this section we start demonstrating how to write modular parsers. Suppose we want to parse a simple language of variables and applications.
 
 \begin{lstlisting}[language=PlainCode]
 Expr := Var String | App Expr Expr
 \end{lstlisting}
 
-Firstly, we define the abstract syntax by Scala's convenient case classes. Expressions have type \lstinline{Expr}, and each of them is either \lstinline{Var} or \lstinline{App}.
+The abstract syntax can be defined by Scala's case classes, and then we write parsers for the two cases \lstinline{Var} and \lstinline{App}.
 
 \begin{lstlisting}
 abstract class Expr
 case class Var(x: String) extends Expr
 case class App(e1: Expr, e2: Expr) extends Expr
-\end{lstlisting}
 
-And then we write parsing functions for each case.
-
-\begin{lstlisting}
-val pVar: PackratParser[Expr] =
-  ident ^^ Var
+val pVar: PackratParser[Expr] = ident ^^ Var
 
 val pApp: (=> PackratParser[Expr]) => PackratParser[Expr] =
   e => e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
 \end{lstlisting}
 
-The \lstinline{PackratParser} type and the combinators are imported from the Scala Packrat parsing library. Some details about these structures will be discussed in later sections, so that readers could only focus on the types of these functions at the first reading.
+Some structures are imported from the Scala Packrat parsing library, such as the combinator \lstinline{^^}. They will be discussed in later sections, so that readers could only focus on the type of parsers at the first reading.
 
-\lstinline{pVar} is straight forward. It parses a single identifier, and its type \lstinline{PackratParser[Expr]} indicates the result is an \lstinline{Expr}. However the type of \lstinline{pApp} is different. It takes a parser of \lstinline{Expr} as an argument, which represents the parser of the whole expression, namely \lstinline{e} here. And use it to parse two consecutive expressions as an application. In this particular case, the parser of the whole expression is in fact the combination of \lstinline{pVar} and \lstinline{pApp}. We can write equivalent code as below.
+\lstinline{pVar} for parsing variables is straight forward. It parses a single identifier, and its type \lstinline{PackratParser[Expr]} indicates the result is an \lstinline{Expr}.
 
-\begin{lstlisting}
-val pApp2: PackratParser[Expr] = {
-  lazy val e = pApp2 | pVar
-  e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
-}
-\end{lstlisting}
+The type of \lstinline{pApp} is different. It takes a parser of \lstinline{Expr} as an argument, and use it to parse two consecutive expressions as an application. This argument \lstinline{e} represents the parser of \emph{the whole expression}. In this particular case, it is in fact the combination of \lstinline{pVar} and \lstinline{pApp}. We can replace it by \lstinline{pVar | pApp} and the code still works. However, using an abstract argument provides extensibility to the parser. Because once the abstract syntax is extended later, the parser of the whole expression will change correspondingly. Then we have to edit existing code if it is hard-coded. The parameterization technique used in \lstinline{pApp} is called \textit{open recursion}, which is discussed in section \ref{sec:openandparsing}.
 
-\lstinline{pApp2} works fine, but it does not have the extensibility as \lstinline{pApp} does. Since the parser of the whole expression in \lstinline{pApp2} is hard-coded, it covers and only covers the variable and application cases. If we we extend \lstinline{Expr} later to add a third case lambda abstraction, we have to edit the existing code. The parameterization technique used in \lstinline{pApp} is called \textit{open recursion}, which is discussed in section \ref{sec:openandparsing}.
-
-We can use a trait to glue them together, and define \lstinline{pVarApp} as a combination of the two parsing functions. A type synonym \lstinline{Fix} is used to shorten the types.
+We can use a trait to glue them together, and define \lstinline{pVarApp} as a combination of the two parsers. A type synonym \lstinline{Fix} is used to shorten the types.
 
 \begin{lstlisting}
 type Fix[T] = (=>T) => T
@@ -77,15 +65,15 @@ trait ExprParser {
 Finally, we are able to parse \lstinline{Expr} frome strings as shown in the code below. The \lstinline{fix} function here is just the standard \textit{fixpoint}, it is explained in section \ref{subsec:openrecursion}.
 
 \begin{lstlisting}
-def parseAndPrint(p: Fix[PackratParser[Expr]])(inp: String) = {
+def parse[E](p: Fix[PackratParser[E]])(inp: String): E = {
   val t = phrase(fix(p))(new lexical.Scanner(inp))
-  if (t.successful) println(t.get) else scala.sys.error(t.toString)
+  if (t.successful) t.get else scala.sys.error(t.toString)
 }
 
-parseAndPrint(new ExprParser {}.pVarApp)("x y")
+println(parse(new ExprParser {}.pVarApp)("x y"))
 \end{lstlisting}
 
-It will print \lstinline{App(Var(x),Var(y))} as the parsing result of string \lstinline{"x y"}.
+It will print the AST as \lstinline{App(Var(x),Var(y))}.
 
 \subsection{Extend and Reuse Parsers}\label{subsec:overview-extend}
 
@@ -117,10 +105,10 @@ trait LambdaParser extends ExprParser {
 In the new parser \lstinline{LambdaParser} extended from the old one, we write a new parsing function \lstinline{pLam} for the new case lambda abstraction. And compose it with \lstinline{pVarApp}, which we already have in the old parser \lstinline{ExprParser}. Open recursion is critical to achieve such type-safe compositions, because wherever we refer to the parser of the whole expression, it is updated to cover all of the three case we have now.
 
 \begin{lstlisting}
-parseAndPrint(new LambdaParser {}.pVarAppLam)("(\\x.x) y")
+println(parse(new LambdaParser {}.pVarAppLam)("(\\x.x) y"))
 \end{lstlisting}
 
-The code above will print result \lstinline{App(Lam(x,Var(x)),Var(y))} from parsing \lstinline{"(\\x.x)} \lstinline{y"}.
+The code above will print \lstinline{App(Lam(x,Var(x)),Var(y))} from parsing \lstinline{"(\\x.x)} \lstinline{y"}.
 
 \subsection{Object Algebras and More}\label{subsec:overview-oa}
 
@@ -155,7 +143,7 @@ trait Parser[E] {
 }
 \end{lstlisting}
 
-We glue them together by defining an object.
+We glue them together by defining an object. It actually becomes a \textit{language component} that represents a specific language feature.
 
 \begin{lstlisting}
 object VarApp {
@@ -168,16 +156,50 @@ object VarApp {
 To use the parser, we must provide an algebra instance as the operation to construct the parsing result. As shown in the code below, we feed the pretty printing operation \lstinline{VarApp.Print} to the generic \lstinline{parse} function. It will print \lstinline{(x y)} as the result.
 
 \begin{lstlisting}
-def parse[E](inp: String)(alg: VarApp.Alg[E]): E = {
+def parseWithAlg[E](inp: String)(alg: VarApp.Alg[E]): E = {
   val p = new VarApp.Parser[E] {}.pVarApp(alg)
-  val t = phrase(fix(p))(new lexical.Scanner(inp))
-  if (t.successful) t.get else scala.sys.error(t.toString)
+  parse[E](p)(inp)
 }
 
-def parseAndPrint(inp: String) = println(parse(inp)(new VarApp.Print{}))
-
-parserAndPrint("x y")
+println(parseWithAlg("x y")(new VarApp.Print{}))
 \end{lstlisting}
+
+With Object Algebras, we can extend all the stuff, including abstract syntax, operations, and parsers. The code below extend the language to support lambda abstraction.
+
+\begin{lstlisting}
+object Lambda {
+  trait Alg[E] extends VarApp.Alg[E] {
+    def Lam(x: String, e: E): E
+  }
+
+  trait Print extends Alg[String] with VarApp.Print {
+    def Lam(x: String, e: String) = "\\" + x + "." + e
+  }
+
+  trait Parser[E] extends VarApp.Parser[E] {
+    lexical.delimiters += ("\\", ".")
+
+    val pLam: Alg[E] => Fix[PackratParser[E]] = alg => e =>
+      ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.Lam(x, e0) }
+    val pVarAppLam: Alg[E] => Fix[PackratParser[E]] =
+      pVarApp | pLam
+  }
+}
+\end{lstlisting}
+
+For easily combining the parsers using Object Algebras as the representation of abstract syntax, we have a special combinator \huang{we need to rename our combinator} defined in our library.
+
+In addition to make extending operations possible, another advantage of using Object Algebras is that it supports multiple sorts of syntax. For example, if our language has not only expressions but also types, we can easily distinguish them in the abstract syntax by an extra type parameter. This topic will be discussed in section \ref{subsec:differentsyntax}.
+
+\begin{lstlisting}
+trait TypedLambda[E, T] extends VarApp.Alg[E] {
+  def Lam(x: String, t: T, e: E): E
+  def IntType(): T
+  def BoolType(): T
+  def ArrowType(a: T, b: T): T
+}
+\end{lstlisting}
+
 
 
 % \begin{itemize}
