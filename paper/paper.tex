@@ -105,6 +105,7 @@ keywordstyle=\ttfamily\bfseries,
 \newcommand\unit[0]{\mathbbm{1}}
 
 \newcommand\mixin{\textbf{@Mixin} }
+\newcommand\name{\textbf{Parser}\xspace}
 \usepackage{xspace}
 
 % Author macros::begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,7 +155,32 @@ keywordstyle=\ttfamily\bfseries,
 
 \begin{abstract}
 
-Text.
+  Over the years alot of effort has been put on solving challenging
+  extensibility problems, while retaining important software
+  engineering properties such as modular type-safety and
+  separate compilation. Most previous work focused on
+  operations that traverse and process extensible Abtract Syntax Tree
+  (AST) structures. However, there is almost no work on operations that
+  \emph{build} such extensible ASTs, including \emph{parsing}.
+
+  This paper investigates solutions for the problem of \emph{modular
+    parsing}. We focus on \emph{semantic} modularity and not just
+  \emph{syntactic} modularity. That is, the solutions should not only
+  allow complete parsers to be built out of modular parsing
+  components, but also enable the parsing components to be \emph{modularly
+  type-checked} and \emph{separately compiled}. We present \name: a parsing
+  combinator library that enables modular parsing. The library is
+  built on top of a Packrat parsing library, but adds new parsing
+  combinators to enable modular parsing. The new parsing combinators 
+  employ \emph{delegation-based} techniques and \emph{Object Algebras} 
+  to support extensibility. The choice of Packrat parsing over other
+  parsing techniques turns out to be important for achieving
+  performance in a modular setting. To evaluate \name 
+  we conduct a  case study based on the 
+  ``Types and Programming Languages'' interpreters. The case study 
+  shows that \name is effective at reusing parsing code from existing
+  interpreters, and the total parsing code is 60\% smaller than the
+  non-modular parsing code.
 
 \end{abstract}
 
