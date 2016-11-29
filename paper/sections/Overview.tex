@@ -95,9 +95,9 @@ Since we already have the parser for variables and applications, we want to reus
 trait LambdaParser extends ExprParser {
   lexical.delimiters += ("\\", ".")
 
-  val pLam: (=> PackratParser[Expr]) => PackratParser[Expr] =
+  val pLam: Fix[PackratParser[Expr]] =
     e => "\\" ~> ident ~ ("." ~> e) ^^ { case x ~ b => Lam(x, b) }
-  val pVarAppLam: (=> PackratParser[Expr]) => PackratParser[Expr] =
+  val pVarAppLam: Fix[PackratParser[Expr]] =
     e => pLam(e) | pVarApp(e)
 }
 \end{lstlisting}
