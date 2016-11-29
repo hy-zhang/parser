@@ -1,1 +1,64 @@
 \section{Introduction}\label{sec:introduction}
+ 
+The quest for improved modularity, variability and extensibility of
+programs has been going on since the early days of Software
+Engineering~\cite{}. Modern Programming Languages enable a certain
+degree of modularity, but they have limitations as illustrated by
+well-known problems such as the Expression Problem~\cite{}. To address
+the limitations of Programming Languages several different approaches
+have been proposed in the past. Existing approaches can be broadly
+divided into two categories: \emph{syntactic} or \emph{semantic} 
+modularization techniques. Syntactic modularization techniques enable 
+the separate development of software components or features that can
+later be combined into complete programs. However, very often, the 
+composition of components in syntactic modularization techniques 
+amounts to a form of textual composition of the code from multiple 
+components/features. Semantic modularization
+techniques go one step further, and also enable those components or
+features to be modularly type-checked and separately compiled. This
+enables the composition of compiled binaries, and also ensures the
+type-safety of the composed code.  
+
+Many approaches use syntactic modularization techniques. Examples
+include tools for developing Software-Product Lines~\cite{}, some
+Language Workbenches~\cite{}, or extensible parser generators.  In
+those approaches textual composition techniques such as
+\emph{superimposition}~\cite{} enable the development . Syntactic
+modularization techniques have also been applied to the problem of
+\emph{extensible parsing}. There are several approaches that enable
+the development of \emph{syntactically} modular parsers or
+grammars. However these approaches do not support separate compilation
+or modular type-checking that we strive for in this work.
+
+\begin{comment}
+ such as AHEAD or 
+FeatureHouse, which enable the development of highly reusable 
+software components that can be combined to form complete 
+software products.
+\end{comment}  
+
+There are also several approaches to semantic modularity. For example,
+family polymorphism enables the development of highly reusable
+components and can even be used to develop Software-Product Lines. 
+... However, as far as we are aware, the problem of modular parsing 
+has not been studied in semantic modularization
+approaches.
+
+  This paper investigates solutions for the problem of \emph{modular
+    parsing}. We focus on \emph{semantic} modularity and not just
+  \emph{syntactic} modularity. That is, the solutions should not only
+  allow complete parsers to be built out of modular parsing
+  components, but also enable the parsing components to be \emph{modularly
+  type-checked} and \emph{separately compiled}. We present \name: a parsing
+  combinator library that enables modular parsing. The library is
+  built on top of a Packrat parsing library, but adds new parsing
+  combinators to enable modular parsing. The new parsing combinators 
+  employ \emph{delegation-based} techniques and \emph{Object Algebras} 
+  to support extensibility. The choice of Packrat parsing over other
+  parsing techniques turns out to be important for achieving
+  performance in a modular setting. To evaluate \name 
+  we conduct a  case study based on the 
+  ``Types and Programming Languages'' interpreters. The case study 
+  shows that \name is effective at reusing parsing code from existing
+  interpreters, and the total parsing code is 60\% shorter than the
+  non-modular parsing code.
