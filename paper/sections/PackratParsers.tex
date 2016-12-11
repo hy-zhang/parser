@@ -1,9 +1,16 @@
-\section{Scala Parsing Library: Packrat Parsers}\label{sec:packratparsers}
+\section{Background: Scala Packrat Parsing Library}\label{sec:packratparsers}
 
-We have selected Packrat Parsing library for our prototype implementation. It is a library built on Scala's basic parsing features,
-which opens access to high performance in parsing, convenient parser combinators with concise syntax, as well as lexers for users. Generally,
-a Packrat parser has type \lstinline{PackratParser[E]} for some \lstinline{E}, which indicates the representation. Below we present a small piece of
-code that uses Packrat parsing for our illustration. Note that it should be defined in an enclosing type that extends \lstinline{scala.util.parsing.combinator.syntactical.StandardTokenParsers} for lexing and \lstinline{scala.util.parsing.combinator.PackratParsers} for Packrat parsers.
+\bruno{We need to think whether this section should be incoorporated
+  in S2}
+
+This section introduces the Scala Packrat Parsing library~\cite{}, which is
+used by \name.
+
+\paragraph{An Example}
+A Packrat parser has type \lstinline{PackratParser[E]} for some
+\lstinline{E}, which indicates the representation\bruno{the
+  representation of what?}. The code below illustrates
+Scala's Packrat parsing library. 
 
 \begin{lstlisting}
 lexical.reserved += ("str")
@@ -13,7 +20,25 @@ val p : PackratParser[String] =
     "str" ~> ("(" ~> numericLit <~ ")") ^^ { x => x.toString }
 \end{lstlisting}
 
-The first two lines stand for lexing. In the third line we define a parser which can, for instance, parse \lstinline{"str(5)"} and produce the string \lstinline{"5"}. In \lstinline{StandardTokenParsers} there are a number of basic parsers, such as \lstinline{numericLit} that parsers integers, and \lstinline{stringLit} that parsers string literals for convenient use. Moreover, in Scala the syntax for parsing is quite concise and clear, as we have shown above, with the help of parser combinators. \lstinline{~>} and \lstinline{<~} only collect results from the parts that arrows point to, and \lstinline{^^} is followed by a function which is applied to a parser to return new values. Finally, we can define a generic \lstinline{runParser} function for testing:
+\noindent
+ 
+Note that the code should be defined in an enclosing type that extends
+\lstinline{scala.util.parsing.combinator.syntactical.StandardTokenParsers}
+for lexing and
+\lstinline{scala.util.parsing.combinator.PackratParsers} for Packrat
+parsers.
+The first two lines are used for lexing. The third line defines a
+parser which can, for instance, parse \lstinline{"str(5)"} and produce
+the string \lstinline{"5"}. In \lstinline{StandardTokenParsers} there
+are a number of basic parsers, such as \lstinline{numericLit} that
+parses integers, and \lstinline{stringLit} that parsers string
+literals. Moreover, in Scala the syntax for parsing
+is quite concise and clear, as shown above, with the help of
+parser combinators. The combinators \lstinline{~>} and \lstinline{<~} only collect
+results from the parts that arrows point to, and the combinator \lstinline{^^} is
+followed by a function which is applied to a parser to return new
+values. Finally, a generic \lstinline{runParser}
+function is used for testing:
 
 \begin{lstlisting}
 def runParser(p: Parser[_]): String => Unit = in => {
@@ -79,10 +104,37 @@ def |||[U >: T](q0: => Parser[U]): Parser[U]
 \hline \\
 \end{tabular}
 \caption{Some frequently used functions in Scala parser API.}\label{tab1}
-\end{table}
+\end{table}\bruno{We should double-check that this table lists the
+  combinators used in the paper.}
 
-Furthermore, Table~\ref{tab1} shows some common parser combinators that are used in our implementation.
-In particular, \lstinline{|} is common syntax for alternative parsers in many languages, whereas \lstinline{|||} is a new combinator available in Scala, which is also for alternation but with longest match composition. Imagine that we are composing a list of parsers using alternative \lstinline{|}, in an order. A parser in the front might be successful in parsing a substring of the input, but then it unexpectedly stops the parsing and discards the rest, while another parser might be able to parse the whole input. In that case, using \lstinline{|||} we no longer need to worry about the order of composition, which potentially encourages its extensibility. A concrete example will be illustrated for this later.
+\paragraph{Packrat Parsing API} Table~\ref{tab1} shows some common parser combinators
+that are used in our implementation.  There are several standard
+parser combinators. For example \lstinline{|} is the combinator for
+alternative parsers. Other combinators have descriptions of their
+semantics on the table.
 
-On the other hand, the Scala Packrat Parsing library comes to our attention not only because of its performance, but also due to its support for direct left-recursion. Left recursion has been considered as a big problem especially in recursive descent parsers, which many existing libraries cannot perfectly support. From theoretical point of view, the algorithm behind Packrat parsers supports both direct and indirect left-recursion. The current version of the library is still buggy in some cases with indirect left-recursion, but we believe that they will fix it in the future, and with direct left-recursion it is already practical to use for a large number of applications.
+There are two features of the Packrat Parsing library that play a key role
+for modularity, which are discussed next.
 
+\paragraph{Longest Match Composition} The Packrat parsing library 
+contains an alternation combinator, which does \emph{longest match
+  composition}. This combinator has a different semantics from
+\lstinline{|}.
+Suppose that we are composing a list of parsers using alternative
+\lstinline{|}, in an order. A parser in the front might be successful
+in parsing a substring of the input, but then it unexpectedly stops
+the parsing and discards the rest, while another parser might be able
+to parse the whole input. In that case, using \lstinline{|||} we no
+longer need to worry about the order of composition, which potentially
+encourages its extensibility. A concrete example will be illustrated
+for this later. \bruno{Please show example here. }
+
+\paragraph{Left Recursion} The Scala Packrat Parsing library 
+supports direct left-recursion. Left recursion has been considered
+as a big problem especially in recursive descent parsers~\cite{}, and many
+existing parsing libraries have limited or no support for it. From theoretical point of
+view, the algorithm behind Packrat parsers supports both direct and
+indirect left-recursion. In practice, the current version of the library is still
+buggy in some cases with indirect left-recursion, but we believe that
+they will fix it in the future, and direct left-recursion is
+already practical to use for a large number of applications.
