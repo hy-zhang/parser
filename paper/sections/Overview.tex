@@ -1,28 +1,28 @@
 \section{Overview}\label{sec:overview}
 
-\subsection{Chosing the Parsing Technique}\label{subsec:overview-parsing}
+\subsection{Choosing the Parsing Technique}\label{subsec:overview-parsing}
 
-%A technique for type-safe modular parsing should the following 3 
-%features: \emph{modular type-checking}; \emph{separate compilation}; 
-%low performance overhead 
+%A technique for type-safe modular parsing should the following 3
+%features: \emph{modular type-checking}; \emph{separate compilation};
+%low performance overhead
 
 Although there are many parsing techniques, not all of them are
-suitable for type-safe modular parsing. In particular there are many 
-techniques which fail to provide modular type-checking and separate 
-compilation. Moreover, even if modular type-checking and separate 
+suitable for type-safe modular parsing. In particular there are many
+techniques which fail to provide modular type-checking and separate
+compilation. Moreover, even if modular type-checking and separate
 compilation are supported, efficiency is another
-concern. A parsing technique should have low overhead when applied 
-in a modular setting. In the remaider of this section, we eliminate 
+concern. A parsing technique should have low overhead when applied
+in a modular setting. In the remaider of this section, we eliminate
 various techniques that fail to satisfy our requirements, and argue
 that that Packrat parsing~\cite{} is a suitable candidate for
 type-safe modular parsing.
 
-\paragraph{Parser Generators} The most widely use tools for parsing 
+\paragraph{Parser Generators} The most widely use tools for parsing
 are parser generators~\cite{}. Parser generators help users generate parsers automatically or
 semi-automatically from a given grammar. There is no restriction on
 the algorithm, while most of them adopts table-based LL~\cite{} and LR parsing
-algorithms~\cite{}. 
-Although efficient, the main drawback of parser generators is that they do not support 
+algorithms~\cite{}.
+Although efficient, the main drawback of parser generators is that they do not support
 modular type-checking and separate compilation.
 
 \huang{a paragraph here, refer to related work section, discuss
@@ -46,7 +46,7 @@ statically typed programming language they can be statically
 type-checked.
 
 Unfortunatelly many parser combinators have important limitations for
-modular parsing. In particular several parser combinators, 
+modular parsing. In particular several parser combinators,
 including the famous library Parsec~\cite{} library, require
 programmers to manually do\textit{left-recursion elimination}, and
 require significant amounts \textit{backtracking}. Both of these are
@@ -58,7 +58,7 @@ transformation on a grammar. Given that the full grammar is known,
 then it is possible to remove all left-recursive cases.
 \bruno{Illustrate with a concrete example: show a simple
   left-recursive grammar; then do left-recursion elimination. Then add
-a new case into the original left-recursive grammar; and show that 
+a new case into the original left-recursive grammar; and show that
 a very different grammar is obtained after left-recursion elimination.}
 
 However, when doing modular parsing, the full grammar is not known!
@@ -73,7 +73,7 @@ left-recursive grammar into an equivalent one, so called
 \textit{left-recursion elimination}. This solution requires
 information of the whole grammar, so that it cannot be applied in a
 modular setting. Because the grammar may be extended in the future,
-essentially we only have parts of the grammar. 
+essentially we only have parts of the grammar.
 
 \paragraph{Backtracking} The need for backtracking is also problematic
 in a modular setting. Take Parsec as an example, its choice
@@ -88,35 +88,35 @@ branches, which results worst case exponential time complexity.
   example. The example should illustrate that the addition of a new
   case may require introducing backtracking. }
 
-\paragraph{Packrat Parsing} 
+\paragraph{Packrat Parsing}
 Fortunatelly more advanced parsing techniques such as Packrat
-parsing~\cite{}, address the limitations of simple parser combinators 
+parsing~\cite{}, address the limitations of simple parser combinators
 such as Parsec. Packrat parsers use
 memorization to record the result of applying each parser at each
 position of the input, so that repeated computation is eliminated, and
 they supports left-recursive grammars directly. All of these properties are very
 suitable for modularity, thus we use Packrat parsers as the underlying
 parsing technique. In section \ref{sec:packratparsers}, we will give
-an overview of the Packrat parsing library implemented in Scala, 
+an overview of the Packrat parsing library implemented in Scala,
 which we use.
 
 It is worth mentioning that the choice of parser combinators will not
 affect the other parts of our library. One can choose other parser
 combinators like Parsec, in cases that the performance and supporting
-of left-recursion are not major concerns. 
+of left-recursion are not major concerns.
 
 \subsection{The Parsing Expression Problem}
-\bruno{You are not motivating the problem! You are going straight to
+\huang{done, added the attempt/failure/reason of extending conventional parsers}\bruno{You are not motivating the problem! You are going straight to
   the solution without pointing out what the problem is first. What
   you need to do is: First show what happens with conventional
   parsers: at some point, if you add extensions the recursive calls
-  will be wrong. Then you show (in the next section) the solution: 
+  will be wrong. Then you show (in the next section) the solution:
  use delegation/open recursion.}
 
-\bruno{I think we need to set up a challenge here, similar to the challange of
+\huang{partly done, only extend a new language construct in the example, how about leaving extension of new operations in the OA subsection?}\bruno{I think we need to set up a challenge here, similar to the challange of
   the expression problem. The challange should be like. Build a parser
-for a simple expression language, then extend the language with both 
-a new language construct and a new operation. This section will show 
+for a simple expression language, then extend the language with both
+a new language construct and a new operation. This section will show
 how we can do that using traditional parsers, but without modular
 type-safety and separate compilation. The remaining sections will show
 that the techniques introduced by us, enable us to solve those two challenges.}
@@ -132,66 +132,119 @@ illustrate this problem with a simple expression language and extension.
 Suppose we want to parse a simple language of variables and
 applications.
 
-\begin{lstlisting}[language=PlainCode]
-Expr := Var String | App Expr Expr
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <var>
+    \alt <expr> <expr>
+    \alt `(' <expr> `)'
+\end{grammar}
+
+It is straightforward to model ASTs by inheritance and write corresponding parsers for each case.
+
+\begin{lstlisting}
+abstract class Expr
+class Var(x: String) extends Expr
+class App(e1: Expr, e2: Expr) extends Expr
+
+trait BaseParser {
+  lexical.delimiters += ("(", ")")
+  val pExpr: PackratParser[Expr] = pVar ||| pApp ||| "(" ~> pExpr <~ ")"
+  val pVar: PackratParser[Expr] = ident ^^ { x => new Var(x) }
+  val pApp: PackratParser[Expr] =
+    pExpr ~ pExpr ^^ { case e1 ~ e2 => new App(e1, e2) }
+}
 \end{lstlisting}
-\bruno{if you intend to write a grammar here, then please use grammar
-  (BNF) notation, and not some notation invented by you!}
 
-\paragraph{Extensing the Parser}
+As the combination of \lstinline{pVar} and \lstinline{pApp}, \lstinline{pExpr} can parse expressions correctly.
 
-\paragraph{Problem: Hardcoded Recursive Calls} 
+\paragraph{Attempt to Extend the Parser} Now consider we are extending the abstract syntax as well as the parsers. We add lambda abstractions as a new case of expressions. The language then becomes the famous \textit{untyped lambda calculus}.
+
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= ...
+    \alt `\\' <var> `.' <expr>
+\end{grammar}
+
+The ASTs can be extended trivially as below.
+
+\begin{lstlisting}
+class Lam(x: String, e: Expr) extends Expr
+\end{lstlisting}
+
+Since we already have the parser for variables and applications, we would like to build the new parser by reusing the old one. So we compose \lstinline{pLam}, which parses lambda abstractions, with the old parser. \lstinline{pExtExpr} is the new function to parse expressions.
+
+\begin{lstlisting}
+trait ExtParser extends BaseParser {
+  lexical.delimiters += ("\\", ".")
+  val pExtExpr: PackratParser[Expr] = pExpr ||| pLam ||| "(" ~> pExtExpr <~ ")"
+  val pLam: PackratParser[Expr] =
+    "\\" ~> ident ~ ("." ~> pExtExpr) ^^ { case x ~ e => new Lam(x, e) }
+}
+\end{lstlisting}
+
+Unfortunately, this extended parser does not work properly to parse all possible expressions defined by the new grammar. For example, it fails to parse \lstinline{(\x.x)} \lstinline{(\y.y)} which is obviously valid.
+
+\paragraph{Problem: Hard-coded Recursive Calls} The critical problem of extending parsers directly is that the recursive calls in old parsers are hard-coded. Specifically, \lstinline{pApp} makes two recursive calls to parse two consecutive expressions as an application. Before the extension, we implemented it by using \lstinline{pExpr} for those recursive calls. It worked fine at that time because \lstinline{pExpr} covers all cases of the old grammar. However, after the extension of lambda abstractions, the proper function for such recursive calls should be \lstinline{pExtExpr} instead of \lstinline{pExpr}, because the new function \lstinline{pExtExpr} covers all of the three cases in the new grammar, including the lambda case.
+
+That is the reason why the extended parser fails to parse some valid expressions such as \lstinline{(\x.x)} \lstinline{(\y.y)}. To resolve this issue, we need to let \lstinline{pApp} be aware of the change of grammar. We have some direct solutions:
+
+\begin{itemize}
+    \item Keep the old code, rewrite problematic functions like \lstinline{pApp}. \\Separate compilation is obtained but code reuse is lost, because every function may contain such recursive calls.
+    \item Modify the old code, correct the recursive calls by proper functions. \\We can avoid code duplication thus get code reuse, but separate compilation is lost because of modification on the old code.
+    \item ??? \huang{third one? use dynamic languages?}
+\end{itemize}
+
+Similar to the trade-off in the Expression Problem, neither of them satisfies us. The challenge of building semantically modular parsers requires fundamental change of the parser structure. We will introduce our solution in the next sections.
 
 \subsection{Delegation-Based Parsing}\label{subsec:overview-firstlook}
 
-The problem of hardcoded recursive calls can be solved using
-delegation, which can be encoded with open recursion. The idea is
+Hard-coded recursive calls prevent our parsers from extensibility.
+This problem can be solved using delegation, which can be encoded with \textit{open recursion}. The idea is
 simple: instead of making direct recursive calls, an additional
-argument, that abstracts over the recursive call, is passed to the 
-parsers. This technique enables the developement of parsers that 
-support OO-style extensibility of ASTs. 
+argument, that abstracts over the recursive call, is passed to the
+parsers. This technique enables the developement of parsers that
+support OO-style extensibility of ASTs.
 
 \paragraph{Open Parsing}
 The example in Section \ref{} can be rewritten as follows:
 
 \begin{lstlisting}
-abstract class Expr
-case class Var(x: String) extends Expr
-case class App(e1: Expr, e2: Expr) extends Expr
+type Open[T] = (=> T) => T
 
-val pVar: PackratParser[Expr] = ident ^^ Var
-
-val pApp: (=> PackratParser[Expr]) => PackratParser[Expr] =
-  e => e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
+// Expr, Var and App are the same as previous section
+trait ExprParser {
+  val pVar: Open[PackratParser[Expr]] =
+    _ => ident ^^ { x => new Var(x) }
+  val pApp: Open[PackratParser[Expr]] =
+    self => self ~ self ^^ { case e1 ~ e2 => new App(e1, e2) }
+}
 \end{lstlisting}
+
 \bruno{You are copying and pasting code into the paper. Don't do this:
 code will change alot (various edits), and it is all too easy to get
-inconsistent code snippets. Instead use the small Ruby tool that we 
+inconsistent code snippets. Instead use the small Ruby tool that we
 have in the paper directory to import source code directly from the
 code repository. This will ensure the consistency of the code
 throughout the paper writing. Please ask Haoyuan about the tool; he
 knows how to use it!}
-\bruno{Please polish up code. You probably want to consistently use 
+
+\huang{done}\bruno{Please polish up code. You probably want to consistently use
 the variable name ``self'' whenever you want to refer to the whole
-parser (instead of ``e'' that you use at the moment). Also you should 
+parser (instead of ``e'' that you use at the moment). Also you should
 use ``Open'' (which you currently call ``Fix'') instead of using the
-longwinded ``(=> PackratParser[Expr]) => PackratParser[Expr]''} 
-\bruno{Also, for consistency, why isn't ``pVar'' open? I.e. using a
+longwinded ``(=> PackratParser[Expr]) => PackratParser[Expr]''}
+
+\huang{done}\bruno{Also, for consistency, why isn't ``pVar'' open? I.e. using a
   self reference as well? I know that it is not recursive, but giving
   it a different treatment makes it more confusing for users.}
-\bruno{You should use a more OO approach in the example. 
+
+\huang{done}\bruno{You should use a more OO approach in the example.
 Rather than case classes show an Expr trait with pretty printing.
 This will enable you to talk about the extensibility and object
 algebras better later on.
 }
 
-The abstract syntax is defined by Scala's case classes, and 
-we write parsers for the two cases \lstinline{Var} and \lstinline{App}.
-The parser \lstinline{pVar}, for parsing variables, is straightforward. It parses a
-single identifier, and its type \lstinline{PackratParser[Expr]}
-indicates the result is an \lstinline{Expr}.
-The parser \lstinline{pApp}, for parsing applications is more
-interesting. \lstinline{pApp} takes a parser of
+\lstinline{pApp} takes a parser of
 \lstinline{Expr} as an argument, and uses it to parse two consecutive
 expressions as an application. This argument \lstinline{e} represents
 the parser of \emph{the whole expression}. In this particular case, it
@@ -246,16 +299,17 @@ It will print the AST as \lstinline{App(Var(x),Var(y))}.
 
 %\subsection{Extend and Reuse Parsers}\label{subsec:overview-extend}
 
-\paragraph{Extensibility} To demonstrate the advantages of writing 
-parsers with open recursion, we extend the language to add lambda 
-abstractions as a new case of expressions. The language then 
+\paragraph{Extensibility} To demonstrate the advantages of writing
+parsers with open recursion, we extend the language to add lambda
+abstractions as a new case of expressions. The language then
 becomes the famous \textit{untyped lambda calculus}.
 
-\begin{lstlisting}[language=PlainCode]
-Expr := Var String | App Expr Expr | Lam String Expr
-\end{lstlisting}
-\bruno{same comment as before: if this is supposed to be a grammar,
-  then use a grammar notation}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <var>
+    \alt <expr> <expr>
+    \alt `\\' <var> `.' <expr>
+\end{grammar}
 
 With Scala's case classes, extending the abstract syntax \lstinline{Expr} is easy.
 
