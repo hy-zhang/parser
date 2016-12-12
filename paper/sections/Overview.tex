@@ -139,7 +139,7 @@ applications.
     \alt `(' <expr> `)'
 \end{grammar}
 
-It is straightforward to model ASTs by inheritance and write corresponding parsers for each case.
+It is straightforward to model ASTs by inheritance and write corresponding parsers for each case. \huang{This is the first time to demonstrate code in this paper. Readers may not know what those combinators/types are. Refer to the library docs here? move the 'scala parsing library' section to the beginning as 'background'?}
 
 \begin{lstlisting}
 abstract class Expr
@@ -176,7 +176,8 @@ Since we already have the parser for variables and applications, we would like t
 \begin{lstlisting}
 trait ExtParser extends BaseParser {
   lexical.delimiters += ("\\", ".")
-  val pExtExpr: PackratParser[Expr] = pExpr ||| pLam ||| "(" ~> pExtExpr <~ ")"
+  val pExtExpr: PackratParser[Expr] =
+    pVar ||| pApp ||| pLam ||| "(" ~> pExtExpr <~ ")"
   val pLam: PackratParser[Expr] =
     "\\" ~> ident ~ ("." ~> pExtExpr) ^^ { case x ~ e => new Lam(x, e) }
 }
@@ -205,19 +206,39 @@ argument, that abstracts over the recursive call, is passed to the
 parsers. This technique enables the developement of parsers that
 support OO-style extensibility of ASTs.
 
-\paragraph{Open Parsing}
-The example in Section \ref{} can be rewritten as follows:
+\paragraph{Open Parsing} Consider the expression language of only variables and applications in the previous section. The parser can be rewritten as follows:
 
+\huang{todo: polish it}
 \begin{lstlisting}
 type Open[T] = (=> T) => T
 
-// Expr, Var and App are the same as previous section
-trait ExprParser {
+// Expr, Var and App are the same as previous
+trait BaseParser {
+  lexical.delimiters += ("(", ")")
   val pVar: Open[PackratParser[Expr]] =
-    _ => ident ^^ { x => new Var(x) }
+    self => ident ^^ { x => new Var(x) }
   val pApp: Open[PackratParser[Expr]] =
     self => self ~ self ^^ { case e1 ~ e2 => new App(e1, e2) }
+  val pExpr: Open[PackratParser[Expr]] =
+    self => pVar(self) ||| pApp(self) ||| "(" ~> self <~ ")"
 }
+\end{lstlisting}
+
+According to the definition of type synonym \lstinline{Open[T]}, every parse function takes a parser of \lstinline{Expr} as a parameter, namely \lstinline{self}. This parameter \lstinline{self} represents \emph{the parser} of expressions, which is dynamiclly explained by the argument. Using an abstract parameter provides extensibility to parsers, because the recursive calls are not hard-coded here --- they are dynamic and can be changed corresponding to the grammar!
+
+We take \lstinline{pApp} as an example again. It uses \lstinline{self} instead of hard-coded \lstinline{pExpr} for recursive parsing. Depending on the real argument, \lstinline{self} can be a parser which covers variables and applications, or a parser which also supports the lambda case.
+
+\paragraph{Client Code} Since the type of parsing functions are changed, we can not apply the parsers directly. The \lstinline{fix} function below, which is the the standard \textit{fixpoint combinator}, is used to `close' the open recursion.
+
+\begin{lstlisting}
+def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
+
+def parse[E](p: Open[PackratParser[E]])(inp: String): E = {
+  val t = phrase(fix(p))(new lexical.Scanner(inp))
+  if (t.successful) t.get else scala.sys.error(t.toString)
+}
+
+println(parse(new BaseParser {}.pExpr)("x y"))
 \end{lstlisting}
 
 \bruno{You are copying and pasting code into the paper. Don't do this:
@@ -244,95 +265,20 @@ This will enable you to talk about the extensibility and object
 algebras better later on.
 }
 
-\lstinline{pApp} takes a parser of
-\lstinline{Expr} as an argument, and uses it to parse two consecutive
-expressions as an application. This argument \lstinline{e} represents
-the parser of \emph{the whole expression}. In this particular case, it
-is in fact the combination of \lstinline{pVar} and
-\lstinline{pApp}. We can replace it by \lstinline{pVar | pApp} and the
-code still works. However, using an abstract argument provides
-extensibility to the parser. Because once the abstract syntax is
-extended later, the parser of the whole expression will change
-correspondingly. Then we have to edit existing code if it is
-hard-coded. The parameterization technique used in \lstinline{pApp} is
-called \textit{open recursion}, which is discussed in section
-\ref{sec:openandparsing}.
 
-\paragraph{Parsing Components}\bruno{consider removing and/or moving
-  to later parts of the paper}
-We can use a trait to glue them together, and define
-\lstinline{pVarApp} as a combination of the two parsers. A type
-synonym \lstinline{Fix} is used to shorten the types.
+\paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Notice that the old code is not touched, hence separate compilation is obtained.
 
 \begin{lstlisting}
-type Fix[T] = (=>T) => T
-
-trait ExprParser {
-  lexical.delimiters += ("(", ")")
-
-  val pVar: PackratParser[Expr] =
-    ident ^^ Var
-  val pApp: Fix[PackratParser[Expr]] =
-    e => e ~ e ^^ { case e1 ~ e2 => App(e1, e2) }
-  val pVarApp: Fix[PackratParser[Expr]] =
-    e => pApp(e) | pVar | "(" ~> e <~ ")"
-}
-\end{lstlisting}
-\bruno{Fix is not the right name. A better name is Open (for open
-  recursion).}
-\bruno{I'm not sure that showing the code for language components is
-  essential at this point. This can be shown latter in the paper.}
-
-\paragraph{Client Code}
-Finally, we are able to parse \lstinline{Expr} frome strings as shown in the code below. The \lstinline{fix} function here is just the standard \textit{fixpoint}, it is explained in section \ref{subsec:openrecursion}.
-
-\begin{lstlisting}
-def parse[E](p: Fix[PackratParser[E]])(inp: String): E = {
-  val t = phrase(fix(p))(new lexical.Scanner(inp))
-  if (t.successful) t.get else scala.sys.error(t.toString)
-}
-
-println(parse(new ExprParser {}.pVarApp)("x y"))
-\end{lstlisting}
-
-It will print the AST as \lstinline{App(Var(x),Var(y))}.
-
-%\subsection{Extend and Reuse Parsers}\label{subsec:overview-extend}
-
-\paragraph{Extensibility} To demonstrate the advantages of writing
-parsers with open recursion, we extend the language to add lambda
-abstractions as a new case of expressions. The language then
-becomes the famous \textit{untyped lambda calculus}.
-
-\setlength{\grammarindent}{5em}
-\begin{grammar}
-<expr> ::= <var>
-    \alt <expr> <expr>
-    \alt `\\' <var> `.' <expr>
-\end{grammar}
-
-With Scala's case classes, extending the abstract syntax \lstinline{Expr} is easy.
-
-\begin{lstlisting}
-case class Lam(x: String, e: Expr) extends Expr
-\end{lstlisting}
-
-Since we already have the parser for variables and applications, we
-want to reuse it and build a new parser by extending it. It is just
-what the code below does. Notice that the old code is not touched,
-hence separate compilation is obtained.
-
-\begin{lstlisting}
-trait LambdaParser extends ExprParser {
+trait ExtParser extends BaseParser {
   lexical.delimiters += ("\\", ".")
-
-  val pLam: Fix[PackratParser[Expr]] =
-    e => "\\" ~> ident ~ ("." ~> e) ^^ { case x ~ b => Lam(x, b) }
-  val pVarAppLam: Fix[PackratParser[Expr]] =
-    e => pLam(e) | pVarApp(e)
+  val pLam: Open[PackratParser[Expr]] =
+    self => "\\" ~> ident ~ ("." ~> self) ^^ { case x ~ b => new Lam(x, b) }
+  val pExtExpr: Open[PackratParser[Expr]] =
+    self => pLam(self) ||| pExpr(self)
 }
 \end{lstlisting}
 
+\huang{todo: rewrite}
 In the new parser \lstinline{LambdaParser} extended from the old one,
 we write a new parsing function \lstinline{pLam} for the new case
 lambda abstraction. And compose it with \lstinline{pVarApp}, which we
@@ -342,10 +288,10 @@ we refer to the parser of the whole expression, it is updated to cover
 all of the three case we have now.
 
 \begin{lstlisting}
-println(parse(new LambdaParser {}.pVarAppLam)("(\\x.x) y"))
+println(parse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)"))
 \end{lstlisting}
 
-The code above will print \lstinline{App(Lam(x,Var(x)),Var(y))} from parsing \lstinline{"(\\x.x)} \lstinline{y"}.
+Parsing with open recursion will be discussed further in section \ref{sec:openandparsing}.
 
 \subsection{Object Algebras for full Extensibility}\label{subsec:overview-oa}
 
