@@ -10,18 +10,11 @@ used by \name.
 A Packrat parser has type \lstinline{PackratParser[E]} for some
 \lstinline{E}, which indicates the representation\bruno{the
   representation of what?}. The code below illustrates
-Scala's Packrat parsing library. 
+Scala's Packrat parsing library.
 
-\begin{lstlisting}
-lexical.reserved += ("str")
-lexical.delimiters += ("(", ")")
-
-val p : PackratParser[String] =
-    "str" ~> ("(" ~> numericLit <~ ")") ^^ { x => x.toString }
-\end{lstlisting}
-
+\lstinputlisting[linerange=8-12]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=PACKRAT_EXAMPLE
 \noindent
- 
+
 Note that the code should be defined in an enclosing type that extends
 \lstinline{scala.util.parsing.combinator.syntactical.StandardTokenParsers}
 for lexing and
@@ -40,12 +33,7 @@ followed by a function which is applied to a parser to return new
 values. Finally, a generic \lstinline{runParser}
 function is used for testing:
 
-\begin{lstlisting}
-def runParser(p: Parser[_]): String => Unit = in => {
-    val t = phrase(p)(new lexical.Scanner(in))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
-}
-\end{lstlisting}
+\lstinputlisting[linerange=16-19]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=PACKRAT_RUNPARSER
 Now \lstinline{runParser(p)("str(5)")} prints out \lstinline{"5"} as expected.
 
 \begin{table}[t]
@@ -116,7 +104,7 @@ semantics on the table.
 There are two features of the Packrat Parsing library that play a key role
 for modularity, which are discussed next.
 
-\paragraph{Longest Match Composition} The Packrat parsing library 
+\paragraph{Longest Match Composition} The Packrat parsing library
 contains an alternation combinator, which does \emph{longest match
   composition}. This combinator has a different semantics from
 \lstinline{|}.
@@ -129,7 +117,7 @@ longer need to worry about the order of composition, which potentially
 encourages its extensibility. A concrete example will be illustrated
 for this later. \bruno{Please show example here. }
 
-\paragraph{Left Recursion} The Scala Packrat Parsing library 
+\paragraph{Left Recursion} The Scala Packrat Parsing library
 supports direct left-recursion. Left recursion has been considered
 as a big problem especially in recursive descent parsers~\cite{}, and many
 existing parsing libraries have limited or no support for it. From theoretical point of

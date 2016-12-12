@@ -14,12 +14,9 @@ For sure we cannot always leave it open; upon using it we have to close the recu
 fix f = let x = f x in x
 \end{lstlisting}
 In Scala, however, there is no library \lstinline{fix} function, but it can be easily implemented since Scala also supports lazy evaluation. See below:
-\begin{lstlisting}
-def fix[A](f : (=> A) => A) : A = {
-    lazy val a : A = f(a)
-    a
-}
-\end{lstlisting}
+
+\lstinputlisting[linerange=27-30]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIX
+
 where function \lstinline{f} has a by-name parameter of type \lstinline{"=>} \lstinline{A"}.
 Here we illustrate by the famous Fibonacci example. Traditionally it can be implemented in Scala using pattern-matching:
 \begin{lstlisting}

@@ -1,6 +1,7 @@
 paper.pdf
 paper.bbl
 paper.synctex*
+footempfile.txt
 *.aux
 *.toc
 *.out

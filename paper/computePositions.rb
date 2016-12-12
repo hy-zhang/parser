@@ -39,11 +39,11 @@ fileloc = {}
 beginpos = {}
 endpos = {}
 
-Dir['../UseMixinLombok/src/*/*.java'].each do |file| 
+Dir['../Scala/Parser/src/*/*.scala'].each do |file| 
   scan(file, beginpos, endpos, fileloc)
 end
 
-Dir['../UseMixinLombok/src/*/*/*.java'].each do |file| 
+Dir['../Scala/Parser/src/*/*/*.scala'].each do |file| 
   scan(file, beginpos, endpos, fileloc)
 end
 
