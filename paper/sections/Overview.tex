@@ -83,14 +83,30 @@ essentially we only have parts of the grammar.
 in a modular setting. Take Parsec as an example, its choice
 combinator only tries the second alternative if the first fails
 without any token consumption. If two alternatives have a same
-non-empty prefix, an auxiliary function \lstinline{try} must be added
+non-empty prefix, an auxiliary function \inlinecode{try} must be added
 to backtrack. However, if we want to extend our parsers later, we
 should always consider the worst case in which all alternatives share
-common prefixes. Then we need to add \lstinline{try} for all the
+common prefixes. Then we need to add \inlinecode{try} for all the
 branches, which results worst case exponential time complexity.
-\bruno{you should again illustrate your point here with an
+\huang{done}\bruno{you should again illustrate your point here with an
   example. The example should illustrate that the addition of a new
   case may require introducing backtracking. }
+
+For example, suppose that we only have \inlinecode{import..from} statements before, now we want to extend the grammar to add an \inlinecode{import..as} case. The third line of grammar below is the new case.
+
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<stmt> ::= `import' <ident> `from' <ident>
+    \alt ...
+    \alt `import' <ident> `as' <ident>
+\end{grammar}
+
+Because the new case \inlinecode{import..as} shares a prefix with the old case \inlinecode{import..from}, we must backtrack in order to cover all possibilities.
+
+\begin{lstlisting}[language=PlainCode]
+oldParser = parseImportFrom <|> ...
+newParser = try parseImportFrom <|> ... <|> parseImportAs
+\end{lstlisting}
 
 \paragraph{Packrat Parsing}
 Fortunatelly more advanced parsing techniques such as Packrat
@@ -159,7 +175,7 @@ trait BaseParser {
 }
 \end{lstlisting}
 
-As the combination of \lstinline{pVar} and \lstinline{pApp}, \lstinline{pExpr} can parse expressions correctly.
+As the combination of \inlinecode{pVar} and \inlinecode{pApp}, \inlinecode{pExpr} can parse expressions correctly.
 
 \paragraph{Attempt to Extend the Parser} Now consider we are extending the abstract syntax as well as the parsers. We add lambda abstractions as a new case of expressions. The language then becomes the famous \textit{untyped lambda calculus}.
 
@@ -175,7 +191,7 @@ The ASTs can be extended trivially as below.
 class Lam(x: String, e: Expr) extends Expr
 \end{lstlisting}
 
-Since we already have the parser for variables and applications, we would like to build the new parser by reusing the old one. So we compose \lstinline{pLam}, which parses lambda abstractions, with the old parser. \lstinline{pExtExpr} is the new function to parse expressions.
+Since we already have the parser for variables and applications, we would like to build the new parser by reusing the old one. So we compose \inlinecode{pLam}, which parses lambda abstractions, with the old parser. \inlinecode{pExtExpr} is the new function to parse expressions.
 
 \begin{lstlisting}
 trait ExtParser extends BaseParser {
@@ -187,14 +203,14 @@ trait ExtParser extends BaseParser {
 }
 \end{lstlisting}
 
-Unfortunately, this extended parser does not work properly to parse all possible expressions defined by the new grammar. For example, it fails to parse \lstinline{(\x.x)} \lstinline{(\y.y)} which is obviously valid.
+Unfortunately, this extended parser does not work properly to parse all possible expressions defined by the new grammar. For example, it fails to parse \inlinecode{(\x.x)} \inlinecode{(\y.y)} which is obviously valid.
 
-\paragraph{Problem: Hard-coded Recursive Calls} The critical problem of extending parsers directly is that the recursive calls in old parsers are hard-coded. Specifically, \lstinline{pApp} makes two recursive calls to parse two consecutive expressions as an application. Before the extension, we implemented it by using \lstinline{pExpr} for those recursive calls. It worked fine at that time because \lstinline{pExpr} covers all cases of the old grammar. However, after the extension of lambda abstractions, the proper function for such recursive calls should be \lstinline{pExtExpr} instead of \lstinline{pExpr}, because the new function \lstinline{pExtExpr} covers all of the three cases in the new grammar, including the lambda case.
+\paragraph{Problem: Hard-coded Recursive Calls} The critical problem of extending parsers directly is that the recursive calls in old parsers are hard-coded. Specifically, \inlinecode{pApp} makes two recursive calls to parse two consecutive expressions as an application. Before the extension, we implemented it by using \inlinecode{pExpr} for those recursive calls. It worked fine at that time because \inlinecode{pExpr} covers all cases of the old grammar. However, after the extension of lambda abstractions, the proper function for such recursive calls should be \inlinecode{pExtExpr} instead of \inlinecode{pExpr}, because the new function \inlinecode{pExtExpr} covers all of the three cases in the new grammar, including the lambda case.
 
-That is the reason why the extended parser fails to parse some valid expressions such as \lstinline{(\x.x)} \lstinline{(\y.y)}. To resolve this issue, we need to let \lstinline{pApp} be aware of the change of grammar. We have some direct solutions:
+That is the reason why the extended parser fails to parse some valid expressions such as \inlinecode{(\x.x)} \inlinecode{(\y.y)}. To resolve this issue, we need to let \inlinecode{pApp} be aware of the change of grammar. We have some direct solutions:
 
 \begin{itemize}
-    \item Keep the old code, rewrite problematic functions like \lstinline{pApp}. \\Separate compilation is obtained but code reuse is lost, because every function may contain such recursive calls.
+    \item Keep the old code, rewrite problematic functions like \inlinecode{pApp}. \\Separate compilation is obtained but code reuse is lost, because every function may contain such recursive calls.
     \item Modify the old code, correct the recursive calls by proper functions. \\We can avoid code duplication thus get code reuse, but separate compilation is lost because of modification on the old code.
     \item ??? \huang{third one? use dynamic languages?}
 \end{itemize}
@@ -227,11 +243,11 @@ trait BaseParser {
 }
 \end{lstlisting}
 
-According to the definition of type synonym \lstinline{Open[T]}, every parse function takes a parser of \lstinline{Expr} as a parameter, namely \lstinline{self}. This parameter \lstinline{self} represents \emph{the parser} of expressions, which is dynamiclly explained by the argument. Using an abstract parameter provides extensibility to parsers, because the recursive calls are not hard-coded here --- they are dynamic and can be changed corresponding to the grammar!
+According to the definition of type synonym \inlinecode{Open[T]}, every parse function takes a parser of \inlinecode{Expr} as a parameter, namely \inlinecode{self}. This parameter \inlinecode{self} represents \emph{the parser} of expressions, which is dynamiclly explained by the argument. Using an abstract parameter provides extensibility to parsers, because the recursive calls are not hard-coded here --- they are dynamic and can be changed corresponding to the grammar!
 
-We take \lstinline{pApp} as an example again. It uses \lstinline{self} instead of hard-coded \lstinline{pExpr} for recursive parsing. Depending on the real argument, \lstinline{self} can be a parser which covers only variables and applications, or a parser which also supports the lambda case.
+We take \inlinecode{pApp} as an example again. It uses \inlinecode{self} instead of hard-coded \inlinecode{pExpr} for recursive parsing. Depending on the real argument, \inlinecode{self} can be a parser which covers only variables and applications, or a parser which also supports the lambda case.
 
-\paragraph{Client Code} Since the type of parsing functions are changed, we can not apply them directly. The client code below shows how to use the new parser. The \lstinline{fix} function, which is the the standard \textit{fixpoint combinator}, is used to `close' the open recursion.
+\paragraph{Client Code} Since the type of parsing functions are changed, we can not apply them directly. The client code below shows how to use the new parser. The \inlinecode{fix} function, which is the the standard \textit{fixpoint combinator}, is used to `close' the open recursion.
 
 \begin{lstlisting}
 def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
@@ -269,7 +285,7 @@ algebras better later on.
 }
 
 
-\paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Similarly, the new parser extends from the old one by adding \lstinline{pLam} on it. Notice that the old code is not touched, hence separate compilation is obtained.
+\paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Similarly, the new parser extends from the old one by adding \inlinecode{pLam} on it. Notice that the old code is not touched, hence separate compilation is obtained.
 
 \begin{lstlisting}
 trait ExtParser extends BaseParser {
@@ -281,7 +297,7 @@ trait ExtParser extends BaseParser {
 }
 \end{lstlisting}
 
-All recursive calls of parsing `an expression' are called via the explicit parameter \lstinline{self}. Once the \lstinline{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \lstinline{pApp} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \lstinline{(\\x.x)} \lstinline{(\\y.y)} which cannot be parsed in the previous section.
+All recursive calls of parsing `an expression' are called via the explicit parameter \inlinecode{self}. Once the \inlinecode{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \inlinecode{pApp} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \inlinecode{(\\x.x)} \inlinecode{(\\y.y)} which cannot be parsed in the previous section.
 
 \begin{lstlisting}
 println(parse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)"))
@@ -323,7 +339,7 @@ trait Print extends Alg[String] {
 }
 \end{lstlisting}
 
-And also parser for it as below. Notice the parsing function \lstinline{pVarApp} takes an argument of type \lstinline{Alg[E]}, that means it accepts any instance of the algebra interface \lstinline{Alg}.
+And also parser for it as below. Notice the parsing function \inlinecode{pVarApp} takes an argument of type \inlinecode{Alg[E]}, that means it accepts any instance of the algebra interface \inlinecode{Alg}.
 
 \begin{lstlisting}
 trait Parser[E] {
@@ -344,7 +360,7 @@ object VarApp {
 }
 \end{lstlisting}
 
-To use the parser, we must provide an algebra instance as the operation to construct the parsing result. As shown in the code below, we feed the pretty printing operation \lstinline{VarApp.Print} to the generic \lstinline{parse} function. It will print \lstinline{(x y)} as the result.
+To use the parser, we must provide an algebra instance as the operation to construct the parsing result. As shown in the code below, we feed the pretty printing operation \inlinecode{VarApp.Print} to the generic \inlinecode{parse} function. It will print \inlinecode{(x y)} as the result.
 
 \begin{lstlisting}
 def parseWithAlg[E](inp: String)(alg: VarApp.Alg[E]): E = {
