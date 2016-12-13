@@ -25,9 +25,13 @@ algorithms~\cite{}.
 Although efficient, the main drawback of parser generators is that they do not support
 modular type-checking and separate compilation.
 
+Modular parsing based on parser generators is supported by many libraries []. Users can separate the concrete/abstract syntax and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA [] uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence thoes libraries only have syntactic modularity.
+
+Generating parsers often requires full information of grammars, thus semantic modularity is difficult to achieve in this way.
+
 \huang{a paragraph here, refer to related work section, discuss
   previous works of modular parsing using parser generators and its
-  drawbacks}\bruno{Please finish this.}
+  drawbacks}\bruno{Please finish this.}\huang{done}
 
 \paragraph{Parser Combinators}
 Comparing with the parser generators, a \textit{parser combinator}~\cite{}
@@ -48,7 +52,7 @@ type-checked.
 Unfortunatelly many parser combinators have important limitations for
 modular parsing. In particular several parser combinators,
 including the famous library Parsec~\cite{} library, require
-programmers to manually do\textit{left-recursion elimination}, and
+programmers to manually do \textit{left-recursion elimination}, and
 require significant amounts \textit{backtracking}. Both of these are
 problematic in a modular setting.
 
@@ -208,7 +212,6 @@ support OO-style extensibility of ASTs.
 
 \paragraph{Open Parsing} Consider the expression language of only variables and applications in the previous section. The parser can be rewritten as follows:
 
-\huang{todo: polish it}
 \begin{lstlisting}
 type Open[T] = (=> T) => T
 
@@ -226,9 +229,9 @@ trait BaseParser {
 
 According to the definition of type synonym \lstinline{Open[T]}, every parse function takes a parser of \lstinline{Expr} as a parameter, namely \lstinline{self}. This parameter \lstinline{self} represents \emph{the parser} of expressions, which is dynamiclly explained by the argument. Using an abstract parameter provides extensibility to parsers, because the recursive calls are not hard-coded here --- they are dynamic and can be changed corresponding to the grammar!
 
-We take \lstinline{pApp} as an example again. It uses \lstinline{self} instead of hard-coded \lstinline{pExpr} for recursive parsing. Depending on the real argument, \lstinline{self} can be a parser which covers variables and applications, or a parser which also supports the lambda case.
+We take \lstinline{pApp} as an example again. It uses \lstinline{self} instead of hard-coded \lstinline{pExpr} for recursive parsing. Depending on the real argument, \lstinline{self} can be a parser which covers only variables and applications, or a parser which also supports the lambda case.
 
-\paragraph{Client Code} Since the type of parsing functions are changed, we can not apply the parsers directly. The \lstinline{fix} function below, which is the the standard \textit{fixpoint combinator}, is used to `close' the open recursion.
+\paragraph{Client Code} Since the type of parsing functions are changed, we can not apply them directly. The client code below shows how to use the new parser. The \lstinline{fix} function, which is the the standard \textit{fixpoint combinator}, is used to `close' the open recursion.
 
 \begin{lstlisting}
 def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
@@ -266,7 +269,7 @@ algebras better later on.
 }
 
 
-\paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Notice that the old code is not touched, hence separate compilation is obtained.
+\paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Similarly, the new parser extends from the old one by adding \lstinline{pLam} on it. Notice that the old code is not touched, hence separate compilation is obtained.
 
 \begin{lstlisting}
 trait ExtParser extends BaseParser {
@@ -278,20 +281,13 @@ trait ExtParser extends BaseParser {
 }
 \end{lstlisting}
 
-\huang{todo: rewrite}
-In the new parser \lstinline{LambdaParser} extended from the old one,
-we write a new parsing function \lstinline{pLam} for the new case
-lambda abstraction. And compose it with \lstinline{pVarApp}, which we
-already have in the old parser \lstinline{ExprParser}. Open recursion
-is critical to achieve such type-safe compositions, because wherever
-we refer to the parser of the whole expression, it is updated to cover
-all of the three case we have now.
+All recursive calls of parsing `an expression' are called via the explicit parameter \lstinline{self}. Once the \lstinline{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \lstinline{pApp} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \lstinline{(\\x.x)} \lstinline{(\\y.y)} which cannot be parsed in the previous section.
 
 \begin{lstlisting}
 println(parse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)"))
 \end{lstlisting}
 
-Parsing with open recursion will be discussed further in section \ref{sec:openandparsing}.
+As we demonstrated, delegation encoded by open recursion is the key technique to obtain semantic modularity. It enables type-safe code reuse and separate compilation in our parsers. We will discuss this topic further in section \ref{sec:openandparsing}.
 
 \subsection{Object Algebras for full Extensibility}\label{subsec:overview-oa}
 
