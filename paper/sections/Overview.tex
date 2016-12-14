@@ -25,7 +25,7 @@ algorithms~\cite{}.
 Although efficient, the main drawback of parser generators is that they do not support
 modular type-checking and separate compilation.
 
-Modular parsing based on parser generators is supported by many libraries []. Users can separate the concrete/abstract syntax and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA [] uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence thoes libraries only have syntactic modularity.
+Modular parsing based on parser generators is supported by many libraries []. Users can separate the concrete/abstract syntax and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA [] uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence those libraries only have syntactic modularity.
 
 Generating parsers often requires full information of grammars, thus semantic modularity is difficult to achieve in this way.
 
@@ -49,35 +49,55 @@ a piece of code, and also are the parsers it takes. Thus in a
 statically typed programming language they can be statically
 type-checked.
 
-Unfortunatelly many parser combinators have important limitations for
+Unfortunately many parser combinators have important limitations for
 modular parsing. In particular several parser combinators,
 including the famous library Parsec~\cite{} library, require
 programmers to manually do \textit{left-recursion elimination}, and
 require significant amounts \textit{backtracking}. Both of these are
 problematic in a modular setting.
 
-\paragraph{Left-Recursion Elimination} The main problem with
-left-recursion elimination is that it is a \emph{global}
-transformation on a grammar. Given that the full grammar is known,
-then it is possible to remove all left-recursive cases.
-\bruno{Illustrate with a concrete example: show a simple
+\paragraph{Left-Recursion Elimination} The top-down, recursive descent parsing strategy adopted by those parser combinator libraries cannot support left-recursive grammars directly. The common solution is to rewrite the grammar into an equivalent but not left-recursive one, so called left-recursion elimination.
+
+A left-recursive grammar of adding integers can be rewritten as below. On the right side, we got a new grammar without left-recursion.
+
+\begin{tabular}{m{0.4\linewidth}m{0.4\linewidth}}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> \alt <expr> `+' <int>
+\end{grammar}
+&
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> <expr'>
+
+<expr'> ::= <empty> \alt `+' <int> <expr'>
+\end{grammar}
+\end{tabular}
+
+The main problem with left-recursion elimination is that it is a \emph{global} transformation on a grammar. Given that the full grammar is known, then it is possible to remove all left-recursive cases. However, when doing modular parsing, the full grammar is not known!
+
+For the example above, if we extend the original grammar to support subtraction, we must analyse the full grammar again to rewrite it.
+
+\begin{tabular}{m{0.4\linewidth}m{0.4\linewidth}}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> \alt <expr> `+' <int> \alt <expr> `-' <int>
+\end{grammar}
+&
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> <expr'>
+
+<expr'> ::= <empty> \alt `+' <int> <expr'> \alt `-' <int> <expr'>
+\end{grammar}
+\end{tabular}
+
+Another issue of left-recursion elimination is that it requires extra bookkeeping work to retain the original semantic. For example, the expression $1+2-3$ is parsed as $(1+2)-3$ in the left-recursive grammar, but after rewrite the result is $1((+2)-3))$. The parse tree must be transformed to recover its structure.
+
+\huang{done, the example may be not very good, but i haven't found a better one}\bruno{Illustrate with a concrete example: show a simple
   left-recursive grammar; then do left-recursion elimination. Then add
 a new case into the original left-recursive grammar; and show that
 a very different grammar is obtained after left-recursion elimination.}
-
-However, when doing modular parsing, the full grammar is not known!
-
-
-Parser combinators adopt top-down, recursive descent parsing, which
-uses backtracking to search through the possible branches. However,
-simple backtracking parser combinators such as the famous library
-Parsec~\cite{} in Haskell, have some drawbacks. One is that they cannot
-support left-recursive grammars. The common solution is to rewrite a
-left-recursive grammar into an equivalent one, so called
-\textit{left-recursion elimination}. This solution requires
-information of the whole grammar, so that it cannot be applied in a
-modular setting. Because the grammar may be extended in the future,
-essentially we only have parts of the grammar.
 
 \paragraph{Backtracking} The need for backtracking is also problematic
 in a modular setting. Take Parsec as an example, its choice
@@ -109,7 +129,7 @@ newParser = try parseImportFrom <|> ... <|> parseImportAs
 \end{lstlisting}
 
 \paragraph{Packrat Parsing}
-Fortunatelly more advanced parsing techniques such as Packrat
+Fortunately more advanced parsing techniques such as Packrat
 parsing~\cite{}, address the limitations of simple parser combinators
 such as Parsec. Packrat parsers use
 memorization to record the result of applying each parser at each
@@ -133,8 +153,8 @@ of left-recursion are not major concerns.
   will be wrong. Then you show (in the next section) the solution:
  use delegation/open recursion.}
 
-\huang{partly done, only extend a new language construct in the example, how about leaving extension of new operations in the OA subsection?}\bruno{I think we need to set up a challenge here, similar to the challange of
-  the expression problem. The challange should be like. Build a parser
+\huang{partly done, only extend a new language construct in the example, how about leaving extension of new operations in the OA subsection?}\bruno{I think we need to set up a challenge here, similar to the challenge of
+  the expression problem. The challenge should be like. Build a parser
 for a simple expression language, then extend the language with both
 a new language construct and a new operation. This section will show
 how we can do that using traditional parsers, but without modular
@@ -154,7 +174,7 @@ applications.
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}
-<expr> ::= <var>
+<expr> ::= <ident>
     \alt <expr> <expr>
     \alt `(' <expr> `)'
 \end{grammar}
@@ -182,7 +202,7 @@ As the combination of \inlinecode{pVar} and \inlinecode{pApp}, \inlinecode{pExpr
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <expr> ::= ...
-    \alt `\\' <var> `.' <expr>
+    \alt `\\' <ident> `.' <expr>
 \end{grammar}
 
 The ASTs can be extended trivially as below.
