@@ -1,4 +1,6 @@
 .cache-main
-/bin/
+bin/
 .idea/
 Parser.iml
+.classpath
+.project

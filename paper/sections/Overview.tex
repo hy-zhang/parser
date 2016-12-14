@@ -181,19 +181,7 @@ applications.
 
 It is straightforward to model ASTs by inheritance and write corresponding parsers for each case. \huang{This is the first time to demonstrate code in this paper. Readers may not know what those combinators/types are. Refer to the library docs here? move the 'scala parsing library' section to the beginning as 'background'?}
 
-\begin{lstlisting}
-abstract class Expr
-class Var(x: String) extends Expr
-class App(e1: Expr, e2: Expr) extends Expr
-
-trait BaseParser {
-  lexical.delimiters += ("(", ")")
-  val pExpr: PackratParser[Expr] = pVar ||| pApp ||| "(" ~> pExpr <~ ")"
-  val pVar: PackratParser[Expr] = ident ^^ { x => new Var(x) }
-  val pApp: PackratParser[Expr] =
-    pExpr ~ pExpr ^^ { case e1 ~ e2 => new App(e1, e2) }
-}
-\end{lstlisting}
+\lstinputlisting[linerange=8-18]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_EXPR
 
 As the combination of \inlinecode{pVar} and \inlinecode{pApp}, \inlinecode{pExpr} can parse expressions correctly.
 
@@ -207,21 +195,11 @@ As the combination of \inlinecode{pVar} and \inlinecode{pApp}, \inlinecode{pExpr
 
 The ASTs can be extended trivially as below.
 
-\begin{lstlisting}
-class Lam(x: String, e: Expr) extends Expr
-\end{lstlisting}
+\lstinputlisting[linerange=22-22]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_LAM
 
 Since we already have the parser for variables and applications, we would like to build the new parser by reusing the old one. So we compose \inlinecode{pLam}, which parses lambda abstractions, with the old parser. \inlinecode{pExtExpr} is the new function to parse expressions.
 
-\begin{lstlisting}
-trait ExtParser extends BaseParser {
-  lexical.delimiters += ("\\", ".")
-  val pExtExpr: PackratParser[Expr] =
-    pVar ||| pApp ||| pLam ||| "(" ~> pExtExpr <~ ")"
-  val pLam: PackratParser[Expr] =
-    "\\" ~> ident ~ ("." ~> pExtExpr) ^^ { case x ~ e => new Lam(x, e) }
-}
-\end{lstlisting}
+\lstinputlisting[linerange=26-32]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_EXT
 
 Unfortunately, this extended parser does not work properly to parse all possible expressions defined by the new grammar. For example, it fails to parse \inlinecode{(\x.x)} \inlinecode{(\y.y)} which is obviously valid.
 
@@ -248,20 +226,7 @@ support OO-style extensibility of ASTs.
 
 \paragraph{Open Parsing} Consider the expression language of only variables and applications in the previous section. The parser can be rewritten as follows:
 
-\begin{lstlisting}
-type Open[T] = (=> T) => T
-
-// Expr, Var and App are the same as previous
-trait BaseParser {
-  lexical.delimiters += ("(", ")")
-  val pVar: Open[PackratParser[Expr]] =
-    self => ident ^^ { x => new Var(x) }
-  val pApp: Open[PackratParser[Expr]] =
-    self => self ~ self ^^ { case e1 ~ e2 => new App(e1, e2) }
-  val pExpr: Open[PackratParser[Expr]] =
-    self => pVar(self) ||| pApp(self) ||| "(" ~> self <~ ")"
-}
-\end{lstlisting}
+\lstinputlisting[linerange=53-63]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_BASE
 
 According to the definition of type synonym \inlinecode{Open[T]}, every parse function takes a parser of \inlinecode{Expr} as a parameter, namely \inlinecode{self}. This parameter \inlinecode{self} represents \emph{the parser} of expressions, which is dynamiclly explained by the argument. Using an abstract parameter provides extensibility to parsers, because the recursive calls are not hard-coded here --- they are dynamic and can be changed corresponding to the grammar!
 
@@ -269,24 +234,7 @@ We take \inlinecode{pApp} as an example again. It uses \inlinecode{self} instead
 
 \paragraph{Client Code} Since the type of parsing functions are changed, we can not apply them directly. The client code below shows how to use the new parser. The \inlinecode{fix} function, which is the the standard \textit{fixpoint combinator}, is used to `close' the open recursion.
 
-\begin{lstlisting}
-def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
-
-def parse[E](p: Open[PackratParser[E]])(inp: String): E = {
-  val t = phrase(fix(p))(new lexical.Scanner(inp))
-  if (t.successful) t.get else scala.sys.error(t.toString)
-}
-
-println(parse(new BaseParser {}.pExpr)("x y"))
-\end{lstlisting}
-
-\bruno{You are copying and pasting code into the paper. Don't do this:
-code will change alot (various edits), and it is all too easy to get
-inconsistent code snippets. Instead use the small Ruby tool that we
-have in the paper directory to import source code directly from the
-code repository. This will ensure the consistency of the code
-throughout the paper writing. Please ask Haoyuan about the tool; he
-knows how to use it!}
+\lstinputlisting[linerange=68-75]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_USE
 
 \huang{done}\bruno{Please polish up code. You probably want to consistently use
 the variable name ``self'' whenever you want to refer to the whole
@@ -307,21 +255,11 @@ algebras better later on.
 
 \paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Similarly, the new parser extends from the old one by adding \inlinecode{pLam} on it. Notice that the old code is not touched, hence separate compilation is obtained.
 
-\begin{lstlisting}
-trait ExtParser extends BaseParser {
-  lexical.delimiters += ("\\", ".")
-  val pLam: Open[PackratParser[Expr]] =
-    self => "\\" ~> ident ~ ("." ~> self) ^^ { case x ~ b => new Lam(x, b) }
-  val pExtExpr: Open[PackratParser[Expr]] =
-    self => pLam(self) ||| pExpr(self)
-}
-\end{lstlisting}
+\lstinputlisting[linerange=80-86]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT
 
 All recursive calls of parsing `an expression' are called via the explicit parameter \inlinecode{self}. Once the \inlinecode{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \inlinecode{pApp} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \inlinecode{(\\x.x)} \inlinecode{(\\y.y)} which cannot be parsed in the previous section.
 
-\begin{lstlisting}
-println(parse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)"))
-\end{lstlisting}
+\lstinputlisting[linerange=95-95]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT_USE
 
 As we demonstrated, delegation encoded by open recursion is the key technique to obtain semantic modularity. It enables type-safe code reuse and separate compilation in our parsers. We will discuss this topic further in section \ref{sec:openandparsing}.
 
