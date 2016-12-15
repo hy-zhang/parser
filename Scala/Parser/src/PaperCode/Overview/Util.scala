@@ -4,8 +4,6 @@ import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.syntactical._
 
 object Util extends StandardTokenParsers with PackratParsers {
-  val lcid = ident ^? { case id if id.charAt(0).isLower => id }
-  val ucid = ident ^? { case id if id.charAt(0).isUpper => id }
 
   type Open[T] = (=> T) => T
 
