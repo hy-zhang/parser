@@ -13,7 +13,7 @@
 \usepackage{url}
 \usepackage{pstricks,pst-node,pst-tree}
 \usepackage{theorem}
-%% \usepackage{mathpartir}
+\usepackage{syntax}
 \usepackage{bbm}
 \usepackage{pgf}
 \usepackage{multirow}
@@ -90,6 +90,7 @@ keywordstyle=\ttfamily\bfseries,
 %\newtheorem{theorem}{Theorem}
 %\newtheorem{lemma}{Lemma}
 %\newenvironment{proof}{\textbf{Proof:\hspace{4mm}}}{$\Box$}
+\newcommand\inlinecode[1]{\lstinline[language=PlainCode]{#1}}
 \newcommand{\authornote}[3]{{\color{#2} {\sc #1}: #3}}
 \newcommand\bruno[1]{\authornote{bruno}{red}{#1}}
 \newcommand\yanlin[1]{\authornote{yanlin}{purple}{#1}}
@@ -172,13 +173,13 @@ keywordstyle=\ttfamily\bfseries,
   type-checked} and \emph{separately compiled}. We present \name: a parsing
   combinator library that enables modular parsing. The library is
   built on top of a Packrat parsing library, but adds new parsing
-  combinators to enable modular parsing. The new parsing combinators 
-  employ \emph{delegation-based} techniques and \emph{Object Algebras} 
+  combinators to enable modular parsing. The new parsing combinators
+  employ \emph{delegation-based} techniques and \emph{Object Algebras}
   to support extensibility. The choice of Packrat parsing over other
   parsing techniques turns out to be important for achieving
-  performance in a modular setting. To evaluate \name 
-  we conduct a  case study based on the 
-  ``Types and Programming Languages'' interpreters. The case study 
+  performance in a modular setting. To evaluate \name
+  we conduct a  case study based on the
+  ``Types and Programming Languages'' interpreters. The case study
   shows that \name is effective at reusing parsing code from existing
   interpreters, and the total parsing code is 60\% shorter than the
   non-modular parsing code.
