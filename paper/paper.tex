@@ -169,20 +169,22 @@ keywordstyle=\ttfamily\bfseries,
     parsing}. We focus on \emph{semantic} modularity and not just
   \emph{syntactic} modularity. That is, the solutions should not only
   allow complete parsers to be built out of modular parsing
-  components, but also enable the parsing components to be \emph{modularly
-  type-checked} and \emph{separately compiled}. We present \name: a parsing
-  combinator library that enables modular parsing. The library is
-  built on top of a Packrat parsing library, but adds new parsing
+  components, but also enable the parsing components to be
+  \emph{modularly type-checked} and \emph{separately compiled}. We
+  present \name: a parsing combinator library that enables modular
+  parsing. Interestingly, the modularity requirements for modular
+  parsing rule out several existing parsing combinator approaches,
+  which rely on some non-modular techniques. Fortunatelly Packrat
+  parsing techniques, provide solutions for such modularity problems,
+  and enable reasonable performance in a modular setting.  Thus \name
+  is built on top of a Packrat parsing library, but adds new parsing
   combinators to enable modular parsing. The new parsing combinators
   employ \emph{delegation-based} techniques and \emph{Object Algebras}
-  to support extensibility. The choice of Packrat parsing over other
-  parsing techniques turns out to be important for achieving
-  performance in a modular setting. To evaluate \name
-  we conduct a  case study based on the
-  ``Types and Programming Languages'' interpreters. The case study
-  shows that \name is effective at reusing parsing code from existing
-  interpreters, and the total parsing code is 60\% shorter than the
-  non-modular parsing code.
+  to support extensibility. To evaluate \name we conduct a case study
+  based on the ``Types and Programming Languages'' interpreters. The
+  case study shows that \name is effective at reusing parsing code
+  from existing interpreters, and the total parsing code is 60\%
+  shorter than the non-modular parsing code.
 
 \end{abstract}
 

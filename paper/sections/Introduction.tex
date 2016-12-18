@@ -4,61 +4,155 @@ The quest for improved modularity, variability and extensibility of
 programs has been going on since the early days of Software
 Engineering~\cite{}. Modern Programming Languages enable a certain
 degree of modularity, but they have limitations as illustrated by
-well-known problems such as the Expression Problem~\cite{}. To address
-the limitations of Programming Languages several different approaches
-have been proposed in the past. Existing approaches can be broadly
-divided into two categories: \emph{syntactic} or \emph{semantic} 
-modularization techniques. Syntactic modularization techniques enable 
-the separate development of software components or features that can
-later be combined into complete programs. However, very often, the 
-composition of components in syntactic modularization techniques 
-amounts to a form of textual composition of the code from multiple 
-components/features. Semantic modularization
-techniques go one step further, and also enable those components or
-features to be modularly type-checked and separately compiled. This
-enables the composition of compiled binaries, and also ensures the
-type-safety of the composed code.  
+well-known problems such as the Expression Problem~\cite{}. The
+Expression Problem refers to the difficulty of writing data
+abstractions that can be easily extended with both new operations and
+new data variants. Traditionally the kinds of data abstraction found
+in functional languages can be extended with new operations, but
+adding new data variants is difficult. The traditional object-oriented
+approach to data abstraction facilitates adding new data variants
+(classes), while adding new operations is more difficult.
 
-Many approaches use syntactic modularization techniques. Examples
-include tools for developing Software-Product Lines~\cite{}, some
-Language Workbenches~\cite{}, or extensible parser generators.  In
-those approaches textual composition techniques such as
-\emph{superimposition}~\cite{} enable the development . Syntactic
-modularization techniques have also been applied to the problem of
-\emph{extensible parsing}. There are several approaches that enable
-the development of \emph{syntactically} modular parsers or
-grammars. However these approaches do not support separate compilation
-or modular type-checking that we strive for in this work.
+A reason why a solution to the Expression Problem is important in
+practice is that it is necessary for the development of
+\emph{Software-Product Lines} (SPLs)~\cite{}. A software-product line
+is a reusable set of components, which can be combined in multiple ways
+to obtain different programs. Programming languages offer a concrete
+example for SPLs. A SPL for programming languages would allow us to
+model various typical operations of programming languages (such as
+evaluation, compilation, or parsing) for various different language
+constructs (such as binding, arithmetic, conditional or loops)
+independently and separately. For example, evaluation components could be defined
+independently for binding and arithmetic constructs. If the language
+to be implemented is the pure lambda calculus, only evaluation of
+binding constructs is necessary. However, more realistic programming
+languages will include arithmetic constructs, and will require 
+evaluation for such constructs as well. In this case 
+both the component for evaluation of binders and arithmetic 
+expressions can be combined to implement the desired functionality.
 
 \begin{comment}
- such as AHEAD or 
-FeatureHouse, which enable the development of highly reusable 
-software components that can be combined to form complete 
-software products.
-\end{comment}  
+Most programming languages share alot of features in
+common. 
 
-There are also several approaches to semantic modularity. For example,
-family polymorphism enables the development of highly reusable
-components and can even be used to develop Software-Product Lines. 
-... However, as far as we are aware, the problem of modular parsing 
-has not been studied in semantic modularization
-approaches.
+For example, most languages have language constructs for:
+binding (such as variables, functions, and function applications);
+basic arithmetic operations; basic logic and conditional operations;
+loops; as well as various other features. For each language construct,
+various operations (such as evaluation, compilation, or parsing) need
+to be implemented. It is reasonable to wonder whether we can simply
+implement those features independently of a particular implementation
+of a programming language. Evaluation could be defined independently 
+for binding and arithmetic constructs. If the language to be
+implemented is the pure lambda calculus, only evaluation of binding 
+constructs is necessary. Thus only the component that implements 
+evaluation for binding needs to be used in such an implementation.
+However, more realistic programming languages 
+will include arithmetic constructs, and will require an evaluation
+function for those. 
 
-  This paper investigates solutions for the problem of \emph{modular
-    parsing}. We focus on \emph{semantic} modularity and not just
-  \emph{syntactic} modularity. That is, the solutions should not only
+
+Then it would be possible to \emph{reuse}
+some of those features in \emph{multiple} different implementations of
+programming languages. Essentially, this would enable a SPL for
+programming languages, where all
+
+A solution to the Expression Problem could ena
+
+
+
+A concrete 
+example that illustrates this issue is 
+\end{comment}
+
+To address the modularity limitations of Programming Languages several
+different approaches have been proposed in the past. Existing
+approaches can be broadly divided into two categories:
+\emph{syntactic} or \emph{semantic} modularization
+techniques. Syntactic modularization techniques are quite popular in
+practice. Examples include many tools for developing Software-Product
+Lines~\cite{}, some Language Workbenches~\cite{}, or extensible parser
+generators~\cite{}.  Most syntactic approaches employ textual
+composition techniques such as \emph{superimposition}~\cite{} to
+enable the development modular program features. Such textual
+composition techniques collect the code for multiple features and
+merge it together when a concrete combination of features is needed
+for a particular program. The typical drawback of such techniques is
+the lack of modular type-checking and separate compilation:
+``\emph{most feature-oriented implementation mechanisms lack proper
+  interfaces and support neither modular type checking nor separate
+  compilation}''~\cite{kastner11road}\bruno{reference to ``The road to
+  Feature Modularity''}. Syntactic modularization techniques have also
+been applied to the problem of \emph{extensible parsing}. There are
+several approaches~\cite{} that enable the development of
+\emph{syntactically} modular parsers or grammars. However these
+approaches do not support separate compilation or modular
+type-checking either.\bruno{mention that a reason why syntactic 
+modularization techniques are popular is simplicity (in implementation
+and also use).}
+
+Semantic modularization techniques move away
+from syntactic composition techniques that rely on the textual source
+code. This allows us to go one step further in terms of modularity,
+and also enable components or features to be modularly type-checked
+and separately compiled. Modular type-checking and separate
+compilation are desirable properties to have from a Software
+Engineering point-of-view, and enable the composition of compiled
+binaries as well as ensuring the type-safety of the code composed of
+multiple components. Examples of semantic modularization techniques 
+include various approaches to \emph{family polymorphism}~\cite{}, as 
+well as several techniques for solving the Expression Problem. 
+\bruno{strenghten? mention dynamic languages (separate compilation 
+but no modular type-checking), and techniques that weaken type-safety 
+requirements.} Most semantic
+modularization techniques have focused on operations that traverse or 
+or process extensible datastructures, such as ASTs.
+\bruno{Object Algebras here?} However, as far as
+we know there is little work on operations that build/produce ASTs. 
+In particular the problem of modular parsing has not been studied in
+semantic modularization approaches. This is a shame because, to
+realise the vision of software product-lines for programming
+languages, modular parsing is a necessity. 
+
+\paragraph{Modular and Extensible Parsing}
+  This paper investigates presents \name: a parsing
+  combinator library that enables modular parsing.
+  \name provides a solution for the problem of \emph{semantic modular
+    parsing}. That is, the solutions should not only
   allow complete parsers to be built out of modular parsing
   components, but also enable the parsing components to be \emph{modularly
-  type-checked} and \emph{separately compiled}. We present \name: a parsing
-  combinator library that enables modular parsing. The library is
+  type-checked} and \emph{separately compiled}. \name is
   built on top of a Packrat parsing library, but adds new parsing
   combinators to enable modular parsing. The new parsing combinators 
   employ \emph{delegation-based} techniques and \emph{Object Algebras} 
   to support extensibility. The choice of Packrat parsing over other
   parsing techniques turns out to be important for achieving
-  performance in a modular setting. To evaluate \name 
-  we conduct a  case study based on the 
-  ``Types and Programming Languages'' interpreters. The case study 
-  shows that \name is effective at reusing parsing code from existing
+  performance in a modular setting. \bruno{left recursion, and
+    backtracking removal.} 
+
+  By analising the \emph{full} grammar it is possible to remove
+  backtracking, which would otherwise increase parsing times. Many
+  parsing combinator libraries routinely use backtracting elimination
+  to achieve performance. However, in a modular setting this technique
+  cannot be used, because the full grammar is not known. Thus we have
+  to be very conservative at eliminating backtracting. Unfortunatelly,
+  this has a severe impact on performance.
+
+  To evaluate \name we conduct a case study based on the ``Types and
+  Programming Languages'' (TAPL) interpreters.  The case study shows
+  that \name is effective at reusing parsing code from existing
   interpreters, and the total parsing code is 60\% shorter than the
-  non-modular parsing code.
+  non-modular parsing code.\bruno{comment on the efficiency}
+
+In summary our contributions are:
+
+\begin{itemize}
+
+\item {\name:} A parser combinator library that allows the development 
+of modular parser.
+
+\item {{\bf TAPL case study:}} We conduct a case study with 18 interpreters
+  from the TAPL book. The case study show the effectiveness of modular 
+  parsing in terms of reuse.
+
+\end{itemize}
