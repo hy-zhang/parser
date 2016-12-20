@@ -26,7 +26,7 @@ class Lam(x: String, e: Expr) extends Expr
 trait ExtParser extends BaseParser {
   lexical.delimiters += ("\\", ".")
   val pExtExpr: PackratParser[Expr] =
-    pExpr ||| pLam ||| "(" ~> pExtExpr <~ ")"
+    pVar ||| pApp ||| pLam ||| "(" ~> pExtExpr <~ ")"
   val pLam: PackratParser[Expr] =
     "\\" ~> ident ~ ("." ~> pExtExpr) ^^ { case x ~ e => new Lam(x, e) }
 }
@@ -37,8 +37,8 @@ trait ExtParser extends BaseParser {
     //runParser(parser)("a b c")
 
     val extParser = new ExtParser {}.pExtExpr
-    runParser(extParser)("a b c")
-    runParser(extParser)("(\\x.x) (\\y.y)")
+    parse(extParser)("a b c")
+    parse(extParser)("(\\x.x) (\\y.y)")
   }
 }
 
@@ -63,18 +63,15 @@ trait BaseParser {
 }
 //END_OVERVIEW_OPEN_BASE
 
-  def use(): Unit = {
+/*
 //BEGIN_OVERVIEW_OPEN_USE
-def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
+def parse[E](p: PackratParser[E]): String => E = {...}
+def fix[T](f: Open[T]): T = {...}
+def openParse[E](p: Open[PackratParser[E]]): String => E = parse[E](fix(p))
 
-def parse[E](p: Open[PackratParser[E]])(inp: String): E = {
-  val t = phrase(fix(p))(new lexical.Scanner(inp))
-  if (t.successful) t.get else scala.sys.error(t.toString)
-}
-
-println(parse(new BaseParser {}.pExpr)("x y"))
+openParse(new BaseParser {}.pExpr)("x y")
 //END_OVERVIEW_OPEN_USE
-  }
+*/
 
 //BEGIN_OVERVIEW_OPEN_EXT
 trait ExtParser extends BaseParser {
@@ -87,13 +84,14 @@ trait ExtParser extends BaseParser {
 //END_OVERVIEW_OPEN_EXT
 
   def use2(): Unit = {
-    def parse[E](p: Open[PackratParser[E]])(inp: String): E = {
-      val t = phrase(fix(p))(new lexical.Scanner(inp))
-      if (t.successful) t.get else scala.sys.error(t.toString)
-    }
+    def openParse[E](p: Open[PackratParser[E]]): String => E = parse(fix(p))
 //BEGIN_OVERVIEW_OPEN_EXT_USE
-println(parse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)"))
+openParse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)")
 //END_OVERVIEW_OPEN_EXT_USE
+  }
+
+  def main(args: Array[String]): Unit = {
+    use2()
   }
 }
 

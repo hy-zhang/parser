@@ -14,8 +14,8 @@ object Util extends StandardTokenParsers with PackratParsers {
 
   def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
 
-  def runParser(p: Parser[_]): String => Unit = in => {
+  def parse[E](p: Parser[E]): String => E = in => {
     val t = phrase(p)(new lexical.Scanner(in))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
+    if (t.successful) t.get else scala.sys.error(t.toString)
   }
 }

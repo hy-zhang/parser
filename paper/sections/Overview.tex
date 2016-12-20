@@ -17,27 +17,23 @@ compilation are supported, efficiency is another
 concern. A parsing technique should have low overhead when applied
 in a modular setting. In the remaider of this section, we eliminate
 various techniques that fail to satisfy our requirements, and argue
-that that Packrat parsing~\cite{} is a suitable candidate for
+that that Packrat parsing~\cite{Ford2002} is a suitable candidate for
 type-safe modular parsing.
 
 \paragraph{Parser Generators} The most widely use tools for parsing
-are parser generators~\cite{}. Parser generators help users generate parsers automatically or
+are parser generators. Parser generators help users generate parsers automatically or
 semi-automatically from a given grammar. There is no restriction on
-the algorithm, while most of them adopts table-based LL~\cite{} and LR parsing
-algorithms~\cite{}.
+the algorithm, while most of them adopts table-based LL~\cite{lewis1968syntax} and LR~\cite{knuth1965translation} parsing
+algorithms.
 Although efficient, the main drawback of parser generators is that they do not support
 modular type-checking and separate compilation.
 
-Modular parsing based on parser generators is supported by many libraries []. Users can separate the concrete/abstract syntax and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA [] uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence those libraries only have syntactic modularity.
+Modular parsing based on parser generators is supported by many libraries~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016}. Users can separate the syntax definition and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA~\cite{Gouseti2014} uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence those libraries only have syntactic modularity.
 
 Generating parsers often requires full information of grammars, thus semantic modularity is difficult to achieve in this way.
 
-\huang{a paragraph here, refer to related work section, discuss
-  previous works of modular parsing using parser generators and its
-  drawbacks}\bruno{Please finish this.}\huang{done}
-
 \paragraph{Parser Combinators}
-Comparing with the parser generators, a \textit{parser combinator}~\cite{}
+Comparing with the parser generators, a \textit{parser combinator}~\cite{burge1975,Wadler1985}
 takes several parsers and produce a new parser as its output. Parser combinators are
 popular in functional programming, where the parsers are represented
 by functions and parser combinators are higher-order functions accepts
@@ -54,7 +50,7 @@ type-checked.
 
 Unfortunately many parser combinators have important limitations for
 modular parsing. In particular several parser combinators,
-including the famous library Parsec~\cite{} library, require
+including the famous library Parsec~\cite{Leijen2001} library, require
 programmers to manually do \textit{left-recursion elimination}, and
 require significant amounts \textit{backtracking}. Both of these are
 problematic in a modular setting.
@@ -111,7 +107,7 @@ must be transformed to recover its structure.
   better one}
 \bruno{This example does not appear to be problematic: adding ``-''
   does not affect the rest of the grammar. Isn't the problem that
-  sometimes adding a new case to the grammar, requires changing other 
+  sometimes adding a new case to the grammar, requires changing other
 parts? Otherwise I don't see why left-recursion is a problem, and we
 cannot simply claim that it is a problem. You have to make a better
 effort to find a problematic grammar.
@@ -126,9 +122,6 @@ to backtrack. However, if we want to extend our parsers later, we
 should always consider the worst case in which all alternatives share
 common prefixes. Then we need to add \inlinecode{try} for all the
 branches, which results worst case exponential time complexity.
-\huang{done}\bruno{you should again illustrate your point here with an
-  example. The example should illustrate that the addition of a new
-  case may require introducing backtracking. }
 
 For example, suppose that we only have \inlinecode{import..from} statements before, now we want to extend the grammar to add an \inlinecode{import..as} case. The third line of grammar below is the new case.
 
@@ -146,25 +139,25 @@ oldParser = parseImportFrom <|> ...
 newParser = try parseImportFrom <|> ... <|> parseImportAs
 \end{lstlisting}
 
-\bruno{The example is good, I think but the explanation is not. 
+\bruno{The example is good, I think but the explanation is not.
 You want to say that when you know
   the full grammar, you can figure out where ``try'' is
   needed. Without the full grammar you'd need assume the worst
   case. Make an effort to make your explanation cristal clear!
 I think you want to miss the abstract explanation that you give first,
-with the explanation about the concrete example. 
+with the explanation about the concrete example.
 Start with ``The need for backtracking is also problematic
-in a modular setting. For example, suppose ...'' and synchronize 
+in a modular setting. For example, suppose ...'' and synchronize
 the abstract explanation and the explanation for the example.
 }
 
 \paragraph{Packrat Parsing}
 Fortunately more advanced parsing techniques such as Packrat
-parsing~\cite{}, address the limitations of simple parser combinators
+parsing~\cite{Ford2002}, address the limitations of simple parser combinators
 such as Parsec. Packrat parsers use
 memoization to record the result of applying each parser at each
 position of the input, so that repeated computation is eliminated, and
-they support left-recursive grammars directly. All of these properties are very
+they support left-recursive grammars directly~\cite{warth2008}. All of these properties are very
 suitable for modularity, thus we use Packrat parsers as the underlying
 parsing technique. In section \ref{sec:packratparsers}, we will give
 an overview of the Packrat parsing library implemented in Scala,
@@ -231,11 +224,11 @@ Since we already have the parser for variables and applications, we would like t
 
 \lstinputlisting[linerange=26-32]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_EXT
 
-Unfortunately, this extended parser does not work properly to parse all possible expressions defined by the new grammar. For example, it fails to parse \inlinecode{(\x.x)} \inlinecode{(\y.y)} which is obviously valid.
+Unfortunately, this extended parser does not work properly to parse all possible expressions defined by the new grammar. For example, it fails to parse \inlinecode{(\\x.x)} \inlinecode{(\\y.y)} which is obviously valid.
 
 \paragraph{Problem: Hard-coded Recursive Calls} The critical problem of extending parsers directly is that the recursive calls in old parsers are hard-coded. Specifically, \inlinecode{pApp} makes two recursive calls to parse two consecutive expressions as an application. Before the extension, we implemented it by using \inlinecode{pExpr} for those recursive calls. It worked fine at that time because \inlinecode{pExpr} covers all cases of the old grammar. However, after the extension of lambda abstractions, the proper function for such recursive calls should be \inlinecode{pExtExpr} instead of \inlinecode{pExpr}, because the new function \inlinecode{pExtExpr} covers all of the three cases in the new grammar, including the lambda case.
 
-That is the reason why the extended parser fails to parse some valid expressions such as \inlinecode{(\x.x)} \inlinecode{(\y.y)}. To resolve this issue, we need to let \inlinecode{pApp} be aware of the change of grammar. We have some direct solutions:
+That is the reason why the extended parser fails to parse some valid expressions such as \inlinecode{(\\x.x)} \inlinecode{(\\y.y)}. To resolve this issue, we need to let \inlinecode{pApp} be aware of the change of grammar. We have some direct solutions:
 
 \begin{itemize}
     \item Keep the old code, rewrite problematic functions like \inlinecode{pApp}. \\Separate compilation is obtained but code reuse is lost, because every function may contain such recursive calls.
@@ -274,19 +267,20 @@ can be a parser which covers only variables and applications, or a
 parser which also supports the lambda case.
 
 \paragraph{Client Code} Since the type of parsing functions are
-changed, we can not apply them directly. The client code below shows
-how to use the new parser. The \inlinecode{fix} function, which is the
+changed, we can not apply them directly. A \inlinecode{fix} function, which is the
 the standard \textit{fixpoint combinator}, is used to `close' the open
-recursion. \bruno{Too much detail is being given here about open
-  recursion. In Section 2 we should talk only about \emph{how} to use 
-open recursion, and not how open recursion is implemented. We 
-can summarize, for example the API related to open recursion. 
-Section 4 is where the implementation and detailed explanation 
+recursion. After that, it can be used as an ordinary parser.
+The client code below demonstrates the usage of new parsers.
+
+\huang{done}\bruno{Too much detail is being given here about open
+  recursion. In Section 2 we should talk only about \emph{how} to use
+open recursion, and not how open recursion is implemented. We
+can summarize, for example the API related to open recursion.
+Section 4 is where the implementation and detailed explanation
 about open recursion should come.
 }
 
-
-\lstinputlisting[linerange=68-75]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_USE
+\lstinputlisting[linerange=68-72]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_USE
 
 \huang{done}\bruno{Please polish up code. You probably want to consistently use
 the variable name ``self'' whenever you want to refer to the whole
@@ -304,14 +298,13 @@ This will enable you to talk about the extensibility and object
 algebras better later on.
 }
 
-
 \paragraph{Extensibility} As same as what we did in previous section, we extend the grammar by adding lambda abstractions as a new case. Similarly, the new parser extends from the old one by adding \inlinecode{pLam} on it. Notice that the old code is not touched, hence separate compilation is obtained.
 
-\lstinputlisting[linerange=80-86]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT
+\lstinputlisting[linerange=77-83]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT
 
 All recursive calls of parsing `an expression' are called via the explicit parameter \inlinecode{self}. Once the \inlinecode{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \inlinecode{pApp} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \inlinecode{(\\x.x)} \inlinecode{(\\y.y)} which cannot be parsed in the previous section.
 
-\lstinputlisting[linerange=95-95]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT_USE
+\lstinputlisting[linerange=89-89]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT_USE
 
 As we demonstrated, delegation encoded by open recursion is the key technique to obtain semantic modularity. It enables type-safe code reuse and separate compilation in our parsers. We will discuss this topic further in section \ref{sec:openandparsing}.
 
@@ -319,7 +312,7 @@ As we demonstrated, delegation encoded by open recursion is the key technique to
 
 Although delegation enables OO extensibility, the use of an OO class
 hierarchy makes the addition of new operations over the AST
-problematic. Object Algebras~\cite{} enable us to solve this problem, and
+problematic. Object Algebras~\cite{Oliveira2012} enable us to solve this problem, and
 offer high flexibility in the choice of operations to be performed
 over the AST. It also makes parsing with multiple sorts of syntax easier.
 
@@ -335,19 +328,19 @@ And also parser for it as below. Notice the parsing function \inlinecode{pExpr} 
 
 \lstinputlisting[linerange=22-28]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PARSER
 
-To use the parser, we must provide an algebra instance as the operation to construct the parsing result. As shown in the code below, we feed the pretty printing operation \inlinecode{ExprPrint} to the generic \inlinecode{parse} function. It will print \inlinecode{(x y)} as the result.
-
-\lstinputlisting[linerange=38-43]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
-
 \paragraph{Extensibility of Syntax} Following previous examples, the code below shows how to extend the language to support lambda abstractions.
 
-\lstinputlisting[linerange=48-62]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
+\lstinputlisting[linerange=32-46]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
 
 For easily combining parsers using Object Algebras as ASTs, we have a special combinator \huang{we need to rename our combinator} defined in our library.
 
-\paragraph{Extensibility of Operations} With Object Algebras, operations over ASTs can also be extended in a modular way. Here is an example of collecting free variables from an expression. We can use this new operation during parsing.
+To use the parser, we must provide an algebra instance as the operation to construct the parsing results. In the code below, we use the pretty printing operation \inlinecode{LambdaPrint} as the algebra instance, so that the parsing result is a pretty printed AST.
 
-\lstinputlisting[linerange=75-81]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
+\lstinputlisting[linerange=55-60]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
+
+\paragraph{Extensibility of Operations} With Object Algebras, operations over ASTs can also be extended in a modular way. Here is an example of collecting free variables from an expression. We can use this operation during parsing and obtain a set of free variables.
+
+\lstinputlisting[linerange=74-80]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
 
 
 \paragraph{Multiple Sorts of Syntax} Another advantage of using Object Algebras is that it supports multiple sorts of syntax easily. In several cases, we want to divide the syntactic elements into some groups. For example, the grammar below has two sorts, which are expressions and types.
@@ -366,5 +359,5 @@ For easily combining parsers using Object Algebras as ASTs, we have a special co
 
 Using Object Algebras, we can easily distinguish them in an extensible way, just by adding an extra type parameter.
 
-\lstinputlisting[linerange=66-70]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\lstinputlisting[linerange=65-69]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
 
