@@ -1,7 +1,10 @@
 \section{Overview}\label{sec:overview}
 
-\bruno{Write a summary for this section}
-\bruno{Fill in all the missing references}
+This section gives an overview of our library \name, from a user's perspective. Basically, \name consists of four parts: underlying parsing technique, delegation mechanism encoded by open recursion, Object Algebras, and glue code of new combinators and utility functions. We start from section \ref{subsec:overview-parsing}, which discusses the choice of parsing technique and how it affects modularity of parsers. Section \ref{subsec:overview-problem} demonstrates the goal of extending parsers together with ASTs in a semantic modular way, with both separate compilation and type-safe code reuse. Then we will see traditional parser combinators fail to achieve it because of hard-coded recursive calls. In section \ref{subsec:overview-delegation}, we show how delegation can solve this problem and allow us to build extensible parsers. Finally, section \ref{subsec:overview-oa} gives examples of using Object Algebras for more extensibility, including extension of operations and parsing multiple sorts of syntax.
+
+\huang{done} \bruno{Write a summary for this section}
+
+\huang{done}\bruno{Fill in all the missing references}
 
 \subsection{Choosing the Parsing Technique}\label{subsec:overview-parsing}
 
@@ -103,8 +106,7 @@ expression $1+2-3$ is parsed as $(1+2)-3$ in the left-recursive
 grammar, but after rewrite the result is $1((+2)-3))$. The parse tree
 must be transformed to recover its structure.
 
-\huang{done, the example may be not very good, but i haven't found a
-  better one}
+\huang{todo}
 \bruno{This example does not appear to be problematic: adding ``-''
   does not affect the rest of the grammar. Isn't the problem that
   sometimes adding a new case to the grammar, requires changing other
@@ -114,16 +116,7 @@ effort to find a problematic grammar.
 }
 
 \paragraph{Backtracking} The need for backtracking is also problematic
-in a modular setting. Take Parsec as an example, its choice
-combinator only tries the second alternative if the first fails
-without any token consumption. If two alternatives have a same
-non-empty prefix, an auxiliary function \inlinecode{try} must be added
-to backtrack. However, if we want to extend our parsers later, we
-should always consider the worst case in which all alternatives share
-common prefixes. Then we need to add \inlinecode{try} for all the
-branches, which results worst case exponential time complexity.
-
-For example, suppose that we only have \inlinecode{import..from} statements before, now we want to extend the grammar to add an \inlinecode{import..as} case. The third line of grammar below is the new case.
+in a modular setting. For example, suppose that we only have \inlinecode{import..from} statements before, now we want to extend the grammar to add an \inlinecode{import..as} case. The third line of grammar below is the new case.
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}
@@ -132,14 +125,23 @@ For example, suppose that we only have \inlinecode{import..from} statements befo
     \alt `import' <ident> `as' <ident>
 \end{grammar}
 
-Because the new case \inlinecode{import..as} shares a prefix with the old case \inlinecode{import..from}, we must backtrack in order to cover all possibilities.
+Because the \inlinecode{import..from} case shares a prefix with the new case \inlinecode{import..as}, when the former case fails, we must backtrack to the beginning. Take Parsec as an example, its choice
+combinator \inlinecode{<|>} only tries the second alternative if the first fails
+without any token consumption. An auxiliary function \inlinecode{try} is used for explicit backtracking.
 
 \begin{lstlisting}[language=PlainCode]
-oldParser = parseImportFrom <|> ...
-newParser = try parseImportFrom <|> ... <|> parseImportAs
+oldParser = parseImpFrom <|> parseA <|> parseB <|> ...
+newParser = try parseImpFrom <|> parseA <|> parseB <|> ... <|> parseImpAs
 \end{lstlisting}
 
-\bruno{The example is good, I think but the explanation is not.
+Given the full grammar, we can decide where to put \inlinecode{try} for backtracking. However, in a modular setting we should always consider the worst case, that all alternatives may share common prefixes with future cases. Then we need to backtrack for all the branches, which results worst case exponential time complexity.
+In Parsec, we must add \inlinecode{try} everywhere:
+
+\begin{lstlisting}[language=PlainCode]
+parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImpAs
+\end{lstlisting}
+
+\huang{I've rewritten this paragraph}\bruno{The example is good, I think but the explanation is not.
 You want to say that when you know
   the full grammar, you can figure out where ``try'' is
   needed. Without the full grammar you'd need assume the worst
@@ -168,7 +170,7 @@ affect the other parts of our library. One can choose other parser
 combinators like Parsec, in cases that the performance and supporting
 of left-recursion are not major concerns.
 
-\subsection{The Parsing Expression Problem}
+\subsection{The Parsing Expression Problem}\label{subsec:overview-problem}
 \huang{done, added the attempt/failure/reason of extending conventional parsers}\bruno{You are not motivating the problem! You are going straight to
   the solution without pointing out what the problem is first. What
   you need to do is: First show what happens with conventional
@@ -238,7 +240,7 @@ That is the reason why the extended parser fails to parse some valid expressions
 
 Similar to the trade-off in the Expression Problem, neither of them satisfies us. The challenge of building semantically modular parsers requires fundamental change of the parser structure. We will introduce our solution in the next sections.
 
-\subsection{Delegation-Based Parsing}\label{subsec:overview-firstlook}
+\subsection{Delegation-Based Parsing}\label{subsec:overview-delegation}
 
 Hard-coded recursive calls prevent our parsers from extensibility.
 This problem can be solved using delegation, which can be encoded with
