@@ -6,39 +6,54 @@ parser combinators is the existence of \emph{hard-coded recursive
 that is, recursive calls to parsers are parametrized. The resulting
 programming style is similar to object-oriented programming, 
 but using delegation instead of class-based inheritance.
+This programming style enables parsing OO-style ASTs, which 
+can be naturally extended with new language constructs.
 
 \subsection{Delegation via Open Recursion}\label{subsec:openrecursion}
 
 Open recursion is known as a useful feature that one method body can
 ``invoke another method of the same object via a special variable
 called \lstinline{self} or, in some languages,
-\lstinline[keywords={}]{this}'' (by Ralf Hinze). The interesting thing
+\lstinline[keywords={}]{this}'' (by Ralf Hinze)\bruno{this is not how we cite references!}. The interesting thing
 is that such a variable \lstinline{self} is late-bound, or open to the
 recursion, which means it can integrate some additional features
 defined later, while existing methods that take \lstinline{self} as a
 parameter can simply delegate their known cases to it.
 
-For sure we cannot always leave it open; upon using it we have to
-close the recursion, at which time we need to take a fix-point. Here
-one might suddenly be reminded of the \lstinline{fix} function in some
-functional languages like Haskell. In Haskell \lstinline{fix} is
-defined as:
+\paragraph{Example of Open Recursion} To illustrate the use and
+usefulness of open recursion, we first consider a standard recursive 
+implementation of the Fibonacci function:
 
-\begin{lstlisting}[language=Haskell,keywords={}]
-fix f = let x = f x in x
-\end{lstlisting}
-In Scala, however, there is no library \lstinline{fix} function, but it can be easily implemented since Scala also supports lazy evaluation. See below:
-
-\lstinputlisting[linerange=27-30]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIX
-
-where function \lstinline{f} has a by-name parameter of type \lstinline{"=>} \lstinline{A"}.
-Here we illustrate by the famous Fibonacci example. Traditionally it can be implemented in Scala using pattern-matching:
 \lstinputlisting[linerange=34-40]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIB
 
-An alternative implementation using open recursion is as follows:
+\noindent An alternative implementation using open recursion is:
+
 \lstinputlisting[linerange=44-51]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIB2
-where \lstinline{self} is the explicit self-reference, namely the delegator. Functions like \lstinline{fib2} which takes
-an explicit self-reference as its parameter are called \textit{generators} (by Ralf Hinze).
+\bruno{Fix should be replaces by Open. Please coordinate with Huang to
+ensure that your code and his code are coherent (i.e you use same
+names and same conventions),}
+\noindent This alternative implementation has an extra argument
+\lstinline{self}, which serves as an explicit self-reference. In the 
+definition of the function, direct recursive calls are replaced by 
+calls to the self reference.
+
+\paragraph{Closing the Open Recursion} An implementation of
+ standard the standard Fibonacci function is recovered by closing 
+the open recursion using a \emph{lazy fixpoint combinator}:
+\bruno{definition of fib with fix here.}
+
+In Scala the lazy fixpoint combinator is straightforwardly implemented~\cite{} as follows:
+
+\lstinputlisting[linerange=27-30]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIX
+\bruno{can be defined in a single line.}
+\noindent Note that the function \lstinline{f} has a by-name parameter 
+of type \lstinline{"=>} \lstinline{A"}. This is necessary to ensure
+termination of well-founded recursive calls. In such cases, 
+there are some base cases (like the first two in
+\lstinline{fib2}) which stop the recursion in their branches, and the 
+evaluation is finally reduced to those cases.
+
+\begin{comment} 
 If we close the recursion on \lstinline{fib2} only, the evaluation of \lstinline{fix(fib2)(2)}, namely the above \lstinline{x2} is processed as follows:
 \begin{lstlisting}[language=Haskell,keywords={}]
    fix(fib2)(2)
@@ -53,7 +68,9 @@ If we close the recursion on \lstinline{fib2} only, the evaluation of \lstinline
 \end{lstlisting}
 which behaves similarly as \lstinline{fib(2)}. The process of evaluation will terminate if there are some base cases (like the first two in
 \lstinline{fib2}) which stop the recursion in their branches, and the evaluation is finally reduced to those cases.
+\end{comment}
 
+\bruno{We may want to use a better example than what is next.}
 Suppose now we want to make use of open recursion for additional operations. We first define a combinator which combines the results of two generators in a pair:
 \lstinputlisting[linerange=55-58]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_COMPOSE
 
@@ -79,7 +96,16 @@ Next we define a more general combinator \lstinline{merge} for open recursion. I
 %how we achieve modularity in a type-safe way.
 
 \subsection{Parsing with Open Recursion}\label{subsec:parsingwithopen}
-Open recursion potentially opens the gate of extensibility for parsing, as a parser can now be open to additional features in the future.
+
+Open recursion potentially opens the gate of extensibility for
+parsing, as a parser can now be open to additional features in the future.
+
+\bruno{Most of the text below overlaps with what Huang was already
+  written. I think you and Huang need to sit down, look at the text 
+both of you wrote to motivate the problem, and rewrite that in the
+Overview Section.}
+
+\bruno{BEGIN: Text to be deleted/moved/rewritten in S2}
 Our exploration starts from a simple example, where a single parser only parses a free variable (i.e., a string). Traditionally, to write
 such a parser, we need to import the library as
 well as defining the datatype for which it produces.
@@ -103,8 +129,29 @@ e ::= x | e ' ' e | n
 Besides writing a new parser for literals, we need to rewrite the existing \lstinline{pApp}, since applications can now contain numbers, like \lstinline{"x 3"} and so on.
 
 \lstinputlisting[linerange=44-49]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PLIT
+\bruno{END: Text to be deleted/moved/rewritten in S2}
 
-We have observed that \lstinline{pApp} is indeed constructed in a non-modular way, because the \lstinline{p} standing for recursive parser needs to be updated on every extension. Actually in the grammar, the recursive \lstinline{"e"} in the second case should not only include all the existing cases like \lstinline{pApp} and \lstinline{pVar}, but also take future extensions into account (we can have arbitrarily more cases). This is where we are inspired to use open recursion. To define \lstinline{pApp} as an ``open'' function, we add a parameter \lstinline{p} to it, representing the explicit self-reference of our whole parser, open to future extensions. Note that \lstinline{p} should be defined as a by-name parameter using \lstinline{"=>"}.
+\bruno{Now, here you can refer back to the example which is used in S2
+to illustrate the problem. But your \emph{main goal} is to talk about
+the implementation of the combinators that are helpful for Open
+Recursion and parsing OO ASTs. So you need some major rewrite of the 
+text that comes next. First, building on open recursion, explain the
+implementation of the new parsing combinators. Then, finish of the
+section with a good example of how to parse OO ASTs, perhaps
+extending the example discussed in S2 a bit more.}
+
+We have observed that \lstinline{pApp} is indeed constructed in a
+non-modular way, because the \lstinline{p} standing for recursive
+parser needs to be updated on every extension. Actually in the
+grammar, the recursive \lstinline{"e"} in the second case should not
+only include all the existing cases like \lstinline{pApp} and
+\lstinline{pVar}, but also take future extensions into account (we can
+have arbitrarily more cases). This is where we are inspired to use
+open recursion. To define \lstinline{pApp} as an ``open'' function, we
+add a parameter \lstinline{p} to it, representing the explicit
+self-reference of our whole parser, open to future extensions. Note
+that \lstinline{p} should be defined as a by-name parameter using
+\lstinline{"=>"}.
 
 \lstinputlisting[linerange=63-63]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PAPPFIX
 
@@ -133,7 +180,8 @@ t ::= "Int"
 \end{lstlisting}
 
 We proceed to implement those parsers. An issue is that we need both a \lstinline{Parser[Expr]} and a \lstinline{Parser[Type]} in the fixpoint.
-Hence we use a pair in the parameter:
+Hence we use a pair in the parameter:\bruno{I don't think the approach
+below, adding pairs, is very modular: it requires changing your }
 
 \lstinputlisting[linerange=83-102]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_TYPEDEXPR
 
