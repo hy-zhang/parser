@@ -11,10 +11,10 @@ class App(e1: Expr, e2: Expr) extends Expr
 
 trait BaseParser {
   lexical.delimiters += ("(", ")")
-  val pExpr: PackratParser[Expr] = pVar ||| pApp ||| "(" ~> pExpr <~ ")"
-  val pVar: PackratParser[Expr] = ident ^^ { x => new Var(x) }
-  val pApp: PackratParser[Expr] =
-    pExpr ~ pExpr ^^ { case e1 ~ e2 => new App(e1, e2) }
+  val pExpr: Parser[Expr] = pVar ||| pApp ||| pParen
+  val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
+  val pApp: Parser[Expr] = pExpr ~ pExpr ^^ { case e1 ~ e2 => new App(e1, e2) }
+  val pParen: Parser[Expr] = "(" ~> pExpr <~ ")"
 }
 //END_OVERVIEW_SIMPLE_EXPR
 
@@ -25,9 +25,8 @@ class Lam(x: String, e: Expr) extends Expr
 //BEGIN_OVERVIEW_SIMPLE_EXT
 trait ExtParser extends BaseParser {
   lexical.delimiters += ("\\", ".")
-  val pExtExpr: PackratParser[Expr] =
-    pVar ||| pApp ||| pLam ||| "(" ~> pExtExpr <~ ")"
-  val pLam: PackratParser[Expr] =
+  val pExtExpr: Parser[Expr] = pExpr ||| pLam
+  val pLam: Parser[Expr] =
     "\\" ~> ident ~ ("." ~> pExtExpr) ^^ { case x ~ e => new Lam(x, e) }
 }
 //END_OVERVIEW_SIMPLE_EXT
@@ -54,20 +53,20 @@ type Open[T] = (=> T) => T
 
 trait BaseParser {
   lexical.delimiters += ("(", ")")
-  val pVar: Open[PackratParser[Expr]] =
+  val pVar: Open[Parser[Expr]] =
     self => ident ^^ { x => new Var(x) }
-  val pApp: Open[PackratParser[Expr]] =
+  val pApp: Open[Parser[Expr]] =
     self => self ~ self ^^ { case e1 ~ e2 => new App(e1, e2) }
-  val pExpr: Open[PackratParser[Expr]] =
+  val pExpr: Open[Parser[Expr]] =
     self => pVar(self) ||| pApp(self) ||| "(" ~> self <~ ")"
 }
 //END_OVERVIEW_OPEN_BASE
 
 /*
 //BEGIN_OVERVIEW_OPEN_USE
-def parse[E](p: PackratParser[E]): String => E = {...}
+def parse[E](p: Parser[E]): String => E = {...}
 def fix[T](f: Open[T]): T = {...}
-def openParse[E](p: Open[PackratParser[E]]): String => E = parse[E](fix(p))
+def openParse[E](p: Open[Parser[E]]): String => E = parse[E](fix(p))
 
 openParse(new BaseParser {}.pExpr)("x y")
 //END_OVERVIEW_OPEN_USE
@@ -76,10 +75,10 @@ openParse(new BaseParser {}.pExpr)("x y")
 //BEGIN_OVERVIEW_OPEN_EXT
 trait ExtParser extends BaseParser {
   lexical.delimiters += ("\\", ".")
-  val pLam: Open[PackratParser[Expr]] =
-    self => "\\" ~> ident ~ ("." ~> self) ^^ { case x ~ b => new Lam(x, b) }
-  val pExtExpr: Open[PackratParser[Expr]] =
+  val pExtExpr: Open[Parser[Expr]] =
     self => pLam(self) ||| pExpr(self)
+  val pLam: Open[Parser[Expr]] =
+    self => "\\" ~> ident ~ ("." ~> self) ^^ { case x ~ b => new Lam(x, b) }
 }
 //END_OVERVIEW_OPEN_EXT
 
