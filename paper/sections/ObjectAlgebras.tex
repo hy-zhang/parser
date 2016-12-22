@@ -1,8 +1,7 @@
 \section{Object Algebras and Parsing}\label{sec:algebrasandparsing}
 
-Object Algebras, first introduced by ... et al as a solution to the famous \textit{Expression Problem}, provide extensibility on
-both data variants and operations for structures like abstract syntax trees. We integrate Object Algebras directly to enhance the
-extensibility of open parsers.
+Object Algebras~\cite{Oliveira2012} is a solution to the famous \textit{Expression Problem}, provide extensibility on
+both data variants and operations. It is suitable for structures like abstract syntax trees. We integrate Object Algebras directly to enhance the extensibility of \name.
 
 \subsection{Object Algebras}\label{subsec:objectalgebras}
 Object Algebras captures a design pattern to address the Expression Problem nicely,
@@ -13,52 +12,41 @@ to both sides no longer require existing code to be modified, supporting separat
 In Object Algebras, ASTs as recursive data structures are defined using traits, where each constructor corresponds
 to an abstract method inside. The example from Section~\ref{subsec:parsingwithopen} is again used here for illustration.
 At first the language only supports variables and applications:
-\begin{lstlisting}
-trait ExprAlg[E] {
-    def varE(x : String) : E
-    def appE(e1 : E, e2 : E) : E
-}
-\end{lstlisting}
+
+\lstinputlisting[linerange=4-8]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_EXPR
+
 The language has two constructors: literals and additions. The trait \lstinline{ExprAlg} is called an \textit{Object Algebra interface},
 whereas as a factory, it cannot produces objects for the expressions directly like traditional approaches, but abstract the results in its
 type parameter \lstinline{E} instead. To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
 provides implementations for all cases. Below is an example of collecting all free variables in an expression:
-\begin{lstlisting}
-trait FreeVars extends ExprAlg[List[String]] {
-    def varE(x : String) = List(x)
-    def appE(e1 : List[String], e2 : List[String]) = e1 ++ e2
-}
-\end{lstlisting}
+
+\lstinputlisting[linerange=12-15]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_FREE_VARS
+
 Here \lstinline{FreeVars} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a list of strings as the result.
 Furthermore, one can define a new trait to implement pretty-printing on expressions:
-\begin{lstlisting}
-trait ExprPrint extends ExprAlg[String] {
-    def varE(x : String) = x
-    def appE(e1 : String, e2 : String) = "(" + e1 + " " + e2 + ")"
-}
-\end{lstlisting}
+
+\lstinputlisting[linerange=19-22]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_EXPR_PRINT
+
 On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Suppose we want to
 have literals in expressions, a new Object Algebra interface \lstinline{LitAlg} is defined as follows:
-\begin{lstlisting}
-trait LitAlg[E] extends ExprAlg[E] {
-    def litE(n : Int) : E
-}
-\end{lstlisting}
+
+\lstinputlisting[linerange=26-28]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT
+
 Now pretty-printing on the new language can be realized by code reuse, without modifying existing code:
-\begin{lstlisting}
-trait LitPrint extends ExprPrint {
-    def litE(n : Int) = n.toString
-}
-\end{lstlisting}
+
+\lstinputlisting[linerange=32-34]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT_PRINT
+
 On this, to create an expression of \lstinline{LitAlg}, a generic method is defined as follows:
-\begin{lstlisting}
-def build[E](alg : LitAlg[E]) : E =
-    alg.appE(alg.varE("x"), alg.litE(3))
-\end{lstlisting}
+
+\huang{todo: better name for build}
+\lstinputlisting[linerange=48-48]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_BUILD
+
 Such a method implicitly represents the expression \lstinline{"x 3"}. The code
+
 \begin{lstlisting}
 build(new LitPrint{})
 \end{lstlisting}
+
 results in \lstinline{"(x 3)"}, as the result of pretty-printing. Now we observe that an ``object'' of expression actually
 has the function type \lstinline{LitAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
 that it is illusory compared to traditional objects, and since we are struggling against the parsing problem, if a parser
@@ -66,13 +54,9 @@ produces structures as functions, it could be hardly be further processed like o
 there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
 in a very clever way. For example, if one wants to transform an \lstinline{ExprAlg} expression to a \lstinline{LitAlg} expression by
 replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:
-\begin{lstlisting}
-trait Refactor[E] extends ExprAlg[E] {
-    def alg : SubAlg[E]
-    def env : Map[String, Int]
-    def varE(x : String) = if (env.contains(x)) alg.litE(env(x)) else alg.varE(x)
-}
-\end{lstlisting}\haoyuan{Is this example OK?}
+
+\lstinputlisting[linerange=38-42]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_REFACTOR
+
 When \lstinline{env = Map("y"} \lstinline{-> 3)}, the \lstinline{ExprAlg} expression \lstinline{"x y"} is changed to \lstinline{LitAlg} expression \lstinline{"x 3"}. The abstract method
 \lstinline{alg} in \lstinline{Refactor} can be any algebra of \lstinline{SubAlg}, simply for delegation. By passing a concrete implementation
 to \lstinline{alg}, \lstinline{Refactor} will be able to apply transformation to an \lstinline{ExprAlg} expression before \lstinline{alg} returns the result.
