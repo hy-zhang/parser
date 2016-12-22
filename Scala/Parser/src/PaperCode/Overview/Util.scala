@@ -6,6 +6,8 @@ import scala.util.parsing.combinator.syntactical._
 object Util extends StandardTokenParsers with PackratParsers {
 
   type Open[T] = (=> T) => T
+  
+  type Parser[T] = PackratParser[T]
 
   implicit class Alternative[E, F, G, H](x: F => (=> H) => PackratParser[E]) {
     def |(y: G => (=> H) => PackratParser[E]): (F with G) => (=> H) => PackratParser[E] =

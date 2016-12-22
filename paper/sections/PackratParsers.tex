@@ -31,11 +31,11 @@ is quite concise and clear, as shown above, with the help of
 parser combinators. The combinators \lstinline{~>} and \lstinline{<~} only collect
 results from the parts that arrows point to, and the combinator \lstinline{^^} is
 followed by a function which is applied to a parser to return new
-values. Finally, a generic \lstinline{runParser}
+values. Finally, a generic \inlinecode{parse}
 function is used for testing:
 
 \lstinputlisting[linerange=16-19]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=PACKRAT_RUNPARSER
-Now \lstinline{runParser(p)("str(5)")} prints out \lstinline{"5"} as expected.
+Now \lstinline{parse(p)("str(5)")} produces \lstinline{"5"} as expected.
 
 \begin{table}[t]
 \centering
