@@ -2,11 +2,15 @@
 
 \subsection{Fusion of Concepts}\label{subsec:fusion}
 
+\huang{These alternatives could be discussed in the discussion section, not here. 6.1 could only talks about library code. And the titles should be changed as well}
+
 In the previous sections we have talked about Packrat Parsing, open recursion and Object Algebras. These components fuse together in our library implementation, for the initial goal, which is to build extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives. For example, Object Algebras are helpful to build extensible data structures, whereas in functional programming, there has been a large amount of related work on extensible datatypes, including DTC and MRM for the Haskell language. And a better
 parsing library would potentially introduce a lot of fancy features and parser combinators, run with high efficiency, or even support indirect left-recursion.
 \haoyuan{Open recursion could also have alternatives?} For now, our implementation integrates the existing ones, and has turned out to be practical in various applications.
 
 The library is made up of around twenty lines of code only, as shown in Figure~\ref{fig:sourcelibrary}. It consists of some types wrapped up by synonyms, basic functions \lstinline{fix} and \lstinline{runParser}, and the combinator \lstinline{|||} from Section~\ref{subsec:differentsyntax}.
+
+\huang{code needs to be polished}
 
 \begin{figure}[htbp]
 \centering
@@ -39,11 +43,13 @@ object Library extends StandardTokenParsers with PackratParsers {
 
 \subsection{Framework of a Language Component}\label{subsec:framework}
 
+\huang{The point of introducing Language Component could be: modular parsers enable us to build modular language features. We can abstract language features, compose them and thus reuse them. A language feature covers all the related stuffs we need, as a combination of syntax+parsing+operations. Rather than: we recommend users to ...}
+
 Having pointed out that our goal is to realize modular and extensible parsers, we recommend users to write code in a modular and
 organized way. The framework we use for a language, or rather a language component in our case study, consists of the following three
 parts:
 \begin{itemize}
-\item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax, with several methods corresponding to the production rules.
+    \item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax, with several methods corresponding to the production rules. \huang{Production rule is about the \emph{concrete} syntax, The methods correspond to \emph{abstract} syntax. }
 \item \textbf{Parser:} implementation of the parser with lexing, using open recursion and Object Algebras, with its scoping trait abstracted over the type parameters.
 \item \textbf{Algebra (optional):} some behaviors (operations) on the data structure, such as pretty-printing and so on.
 \end{itemize}
@@ -111,6 +117,10 @@ object Lam {
 \end{figure}
 
 \subsection{More modularity}
+
+\huang{the title could be more concrete, as all of the content is about the usage of langauge components}
+
+\huang{need to refactor the code as well}
 
 We have optimized the framework for not only modular parsers, but also languages, and that is the reason why we call them language components. To achieve
 higher-order modularity, it is necessary to follow the structure when composing two small components. Figure~\ref{fig:objectlamexpr} presents the combination of \lstinline{Expr} and \lstinline{Lam}, as a new language, which is again modular for future compositions. Note that the \lstinline{AlgParser} extends both parent parsers, so as to reuse their parser functions, as well as composing lexers automatically.
