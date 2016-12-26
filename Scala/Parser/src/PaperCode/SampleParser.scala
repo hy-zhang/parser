@@ -8,8 +8,8 @@ object SampleParser {
 lexical.reserved += "str"
 lexical.delimiters += ("(", ")")
 
-val p: PackratParser[String] =
-  "str" ~> ("(" ~> numericLit <~ ")") ^^ { x => x.toString }
+val p: PackratParser[Int] =
+  "str" ~> ("(" ~> numericLit <~ ")") ^^ { x => x.toInt }
 //END_PACKRAT_EXAMPLE
 
 //BEGIN_PACKRAT_RUNPARSER
