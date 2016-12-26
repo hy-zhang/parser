@@ -1,8 +1,14 @@
 \section{Implementation}\label{sec:implementation}
 
+\bruno{summary is missing}
+
 \subsection{Fusion of Concepts}\label{subsec:fusion}
 
-\huang{These alternatives could be discussed in the discussion section, not here. 6.1 could only talks about library code. And the titles should be changed as well}
+\huang{These alternatives could be discussed in the discussion
+  section, not here. 6.1 could only talks about library code. And the
+  titles should be changed as well}\bruno{I think this subsection is
+  unnecessary. The code will be presented already at the end of S5, I
+  presume. }
 
 In the previous sections we have talked about Packrat Parsing, open recursion and Object Algebras. These components fuse together in our library implementation, for the initial goal, which is to build extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives. For example, Object Algebras are helpful to build extensible data structures, whereas in functional programming, there has been a large amount of related work on extensible datatypes, including DTC and MRM for the Haskell language. And a better
 parsing library would potentially introduce a lot of fancy features and parser combinators, run with high efficiency, or even support indirect left-recursion.
@@ -42,6 +48,7 @@ object Library extends StandardTokenParsers with PackratParsers {
 \end{figure}
 
 \subsection{Framework of a Language Component}\label{subsec:framework}
+\bruno{This is the interesting part. Section 6 could talk about it.}
 
 \huang{The point of introducing Language Component could be: modular parsers enable us to build modular language features. We can abstract language features, compose them and thus reuse them. A language feature covers all the related stuffs we need, as a combination of syntax+parsing+operations. Rather than: we recommend users to ...}
 
