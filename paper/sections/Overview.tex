@@ -451,15 +451,15 @@ The client code below demonstrates the usage of new parsers.
 %algebras better later on.
 %}
 
-\paragraph{Extensibility} Similarly, we extend the grammar by adding lambda abstractions as a new case. The new parser also extends the old one by adding \inlinecode{pLam} on it. Notice that the old code is not touched, hence separate compilation is obtained.
+\paragraph{Extensibility} Similarly, we extend the grammar by adding variables as a new case. The new parser also extends the old one by adding \inlinecode{pVar} on it. Notice that the old code is not touched, hence separate compilation is obtained.
 
-\lstinputlisting[linerange=82-88]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT
+\lstinputlisting[linerange=82-85]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT
 
 \haoyuan{Code without combinators?}
 
-All recursive calls of parsing `an expression' are called via the explicit parameter \inlinecode{self}. Once the \inlinecode{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \inlinecode{pApp} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \inlinecode{(\\x.x)} \inlinecode{(\\y.y)} which cannot be parsed in the previous section.
+All recursive calls of parsing `an expression' are realized via the explicit parameter \inlinecode{self}. Once the \inlinecode{fix} function is applied, these calls will be updated appropriately. Parsing functions such as \inlinecode{pAdd} do not need to be rewritten. As a consequence, this parser recognizes all valid expressions of the new grammar, including \inlinecode{"1 + x"} which cannot be parsed previously.
 
-\lstinputlisting[linerange=94-94]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT_USE
+\lstinputlisting[linerange=91-91]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_OPEN_EXT_USE
 
 As we demonstrated, delegation encoded by open recursion is the key technique to obtain semantic modularity. It enables type-safe code reuse and separate compilation in our parsers. We will discuss this topic further in Section \ref{sec:openandparsing}.
 
@@ -467,40 +467,53 @@ As we demonstrated, delegation encoded by open recursion is the key technique to
 
 Although delegation enables OO extensibility, the use of an OO class
 hierarchy makes the addition of new operations over the AST
-problematic. Object Algebras~\cite{Oliveira2012} enable us to solve this problem, and
+problematic. Modification on existing code breaks the modularity. This
+refers to the famous \textit{Expression Problem} []. For challenge 2, suppose now we want to
+support evaluation on expressions, in Scala one attempt would be extending \lstinline{Expr} with
+evaluation:
+
+\lstinputlisting[linerange=111-111]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_ATTEMPT_EXPRWITHEVAL
+But then the programmer has to define new classes for literals and additions that extend old ones and \lstinline{EvalExpr}. Specifically,
+the critical point is that existing parsing code only generates \lstinline{Expr} objects with pretty printing, so modification on parsing is again required.
+
+
+In contrast, Object Algebras~\cite{Oliveira2012} enable us to solve this problem, as it separates data variants and
+operations, to
 offer high flexibility in the choice of operations to be performed
 over the AST. It also makes parsing with multiple sorts of syntax easier.
 
-\paragraph{Parsing with Object Algebras} Using Object Algebras, the abstract syntax of the language of variables and applications is defined as below.
+\paragraph{Parsing with Object Algebras} Using Object Algebras, the abstract syntax of the expression language is defined as below.
 
 \lstinputlisting[linerange=8-11]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALG
 
-Then we are able to define operations over the syntax in an extensible way. Here we write a pretty printing operation for this language.
+Then we are able to define operations over the syntax in a modular way. For instance, pretty printing operation can be realized as:
 
 \lstinputlisting[linerange=15-18]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
 
-And also parser for it as below. Notice the parsing function \inlinecode{pExpr} takes an argument of type \inlinecode{ExprAlg[E]}, that means it accepts any instance of the algebra interface \inlinecode{ExprAlg}.
+And also parser for it as below. Notice the parsing function \inlinecode{pExpr} now takes an argument of type \inlinecode{ExprAlg[E]}, which means it accepts any instance of \inlinecode{ExprAlg}. Such an instance can for example be \lstinline{Print}, which takes charge of operations on expressions, and parsing code only does delegation.
 
-\lstinputlisting[linerange=22-28]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PARSER
+\lstinputlisting[linerange=22-27]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PARSER
 
-\paragraph{Extensibility of Syntax} Following previous examples, the code below shows how to extend the language to support lambda abstractions.
+\haoyuan{I'm trying to avoid using terminology like algebra and algebra interface.}
 
-\lstinputlisting[linerange=32-46]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
+\paragraph{Extensibility of Syntax} Following previous examples, the code below shows how to extend the language with variables.
 
-For easily combining parsers using Object Algebras as ASTs, we have a special combinator \huang{we need to rename our combinator} defined in our library.
+\lstinputlisting[linerange=31-44]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
+Note that we use the new combinator \lstinline{<|>} defined in our library, to compose two parsing functions into one. The function \lstinline{pExtExpr} has the compound type \lstinline{ExprAlg[E] with VarAlg[E]} in its argument, where two language ASTs are combined to represent the new language.
 
-To use the parser, we must provide an algebra instance as the operation to construct the parsing results. In the code below, we use the pretty printing operation \inlinecode{LambdaPrint} as the algebra instance, so that the parsing result is a pretty printed AST.
+To use the parser, we must provide an algebra instance as the operation to construct the parsing results. In the code below, we use the combination of \lstinline{Print} and \lstinline{PrintVar}, so that the parsing result is a pretty printing of the AST.
 
-\lstinputlisting[linerange=55-60]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
+\lstinputlisting[linerange=53-58]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
 
-\paragraph{Extensibility of Operations} With Object Algebras, operations over ASTs can also be extended in a modular way. Here is an example of collecting free variables from an expression. We can use this operation during parsing and obtain a set of free variables.
+\paragraph{Extensibility of Operations} With Object Algebras, operations over ASTs can also be extended in a modular way. Here is an example of collecting free variables from an expression. We can feed this operation to the parser and obtain a set of free variables.
 
-\lstinputlisting[linerange=74-80]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
+\lstinputlisting[linerange=72-78]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
 
+\haoyuan{I think in our library language ASTs are composed using intersection, not inheritance.}
 
 \paragraph{Multiple Sorts of Syntax} Another advantage of using Object Algebras is that it supports multiple sorts of syntax easily. In several cases, we want to divide the syntactic elements into some groups. For example, the grammar below has two sorts, which are expressions and types.
 
-\begin{tabular}{m{0.4\linewidth}m{0.4\linewidth}}
+\begin{tabular}{m{0.45\linewidth}m{0.45\linewidth}}
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <type> ::= `int' \alt <type> `->' <type>
@@ -508,11 +521,13 @@ To use the parser, we must provide an algebra instance as the operation to const
 &
 \setlength{\grammarindent}{5em}
 \begin{grammar}
-<expr> ::= <ident> \alt <expr> <expr> \alt `\\' <ident> `.' <expr>
+<expr> ::=  `\\' <ident> `:' <type> `.' <expr>
 \end{grammar}
 \end{tabular}
 
-Using Object Algebras, we can easily distinguish them in an extensible way, just by adding an extra type parameter.
+Using Object Algebras, we can easily distinguish them just by adding an extra type parameter. The abstract syntax is
+presented below:
 
-\lstinputlisting[linerange=65-69]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\lstinputlisting[linerange=63-67]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+In the next sections, we will discuss them with more details.
 

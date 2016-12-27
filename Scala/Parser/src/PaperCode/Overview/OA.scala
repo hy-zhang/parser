@@ -6,43 +6,41 @@ object OA {
 
 //BEGIN_OVERVIEW_OA_ALG
 trait ExprAlg[E] {
-  def Var(x: String): E
-  def App(e1: E, e2: E): E
+  def lit(x: Int): E
+  def add(e1: E, e2: E): E
 }
 //END_OVERVIEW_OA_ALG
 
 //BEGIN_OVERVIEW_OA_PRINT
-trait ExprPrint extends ExprAlg[String] {
-  def Var(x: String): String = x
-  def App(e1: String, e2: String): String = "(" + e1 + " " + e2 + ")"
+trait Print extends ExprAlg[String] {
+  def lit(x: Int) = x.toString
+  def add(e1: String, e2: String) = "(" + e1 + " + " + e2 + ")"
 }
 //END_OVERVIEW_OA_PRINT
 
 //BEGIN_OVERVIEW_OA_PARSER
-trait ExprParser[E] {
-  lexical.delimiters += ("(", ")")
-  val pExpr: ExprAlg[E] => Open[PackratParser[E]] = alg => self =>
-    ident ^^ alg.Var |||
-      self ~ self ^^ { case e1 ~ e2 => alg.App(e1, e2) } |||
-      "(" ~> self <~ ")"
+trait BaseParser[E] {
+  lexical.delimiters += ("+")
+  val pExpr: ExprAlg[E] => Open[Parser[E]] = alg => self =>
+    numericLit ^^ alg.lit |||
+    self => self ~ ("+" ~> self) ^^ { case e1 ~ e2 => alg.add(e1, e2) }
 }
 //END_OVERVIEW_OA_PARSER
 
 //BEGIN_OVERVIEW_OA_EXT
-trait LambdaAlg[E] extends ExprAlg[E] {
-  def Lam(x: String, e: E): E
+trait VarAlg[E] {
+  def varE(x: String): E
 }
 
-trait LambdaPrint extends LambdaAlg[String] with ExprPrint {
-  def Lam(x: String, e: String): String = "\\" + x + "." + e
+trait PrintVar extends VarAlg[String] {
+  def varE(x: String) = x
 }
 
-trait LambdaParser[E] extends ExprParser[E] {
-  lexical.delimiters += ("\\", ".")
-  val pLam: LambdaAlg[E] => Open[PackratParser[E]] = alg => self =>
-    ("\\" ~> ident) ~ ("." ~> self) ^^ { case x ~ e => alg.Lam(x, e) }
-  val pExtExpr: LambdaAlg[E] => Open[PackratParser[E]] =
-    pExpr | pLam
+trait ExtParser[E] extends BaseParser[E] {
+  val pVar: VarAlg[E] => Open[Parser[E]] = alg => self =>
+    ident ^^ alg.varE
+  val pExtExpr: ExprAlg[E] with VarAlg[E] => Open[Parser[E]] =
+    pExpr <|> pVar
 }
 //END_OVERVIEW_OA_EXT
 
@@ -52,32 +50,32 @@ trait LambdaParser[E] extends ExprParser[E] {
   }
 
 //BEGIN_OVERVIEW_OA_USE
-def parseLambdaAlg[E](inp: String)(alg: LambdaAlg[E]): E = {
-  val p = new LambdaParser[E] {}.pExtExpr(alg)
+def parseExprVarAlg[E](inp: String)(alg: ExprAlg[E] with VarAlg[E}): E = {
+  val p = new ExtParser[E] {}.pExtExpr(alg)
   openParse[E](p)(inp)
 }
 
-parseLambdaAlg("(\\x.x) (\\y.y)")(new LambdaPrint{})
+parseExprVarAlg("1 + x")(new Print with PrintVar{}) // "(1 + x)"
 //END_OVERVIEW_OA_USE
 
 
 //BEGIN_OVERVIEW_OA_MULTI_SYNTAX
-trait TypedLambdaAlg[E, T] extends ExprAlg[E] {
-  def Lam(x: String, t: T, e: E): E
-  def IntType(): T
-  def ArrowType(a: T, b: T): T
+trait TypedLambdaAlg[E, T] {
+  def intType(): T
+  def arrowType(a: T, b: T): T
+  def lam(x: String, t: T, e: E): E
 }
 //END_OVERVIEW_OA_MULTI_SYNTAX
 
 
 //BEGIN_OVERVIEW_OA_EXT_OP
-trait CollectFreeVars extends LambdaAlg[Set[String]] {
-  def Var(x: String): Set[String] = Set(x)
-  def App(e1: Set[String], e2: Set[String]): Set[String] = e1 ++ e2
-  def Lam(x: String, e: Set[String]): Set[String] = e - x
+trait FreeVars extends ExprAlg[Set[String]] with VarAlg[Set[String]] {
+  def lit(x: Int) = Set()
+  def add(e1: Set[String], e2: Set[String]) = e1 ++ e2
+  def varE(x: String) = Set(x)
 }
 
-parseLambdaAlg("\\x.(x y)")(new CollectFreeVars {})
+parseExprVarAlg("1 + x")(new FreeVars {}) // Set(x)
 //END_OVERVIEW_OA_EXT_OP
 
 

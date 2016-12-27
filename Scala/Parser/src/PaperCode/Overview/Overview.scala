@@ -6,12 +6,12 @@ object Overview2 {
 
 //BEGIN_OVERVIEW_SIMPLE_EXPR
 // Abstract syntax
-trait Expr { def print : String }
+trait Expr { def print: String }
 class Lit(x: Int) extends Expr {
   def print = x.toString
 }
 class Add(e1: Expr, e2: Expr) extends Expr {
-  def print = "(" + e1.print + "+" + e2.print + ")"
+  def print = "(" + e1.print + " + " + e2.print + ")"
 }
 
 // Parser with lexing
@@ -62,7 +62,7 @@ trait BaseParser {
   val pLit: Open[Parser[Expr]] =
     self => numericLit ^^ { x => new Lit(x.toInt) }
   val pAdd: Open[Parser[Expr]] =
-    self => self ~ ("+" ~> self) ^^{ case e1 ~ e2 => new Add(e1, e2) }
+    self => self ~ ("+" ~> self) ^^ { case e1 ~ e2 => new Add(e1, e2) }
   val pExpr: Open[Parser[Expr]] =
     self => pVar(self) ||| pAdd(self)
 }
@@ -74,24 +74,21 @@ def parse[E](p: Parser[E]): String => E = {...}
 def fix[T](f: Open[T]): T = {...}
 def openParse[E](p: Open[Parser[E]]): String => E = parse[E](fix(p))
 
-openParse(new BaseParser {}.pExpr)("1 + x")
+openParse(new BaseParser {}.pExpr)("1 + 2").print // "(1 + 2)"
 //END_OVERVIEW_OPEN_USE
 */
 
 //BEGIN_OVERVIEW_OPEN_EXT
 trait ExtParser extends BaseParser {
-  lexical.delimiters += ("\\", ".")
-  val pExtExpr: Open[Parser[Expr]] =
-    self => pLam(self) ||| pExpr(self)
-  val pLam: Open[Parser[Expr]] =
-    self => "\\" ~> ident ~ ("." ~> self) ^^ { case x ~ b => new Lam(x, b) }
+  val pVar: Open[Parser[Expr]] = self => ident ^^ { x => new Var(x) }
+  val pExtExpr: Open[Parser[Expr]] = self => pExpr(self) ||| pVar(self)
 }
 //END_OVERVIEW_OPEN_EXT
 
   def use2(): Unit = {
     def openParse[E](p: Open[PackratParser[E]]): String => E = parse(fix(p))
 //BEGIN_OVERVIEW_OPEN_EXT_USE
-openParse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)")
+openParse(new ExtParser {}.pExtExpr)("1 + x").print // "(1 + x)"
 //END_OVERVIEW_OPEN_EXT_USE
   }
 
@@ -101,5 +98,23 @@ openParse(new ExtParser {}.pExtExpr)("(\\x.x) (\\y.y)")
 }
 
 object Overview {
+
+trait Expr { def print : String }
+class Lit(x: Int) extends Expr {
+  def print = x.toString
+}
+class Add(e1: Expr, e2: Expr) extends Expr {
+  def print = "(" + e1.print + " + " + e2.print + ")"
+}
+
+//BEGIN_OVERVIEW_ATTEMPT_EXPRWITHEVAL
+trait EvalExpr extends Expr { def eval: Int }
+//END_OVERVIEW_ATTEMPT_EXPRWITHEVAL
+class EvalLit(x: Int) extends Lit(x) with EvalExpr {
+  def eval = x
+}
+class EvalAdd(e1: EvalExpr, e2: EvalExpr) extends Add(e1, e2) with EvalExpr {
+  def eval = e1.eval + e2.eval
+}
 
 }
