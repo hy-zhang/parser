@@ -70,7 +70,8 @@ different approaches have been proposed in the past. Existing
 approaches can be broadly divided into two categories:
 \emph{syntactic} or \emph{semantic} modularization
 techniques. Syntactic modularization techniques are quite popular in
-practice. Examples include many tools for developing Software-Product
+practice, due to their simplicity of implementation and use. 
+Examples include many tools for developing Software-Product
 Lines~\cite{}, some Language Workbenches~\cite{}, or extensible parser
 generators~\cite{}.  Most syntactic approaches employ textual
 composition techniques such as \emph{superimposition}~\cite{} to
@@ -87,24 +88,30 @@ been applied to the problem of \emph{extensible parsing}. There are
 several approaches~\cite{} that enable the development of
 \emph{syntactically} modular parsers or grammars. However these
 approaches do not support separate compilation or modular
-type-checking either.\bruno{mention that a reason why syntactic 
-modularization techniques are popular is simplicity (in implementation
-and also use).}
+type-checking either.
 
-Semantic modularization techniques move away
-from syntactic composition techniques that rely on the textual source
-code. This allows us to go one step further in terms of modularity,
+Semantic modularization techniques go one step further in terms of modularity,
 and also enable components or features to be modularly type-checked
 and separately compiled. Modular type-checking and separate
-compilation are desirable properties to have from a Software
-Engineering point-of-view, and enable the composition of compiled
+compilation are desirable properties to have from a software
+engineering point-of-view. Furthermore they enable the composition of compiled
 binaries as well as ensuring the type-safety of the code composed of
 multiple components. Examples of semantic modularization techniques 
-include various approaches to \emph{family polymorphism}~\cite{}, as 
-well as several techniques for solving the Expression Problem. 
+include various approaches to \emph{family polymorphism}~\cite{},
+virtual classes~\cite{}, as 
+well as several other techniques for solving the Expression Problem~\cite{}. 
 \bruno{strenghten? mention dynamic languages (separate compilation 
 but no modular type-checking), and techniques that weaken type-safety 
-requirements.} Most semantic
+requirements.} 
+
+Semantic modularization techniques are less widely used in practice 
+than syntactic techniques. This is partly due to the perceived need
+for sophisticated type systems, which are not available in mainstream 
+languages and may require more knowledge from users. However, recently 
+several lightweight modularization techniques have been shown to work 
+in mainstream programming languages like Java or Scala. Object
+Algebras are one such technique, which 
+Most semantic
 modularization techniques have focused on operations that traverse or 
 or process extensible datastructures, such as ASTs.
 \bruno{Object Algebras here?} However, as far as
