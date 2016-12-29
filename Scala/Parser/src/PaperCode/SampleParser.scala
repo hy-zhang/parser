@@ -11,13 +11,6 @@ lexical.delimiters += ("(", ")")
 val p: PackratParser[Int] =
   "str" ~> ("(" ~> numericLit <~ ")") ^^ { x => x.toInt }
 //END_PACKRAT_EXAMPLE
-
-//BEGIN_PACKRAT_RUNPARSER
-def parse[E](p: Parser[E]): String => E = in => {
-  val t = phrase(p)(new lexical.Scanner(in))
-  if (t.successful) t.get else scala.sys.error(t.toString)
-}
-//END_PACKRAT_RUNPARSER  
      
 }
 

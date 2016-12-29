@@ -2,9 +2,11 @@ package PaperCode.Overview
 
 import PaperCode.Overview.Util._
 
-object Overview2 {
-
+/*
 //BEGIN_OVERVIEW_SIMPLE_EXPR
+import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import scala.util.parsing.combinator.PackratParsers
+
 // Abstract syntax
 trait Expr { def print: String }
 class Lit(x: Int) extends Expr {
@@ -17,12 +19,77 @@ class Add(e1: Expr, e2: Expr) extends Expr {
 // Parser with lexing
 trait BaseParser {
   lexical.delimiters += ("+")
-  val pLit: Parser[Expr] = numericLit ^^ { x => new Lit(x.toInt) }
-  val pAdd: Parser[Expr] =
-    pExpr ~ ("+" ~> pExpr) ^^{ case e1 ~ e2 => new Add(e1, e2) }
-  val pExpr: Parser[Expr] = pLit ||| pAdd
+  val pLit: PackratParser[Expr] =
+    numericLit ^^ { x => new Lit(x.toInt) }
+  val pAdd: PackratParser[Expr] =
+    pExpr ~ ("+" ~> pExpr) ^^ { case e1 ~ e2 => new Add(e1, e2) }
+  val pExpr: PackratParser[Expr] = pLit ||| pAdd
 }
 //END_OVERVIEW_SIMPLE_EXPR
+*/
+
+object Latest {
+
+type Parser[E] = PackratParser[E]
+
+trait Expr { def print: String }
+class Lit(x: Int) extends Expr {
+  def print = x.toString
+}
+class Add(e1: Expr, e2: Expr) extends Expr {
+  def print = "(" + e1.print + " + " + e2.print + ")"
+}
+
+trait BaseParser {
+  lexical.delimiters += ("+")
+  val pLit: Parser[Expr] = numericLit ^^ { x => new Lit(x.toInt) }
+  val pAdd: Parser[Expr] =
+    pExpr ~ ("+" ~> pExpr) ^^ { case e1 ~ e2 => new Add(e1, e2) }
+  val pExpr: Parser[Expr] = pLit ||| pAdd
+}
+
+//BEGIN_PACKRAT_RUNPARSER
+def parse[E](p: Parser[E]): String => E = in => {
+  val t = phrase(p)(new lexical.Scanner(in))
+  if (t.successful) t.get else scala.sys.error(t.toString)
+}
+
+val result: String = parse(new BaseParser {}.pExpr)("1 + 2").print // "(1 + 2)"
+//END_PACKRAT_RUNPARSER  
+
+/*
+//BEGIN_BAD_ATTEMPT
+val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
+val pExtExpr = pExpr ||| pVar
+//END_BAD_ATTEMPT
+*/
+
+//BEGIN_INHERITANCE_APPROACH
+trait ExtParser extends BaseParser {
+  val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
+  override val pExpr = super.pExpr ||| pVar
+}
+
+val result2: String = parse(new ExtParser {}.pExpr)("1 + x").print // "(1 + x)"
+//END_INHERITANCE_APPROACH
+
+/*
+//BEGIN_MULTIPLE_INHERITANCE
+trait LanguageA {...}
+
+trait LanguageB {...}
+
+trait LanguageC extends LanguageA with LanguageB {
+  override val pExpr = super[LanguageA].pExpr ||| super[LanguageB].pExpr
+}
+//END_MULTIPLE_INHERITANCE
+*/
+
+}
+
+object Overview2 {
+
+
 
 //BEGIN_OVERVIEW_SIMPLE_LAM
 class Var(x: String) extends Expr {
