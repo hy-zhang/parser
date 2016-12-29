@@ -2,10 +2,9 @@ package PaperCode.ObjectAlg
 
 //BEGIN_OBJECT_ALG_EXPR
 trait ExprAlg[E] {
-  def Var(x: String): E
-  def App(e1: E, e2: E): E
+  def lit(n: Int): E
+  def add(e1: E, e2: E): E
 }
-
 //END_OBJECT_ALG_EXPR
 
 //BEGIN_OBJECT_ALG_FREE_VARS

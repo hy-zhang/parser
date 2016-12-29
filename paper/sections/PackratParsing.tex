@@ -130,7 +130,7 @@ parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImp
 
 \noindent Unfortunatelly, this results in the worst exponential time complexity!
 
-\subsection{Packrat Parsing}
+\subsection{Packrat Parsing}\label{subsec:packratparsing}
 Fortunately some more advanced parsing techniques such as Packrat parsing~\cite{Ford2002}, address the limitations of simple parser combinators such as Parsec. Packrat parsers use memoization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated.  Moreover, theoretically the algorithm behind Packrat parsers supports both direct and indirect left-recursion~\cite{warth2008}. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in our modular parsing library.
 \begin{comment}
 It is worth mentioning that the choice of parser combinators will not
@@ -171,7 +171,7 @@ additions. The concrete syntax is as follows:
 It is straightforward to model ASTs by inheritance and write corresponding parsers for all cases.
 Note that a parser has type \lstinline{PackratParser[E]} for some
 \lstinline{E}, which indicates the type of results it produces. Figure~\ref{fig:packrat-arith} shows the abstract syntax and
-the parser code that generates expressions as ASTs.
+the parser code that generates expressions as ASTs. Meanwhile, pretty-printing shows up as an operation on the AST.
 
 \begin{figure}[t]
 \centering

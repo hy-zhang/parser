@@ -1,7 +1,24 @@
 \section{Extensible ASTs with Object Algebras}\label{sec:algebrasandparsing}
 
-Object Algebras~\cite{Oliveira2012} is a solution to the famous \textit{Expression Problem}, provide extensibility on
-both data variants and operations. It is suitable for structures like abstract syntax trees. We integrate Object Algebras directly to enhance the extensibility of \name.
+The inheritance-based approach benefits us from building extensible parsers, based on an OO class hierarchy.
+Nevertheless, the addition of new operations over the AST becomes problematic. Often it requires modification on
+the existing code, which breaks modularity. In this section, we will have a closer look at how it motivates us to
+use Object Algebras for full extensibility.
+
+\subsection{Problem with Traditional OO ASTs}\label{subsec:problemwithoutoa}
+
+Now it comes to extension 2 in Section~\ref{subsec:dimensions}. In the previous code, we have presented pretty-printing as
+an example of operations on the AST. Suppose now we also want to collect free variables on the expression language, which models
+literals, additions and variables. Based on the traditional OO class hierarchy, one attempt would be extending \lstinline{Expr} with the new
+operation directly:
+
+\lstinputlisting[linerange=89-89]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=ATTEMPT_EXPRWITHFREEVARS
+It refers to one Scala solution to the Expression Problem []. But then programmers have to define new classes for literals, additions and variables
+by extending the old ones together with \lstinline{FreeVarsExpr}. The critical issue is that, the existing parsing code only generates objects of the old
+types, again it is a modularity issue, since it is a bad idea to modify existing code again and again with extensions. Other solutions including modelling constructors as functions introduce unnecessary complexity.
+
+In contrast, Object Algebras~\cite{Oliveira2012} enables us to solve this problem. As a nice solution to the Expression Problem, it separates data variants
+and operations, and offers high flexibility in the choice of operations to be performed over the AST. Before adopting it for parsing, the next section introduces the background of Object Algebras.
 
 \subsection{Object Algebras}\label{subsec:objectalgebras}
 Object Algebras captures a design pattern to address the Expression Problem nicely,
@@ -10,36 +27,36 @@ Because of this, the definition of data structures is separated from behaviors o
 to both sides no longer require existing code to be modified, supporting separate compilation.
 
 In Object Algebras, ASTs as recursive data structures are defined using traits, where each constructor corresponds
-to an abstract method inside. The example from Section~\ref{subsec:parsingwithopen} is again used here for illustration.
-At first the language only supports variables and applications:
+to an abstract method inside. The example from Section~\ref{subsec:packratparsing} is again used here for illustration.
+At first the language only supports literals and additions:
 
-\lstinputlisting[linerange=4-8]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_EXPR
+\lstinputlisting[linerange=8-11]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALG
 
 The language has two constructors: literals and additions. The trait \lstinline{ExprAlg} is called an \textit{Object Algebra interface},
 whereas as a factory, it cannot produces objects for the expressions directly like traditional approaches, but abstract the results in its
 type parameter \lstinline{E} instead. To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
-provides implementations for all cases. Below is an example of collecting all free variables in an expression:
+provides implementations for all cases. Below is an example of pretty-printing an expression:
 
-\lstinputlisting[linerange=12-15]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_FREE_VARS
+\lstinputlisting[linerange=15-18]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
 
-Here \lstinline{FreeVars} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a list of strings as the result.
-Furthermore, one can define a new trait to implement pretty-printing on expressions:
+Here \lstinline{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
+Furthermore, one can define a new trait to implement evaluation on arithmetic expressions:
 
-\lstinputlisting[linerange=19-22]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_EXPR_PRINT
+\lstinputlisting[linerange=18-21]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_EXPR_PRINT
 
-On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Suppose we want to
-have literals in expressions, a new Object Algebra interface \lstinline{LitAlg} is defined as follows:
+On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Now we extend the language
+with variables. A new Object Algebra interface \lstinline{VarAlg} is defined as follows:\haoyuan{Updates till here.}
 
-\lstinputlisting[linerange=26-28]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT
+\lstinputlisting[linerange=25-27]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT
 
 Now pretty-printing on the new language can be realized by code reuse, without modifying existing code:
 
-\lstinputlisting[linerange=32-34]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT_PRINT
+\lstinputlisting[linerange=31-33]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT_PRINT
 
 On this, to create an expression of \lstinline{LitAlg}, a generic method is defined as follows:
 
 \huang{todo: better name for build}
-\lstinputlisting[linerange=48-48]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_BUILD
+\lstinputlisting[linerange=47-47]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_BUILD
 
 Such a method implicitly represents the expression \lstinline{"x 3"}. The code
 
@@ -55,7 +72,7 @@ there will be a lot of desugarings (or transformations). However, we argue that 
 in a very clever way. For example, if one wants to transform an \lstinline{ExprAlg} expression to a \lstinline{LitAlg} expression by
 replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:
 
-\lstinputlisting[linerange=38-42]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_REFACTOR
+\lstinputlisting[linerange=37-41]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_REFACTOR
 
 When \lstinline{env = Map("y"} \lstinline{-> 3)}, the \lstinline{ExprAlg} expression \lstinline{"x y"} is changed to \lstinline{LitAlg} expression \lstinline{"x 3"}. The abstract method
 \lstinline{alg} in \lstinline{Refactor} can be any algebra of \lstinline{SubAlg}, simply for delegation. By passing a concrete implementation

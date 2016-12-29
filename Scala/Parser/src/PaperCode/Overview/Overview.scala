@@ -85,6 +85,9 @@ trait LanguageC extends LanguageA with LanguageB {
 //END_MULTIPLE_INHERITANCE
 */
 
+//BEGIN_ATTEMPT_EXPRWITHFREEVARS
+trait FreeVarsExpr extends Expr { def freeVars: Set[String] }
+//END_ATTEMPT_EXPRWITHFREEVARS
 }
 
 object Overview2 {

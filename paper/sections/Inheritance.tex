@@ -4,7 +4,7 @@ This section introduces the problem that motivates our work. In Figure~\ref{fig:
 that Packrat parsers can be defined in a convenient way, with recursive calls. The example is actually inspired
 by Walder's Expression Problem. Similarly, our goal is to build parsers that are extensible in some dimensions.
 
-\subsection{Dimensions of Extensibility}
+\subsection{Dimensions of Extensibility}\label{subsec:dimensions}
 We continue with the expression language of literals and additions. At this point,
 one would like to have two kinds of extensions:
 
@@ -97,7 +97,7 @@ extension 1, namely we are extending the syntax as well as the parser. Hence we 
 As in an OO solution to the Expression Problem, it is easy to extend
 the corresponding AST:
 
-\lstinputlisting[linerange=95-97]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_LAM
+\lstinputlisting[linerange=98-100]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_LAM
 
 And since we already have the parser for literals and additions, we would
 like to build the new parser by reusing the old one. Here one may quickly come up
@@ -137,49 +137,24 @@ It enables type-safe code reuse and separate compilation for parsing OO style AS
 
 \subsection{Object Algebras for full Extensibility}\label{subsec:overview-oa}
 
-Although delegation enables OO extensibility, the use of an OO class
-hierarchy makes the addition of new operations over the AST
-problematic. Modification on existing code breaks the modularity. This
-refers to the famous \textit{Expression Problem} []. For challenge 2, suppose now we want to
-support evaluation on expressions, in Scala one attempt would be extending \lstinline{Expr} with
-evaluation:
-
-\lstinputlisting[linerange=178-178]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_ATTEMPT_EXPRWITHEVAL
-But then the programmer has to define new classes for literals and additions that extend old ones and \lstinline{EvalExpr}. Specifically,
-the critical point is that existing parsing code only generates \lstinline{Expr} objects with pretty printing, so modification on parsing is again required.
-
-
-In contrast, Object Algebras~\cite{Oliveira2012} enable us to solve this problem, as it separates data variants and
-operations, to
-offer high flexibility in the choice of operations to be performed
-over the AST. It also makes parsing with multiple sorts of syntax easier.
-
-\paragraph{Parsing with Object Algebras} Using Object Algebras, the abstract syntax of the expression language is defined as below.
-
-\lstinputlisting[linerange=8-11]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALG
-
-Then we are able to define operations over the syntax in a modular way. For instance, pretty printing operation can be realized as:
-
-\lstinputlisting[linerange=15-18]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
-
 And also parser for it as below. Notice the parsing function \inlinecode{pExpr} now takes an argument of type \inlinecode{ExprAlg[E]}, which means it accepts any instance of \inlinecode{ExprAlg}. Such an instance can for example be \lstinline{Print}, which takes charge of operations on expressions, and parsing code only does delegation.
 
-\lstinputlisting[linerange=22-27]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PARSER
+\lstinputlisting[linerange=29-34]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PARSER
 
 \haoyuan{I'm trying to avoid using terminology like algebra and algebra interface.}
 
 \paragraph{Extensibility of Syntax} Following previous examples, the code below shows how to extend the language with variables.
 
-\lstinputlisting[linerange=31-44]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
+\lstinputlisting[linerange=38-51]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
 Note that we use the new combinator \lstinline{<|>} defined in our library, to compose two parsing functions into one. The function \lstinline{pExtExpr} has the compound type \lstinline{ExprAlg[E] with VarAlg[E]} in its argument, where two language ASTs are combined to represent the new language.
 
 To use the parser, we must provide an algebra instance as the operation to construct the parsing results. In the code below, we use the combination of \lstinline{Print} and \lstinline{PrintVar}, so that the parsing result is a pretty printing of the AST.
 
-\lstinputlisting[linerange=53-58]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
+\lstinputlisting[linerange=60-65]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
 
 \paragraph{Extensibility of Operations} With Object Algebras, operations over ASTs can also be extended in a modular way. Here is an example of collecting free variables from an expression. We can feed this operation to the parser and obtain a set of free variables.
 
-\lstinputlisting[linerange=72-78]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
+\lstinputlisting[linerange=79-85]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
 
 \haoyuan{I think in our library language ASTs are composed using intersection, not inheritance.}
 
@@ -200,5 +175,5 @@ To use the parser, we must provide an algebra instance as the operation to const
 Using Object Algebras, we can easily distinguish them just by adding an extra type parameter. The abstract syntax is
 presented below:
 
-\lstinputlisting[linerange=63-67]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\lstinputlisting[linerange=70-74]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
 In the next sections, we will discuss them with more details.
