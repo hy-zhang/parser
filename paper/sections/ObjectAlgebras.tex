@@ -31,139 +31,90 @@ to an abstract method inside. The example from Section~\ref{subsec:packratparsin
 At first the language only supports literals and additions:
 
 \lstinputlisting[linerange=8-11]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALG
-
 The language has two constructors: literals and additions. The trait \lstinline{ExprAlg} is called an \textit{Object Algebra interface},
 whereas as a factory, it cannot produces objects for the expressions directly like traditional approaches, but abstract the results in its
 type parameter \lstinline{E} instead. To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
 provides implementations for all cases. Below is an example of pretty-printing an expression:
 
 \lstinputlisting[linerange=15-18]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
-
 Here \lstinline{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
 Furthermore, one can define a new trait to implement evaluation on arithmetic expressions:
 
-\lstinputlisting[linerange=18-21]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_EXPR_PRINT
+\lstinputlisting[linerange=22-25]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
 
 On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Now we extend the language
-with variables. A new Object Algebra interface \lstinline{VarAlg} is defined as follows:\haoyuan{Updates till here.}
+with variables. A new Object Algebra interface \lstinline{VarAlg} is defined as follows:
 
-\lstinputlisting[linerange=25-27]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT
+\lstinputlisting[linerange=29-31]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
+Now pretty-printing on the new language can be realized without modifying existing code:
 
-Now pretty-printing on the new language can be realized by code reuse, without modifying existing code:
+\lstinputlisting[linerange=35-37]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
+We observe that only the new case is implemented for pretty-printing, and the others have been inherited.
+It offers programmers with great code reuse, in the sense that existing cases can also be
+overridden in \lstinline{VarExprPrint} using \lstinline{"override def"}.
 
-\lstinputlisting[linerange=31-33]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_LIT_PRINT
+On this, to create an expression of \lstinline{VarExprAlg}, a generic method is defined as follows:
 
-On this, to create an expression of \lstinline{LitAlg}, a generic method is defined as follows:
-
-\huang{todo: better name for build}
-\lstinputlisting[linerange=47-47]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_BUILD
-
-Such a method implicitly represents the expression \lstinline{"x 3"}. The code
+\huang{todo: better name for build}\haoyuan{makeExp}
+\lstinputlisting[linerange=41-41]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
+Such a method implicitly represents the expression \lstinline{"1 + x"}. The code
 
 \begin{lstlisting}
-build(new LitPrint{})
+makeExp(new VarExprPrint {})
 \end{lstlisting}
-
-results in \lstinline{"(x 3)"}, as the result of pretty-printing. Now we observe that an ``object'' of expression actually
-has the function type \lstinline{LitAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
+results in \lstinline{"(1 + x)"}, as the result of pretty-printing. Now we observe that an ``object'' of expression actually
+has the function type \lstinline{VarExprAlg[E] =>} \lstinline{E} for generic \lstinline{E}. At this point, one may argue
 that it is illusory compared to traditional objects, and since we are struggling against the parsing problem, if a parser
 produces structures as functions, it could be hardly be further processed like objects, especially, in the design of a compiler
 there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
-in a very clever way. For example, if one wants to transform an \lstinline{ExprAlg} expression to a \lstinline{LitAlg} expression by
-replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:
+in a very clever way. For example, if one wants to transform a \lstinline{VarExprAlg} expression to an \lstinline{ExprAlg} expression by
+replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:\haoyuan{mention in discussion that shy deals with boilerplate.}
 
-\lstinputlisting[linerange=37-41]{../Scala/Parser/src/PaperCode/ObjectAlg/OA1.scala}% APPLY:linerange=OBJECT_ALG_REFACTOR
-
-When \lstinline{env = Map("y"} \lstinline{-> 3)}, the \lstinline{ExprAlg} expression \lstinline{"x y"} is changed to \lstinline{LitAlg} expression \lstinline{"x 3"}. The abstract method
-\lstinline{alg} in \lstinline{Refactor} can be any algebra of \lstinline{SubAlg}, simply for delegation. By passing a concrete implementation
-to \lstinline{alg}, \lstinline{Refactor} will be able to apply transformation to an \lstinline{ExprAlg} expression before \lstinline{alg} returns the result.
+\lstinputlisting[linerange=45-56]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_REFACTOR
+Here the \lstinline{VarExprAlg} expression \lstinline{"1 + x"} is changed to \lstinline{ExprAlg} expression \lstinline{"1 + 2"}, before the pretty-printing algebra is applied. The abstract method
+\lstinline{alg} in \lstinline{Refactor} can actually be any algebra simply for delegation. By passing a concrete implementation
+to \lstinline{alg}, \lstinline{Refactor} will be able to transform a \lstinline{VarExprAlg} expression before we obtain the result.
 
 \subsection{Parsing with Object Algebras}\label{subsec:parsingwithoa}
 
 Just as shown above, \lstinline{ExprAlg} is defined for a small language in an Object-Algebra style. Furthermore,
-A parser can be defined for this whole language at once. Since Object Algebras represent ``objects'' implicitly as functions like \lstinline{ExprAlg[E] =>} \lstinline{E} for generic \lstinline{E}, such a parser should consume an algebra from its parameter, then return a value of \lstinline{Fix[Parser[E]]} as in open recursion, where \lstinline{E} is abstract.
-\begin{lstlisting}
-trait ExprParser[E] {
-    val pE : ExprAlg[E] => Fix[Parser[E]] = alg => p =>
-        ident ^^ alg.varE |||
-        p ~ p ^^ { case e1 ~ e2 => alg.appE(e1, e2) }
-}
-\end{lstlisting}
-It is observed that \lstinline{pE} is in fact a parser generator, where \lstinline{alg} appears as a parameter, which can be any algebra, and after \lstinline{alg} is fed, it returns a \lstinline{Fix[Parser[E]]}. Again \lstinline{p} is the explicit self-reference of the open parser. Inside the body, the algebra is invoked correspondingly for all cases right after parsing. Note that the two cases are combined using the original \lstinline{|||} operator. To make \lstinline{alg} as a generic algebra, the enclosing trait of the parser, namely \lstinline{ExprParser}, is abstracted over \lstinline{E}. Behaviors, or algebras that can be fed to such a parser, are expected to be defined independently from the Object Algebra interface, just like the algebra \lstinline{ExprPrint} in Section~\ref{subsec:objectalgebras}.
+A parser can be defined for this whole language at once. Since Object Algebras represent ``objects'' implicitly as functions like \lstinline{ExprAlg[E] =>} \lstinline{E} for generic \lstinline{E}, such a parser should have type \lstinline{ExprAlg[E] =>} \lstinline{Parser[E]}, where \lstinline{E} can be abstracted by the enclosing type.
 
-To explain the modularity, we again add literals to expressions, but instead of using inheritance as Section~\ref{subsec:objectalgebras}, \lstinline{LitAlg} is defined independently together with its own parser and algebra:
-\begin{lstlisting}
-trait LitAlg[E] {
-    def litE(n : Int) : E
-}
+\lstinputlisting[linerange=60-68]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
+Such a parser works fine, yet it does not appear to be extensible. For example, we have demonstrated in Section~\ref{subsec:inheritance-approach} that method overriding can update \lstinline{pExpr} for an extended syntax, but now \lstinline{pExpr} will have a different type, like \lstinline{VarExprAlg[E] =>} \lstinline{Parser[E]} where the difference appears in the argument. The difference of types prohibits method overriding, however, this problem refers to \textit{binary methods}. \haoyuan{Shall we mention this?}
 
-trait LitPrint {
-    def litE(n : Int) = n.toString
-}
-
-trait LitParser[E] {
-    val pE : LitAlg[E] => Fix[Parser[E]] = alg => p =>
-        numericLit ^^ alg.litE
-}
-\end{lstlisting}
-In this case, \lstinline{LitAlg} is yet another small language, which is self-contained. To merge the two languages together, we require their grammars
-to be merged, and we obtain a combined language, whose parser integrates the two small parsers using alternative. In Scala we use compound types, namely use \lstinline{"with"} for two Object Algebra interface types, to avoid polluting the namespace.
-
-\begin{lstlisting}
-trait ExprLitParser[E] {
-    val pE : (ExprAlg[E] with LitAlg[E]) => Fix[Parser[E]] = alg => p => {
-        val pExprE = new ExprParser[E]{}.pE(alg)(p)
-        val pLitE = new LitParser[E]{}.pE(alg)(p)
-        pExprE ||| pLitE
-    }
-}
-\end{lstlisting}
-
-In client code, a user can either define a new function with type \lstinline{(ExprAlg[E] with LitAlg[E])} \lstinline{=>} \lstinline{Parser[E]} based on \lstinline{pE}, which implies an algebra is applied after \lstinline{fix}, or simply feed an algebra to \lstinline{pE} at first, then obtain the result from \lstinline{fix}:
-\begin{lstlisting}
-val parsePrint = fix(new ExprLitParser[String]{}.pE(new ExprPrint with LitPrint{}))
-val result = runParser(parsePrint)("x 3") // prints "(x 3)"
-\end{lstlisting}
+One solution to this problem is taking out the argument as a single field, hence it supports overriding as well. Therefore we refactor the parsing code as follows:
+\lstinputlisting[linerange=72-81]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASE_OA_PARSER
+This is precisely the pattern that we advocate for modular parsing. Note that \lstinline{pE} is the one that is used recursively, exported by the trait and considered to be overridden from inheritance. The reason why we use an extra and seemingly redundant \lstinline{pExprE}, is that \lstinline{pE} can no longer be referred to by the \lstinline{super} keyword, as a limitation of Scala for generics, hence we can directly invoke \lstinline{pExprE} as the specific \lstinline{pE} in \lstinline{ExprOAParser}. And we still want code reuse for the composition of \lstinline{pLit} and \lstinline{pAdd}. Now it is worth trying on this pattern with an extension, like \lstinline{VarExprAlg} which we have been using:
+\lstinputlisting[linerange=85-96]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=EXT_OA_PARSER
+In the client code shown above, an instance of algebra is fed to \lstinline{VarExprOAParser} for pretty-printing expressions. Then the trait exports \lstinline{pE}, parses the input and applies the algebra. The result shows that such a pattern is a nice solution to modular parsing. At this point, one may argue that with a different operation like evaluation, the redundant code is required to obtain the parser, and it results in parsing the same input twice. This is generally solved in the original Object Algebras paper [] by composing two algebras into one in advance.
 
 \subsection{Parsing with Multiple Syntax}\label{subsec:differentsyntax}
 
-One intuition of using Object Algebras, as illustrated above, is to separate data structures from behaviors, so as to modularize the design, and both parts are even more modular and reusable. We can simply add new variants corresponding to the new cases in the grammar, or realize different operations on structures, without modifying existing code, meanwhile separate compilation is supported. Another one is that Object Algebras benefit us from using generics, where we can abstract multiple syntax in the type parameters, and define less classes, simplifying code comparatively. Below we refactor the last example in Section~\ref{subsec:parsingwithopen}, by defining a new Object Algebra interface with two cases \lstinline{intT} and \lstinline{lamE}. Meanwhile a parser is implemented for that language.
-\begin{lstlisting}
-trait LamAlg[E, T] {
-    def intT() : T
-    def lamE(x : String, t : T, e : E) : E
-}
+One intuition of using Object Algebras, as illustrated above, is to separate data structures from behaviors, so as to modularize the design, and both parts are even more modular and reusable. We can simply add new variants corresponding to the new cases in the grammar, or realize different operations on structures, without modifying existing code, meanwhile separate compilation is supported. Another one is that Object Algebras benefit us from using generics, where we can abstract multiple syntax in the type parameters, and define less classes, simplifying code comparatively. Below we further extend the language with types, by introducing an extra type parameter in the algebra interface. The extended grammar is:\\
 
-trait LamParser[E, T] {
-    type Pair = (Parser[E], Parser[T])
-    val pE : LamAlg[E, T] => (=> Pair) => Parser[E] = alg => p =>
-        ("\\" ~> ident) ~ (":" ~> p._2) ~ ("." ~> p._1)
-            ^^ { case x ~ t ~ e => alg.lamE(x, t, e) }
-    val pT : LamAlg[E, T] => (=> Pair) => Parser[T] = alg => p =>
-        "Int" ^^^ alg.intT
-}
-\end{lstlisting}
-Note that we are omitting its lexer here. \lstinline{LamParser} contains parsers for both expressions and types. From the code we observe that the multi-sorts of Object Algebra interface
-exactly express multiple syntax. At this point, to combine these two small components together we need some ``glue code''. But instead of writing composition by hand, we reimplement the combinator \lstinline{|||}, to compose one parser with type \lstinline{Alg1 =>} \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} and another one with type \lstinline{Alg2 =>} \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} using alternative. Note that we can only abstract over the whole algebra interface type, instead of working on its type parameters, as the number of type parameters is not fixed. In summary, \lstinline{"|||"} produces a combined parser, which takes a compound algebra as its parameter:
-\begin{lstlisting}
-implicit class Combinator[Alg1, Alg2, R, E](x : Alg1 => (=> R) => Parser[E]) {
-    def |||(y : Alg2 => (=> R) => Parser[E]): (Alg1 with Alg2) => (=> R) => Parser[E]
-        = alg => l => x(alg)(l) ||| y(alg)(l)
-}
-\end{lstlisting}
-Now it is sufficient to merge \lstinline{ExprParser} and \lstinline{LamParser} together:
-\begin{lstlisting}
-trait ExprLamParser[E, T] {
-    val pExpr = new ExprParser[E]{}
-    val pLam = new LamParser[E, T]{}
-    val pExprE : ExprAlg[E] => (=> pLam.Pair) => Parser[E] =
-        alg => p => pExpr.pE(alg)(p._1)
+\begin{tabular}{m{0.45\linewidth}m{0.45\linewidth}}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<type> ::= ... \alt `int' \alt <type> `->' <type>
+\end{grammar}
+&
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::=  ... \alt `\\' <ident> `:' <type> `.' <expr>
+\end{grammar}
+\end{tabular}
 
-    val pE = pExprE ||| pLam.pE
-    val pT = pLam.pT
-}
-\end{lstlisting}
-Parsers for expressions and types are connected using \lstinline{|||}, respectively. Hence the isolation for different syntax
-is guaranteed by the type system. The only left problem is that we still need to replace the parser in \lstinline{ExprParser} with \lstinline{pExprE}
-by updating the fix-point parameter. In the next section we will address this problem, and meanwhile our implementation enhances modularity in various aspects.
+Hence we write code for the extended AST, pretty-printing operation and the extended parser:
 
+\lstinputlisting[linerange=100-128]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+Besides lexing, the trait \lstinline{TypedLamOAParser} also introduces parsers for types, and the new case for expressions. For the same reason,
+we use \lstinline{pTypedLamT} and \lstinline{pTypedLamE} as copies of current \lstinline{pT} and \lstinline{pE}, recursively. \lstinline{pT} and \lstinline{pE} are actually the parsers for recursion.
+
+From the code we observe that the multi-sorts of Object Algebra interface
+exactly express multiple syntax. The isolation for different syntax
+is guaranteed by the type system. Now it is straightforward to show some client code
+for the new parser:
+
+\lstinputlisting[linerange=132-134]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
+Pretty-printing the parsed results just works as expected.

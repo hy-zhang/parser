@@ -109,7 +109,7 @@ with \lstinline{pExpr}:
 Unfortunately, it fails to parse some expressions like \lstinline{"1 + x"}, which is obviously valid in the new grammar.
 The reason is that \lstinline{pAdd} makes two recursive calls to parse sub-expressions, by using \lstinline{pExpr}, which
 covers both cases in the old grammar. But the newly added case \lstinline{pVar} is not observed by the recursive \lstinline{pExpr},
-hence the parser does not work as expected. Still, one may continue to change the recursive call in \lstinline{pAdd} with \lstinline{pExtExpr},
+hence the parser does not work as expected. Still, one may continue to change the recursive call in \lstinline{pAdd} with \lstinline{pVarExpr},
 but modification on existing code sacrifices separate compilation, as mentioned by the Expression Problem.
 
 \subsection{Inheritance-Based Approach}\label{subsec:inheritance-approach}
@@ -119,7 +119,7 @@ the new parser can be defined in an enclosing trait that extends
 the old one:
 
 \lstinputlisting[linerange=68-73]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=INHERITANCE_APPROACH
-Now \lstinline{ExtParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
+Now \lstinline{VarExprParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
 method overriding in inheritance. When the input \lstinline{"1 + x"} is fed to the parser \lstinline{this.pExpr}, it firstly delegates
 the work to \lstinline{super.pExpr}, which parses literals and additions. However, the recursive call \lstinline{pExpr} in \lstinline{pAdd}
 actually refers to \lstinline{this.pExpr} again, due to dynamic dispatch. It implies that the recursive call has included the extension. This
@@ -135,45 +135,4 @@ specify the implementation from inheritance, like:
 As we demonstrated, inheritance is the key technique to obtain semantic modularity.
 It enables type-safe code reuse and separate compilation for parsing OO style ASTs with extension 1.
 
-\subsection{Object Algebras for full Extensibility}\label{subsec:overview-oa}
 
-And also parser for it as below. Notice the parsing function \inlinecode{pExpr} now takes an argument of type \inlinecode{ExprAlg[E]}, which means it accepts any instance of \inlinecode{ExprAlg}. Such an instance can for example be \lstinline{Print}, which takes charge of operations on expressions, and parsing code only does delegation.
-
-\lstinputlisting[linerange=29-34]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PARSER
-
-\haoyuan{I'm trying to avoid using terminology like algebra and algebra interface.}
-
-\paragraph{Extensibility of Syntax} Following previous examples, the code below shows how to extend the language with variables.
-
-\lstinputlisting[linerange=38-51]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT
-Note that we use the new combinator \lstinline{<|>} defined in our library, to compose two parsing functions into one. The function \lstinline{pExtExpr} has the compound type \lstinline{ExprAlg[E] with VarAlg[E]} in its argument, where two language ASTs are combined to represent the new language.
-
-To use the parser, we must provide an algebra instance as the operation to construct the parsing results. In the code below, we use the combination of \lstinline{Print} and \lstinline{PrintVar}, so that the parsing result is a pretty printing of the AST.
-
-\lstinputlisting[linerange=60-65]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_USE
-
-\paragraph{Extensibility of Operations} With Object Algebras, operations over ASTs can also be extended in a modular way. Here is an example of collecting free variables from an expression. We can feed this operation to the parser and obtain a set of free variables.
-
-\lstinputlisting[linerange=79-85]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXT_OP
-
-\haoyuan{I think in our library language ASTs are composed using intersection, not inheritance.}
-
-\paragraph{Multiple Sorts of Syntax} Another advantage of using Object Algebras is that it supports multiple sorts of syntax easily. In several cases, we want to divide the syntactic elements into some groups. For example, the grammar below has two sorts, which are expressions and types.
-
-\begin{tabular}{m{0.45\linewidth}m{0.45\linewidth}}
-\setlength{\grammarindent}{5em}
-\begin{grammar}
-<type> ::= `int' \alt <type> `->' <type>
-\end{grammar}
-&
-\setlength{\grammarindent}{5em}
-\begin{grammar}
-<expr> ::=  `\\' <ident> `:' <type> `.' <expr>
-\end{grammar}
-\end{tabular}
-
-Using Object Algebras, we can easily distinguish them just by adding an extra type parameter. The abstract syntax is
-presented below:
-
-\lstinputlisting[linerange=70-74]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
-In the next sections, we will discuss them with more details.

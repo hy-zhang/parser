@@ -180,7 +180,7 @@ the parser code that generates expressions as ASTs. Meanwhile, pretty-printing s
 \end{figure}
 
 
-In the trait \lstinline{BaseParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} can parse an integer for \lstinline{Lit},
+In the trait \lstinline{ExprParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} can parse an integer for \lstinline{Lit},
 whereas \lstinline{pAdd} handles addition and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
 recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the alternative combinator with longest match.
 Table~\ref{tab:packrat} gives a closer look at part of the API that we have used in our work.

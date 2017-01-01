@@ -17,7 +17,7 @@ class Add(e1: Expr, e2: Expr) extends Expr {
 }
 
 // Parser with lexing
-trait BaseParser {
+trait ExprParser {
   lexical.delimiters += ("+")
   val pLit: PackratParser[Expr] =
     numericLit ^^ { x => new Lit(x.toInt) }
@@ -54,23 +54,23 @@ def parse[E](p: Parser[E]): String => E = in => {
   if (t.successful) t.get else scala.sys.error(t.toString)
 }
 
-val result: String = parse(new BaseParser {}.pExpr)("1 + 2").print // "(1 + 2)"
+val result: String = parse(new ExprParser {}.pExpr)("1 + 2").print // "(1 + 2)"
 //END_PACKRAT_RUNPARSER  
 
 /*
 //BEGIN_BAD_ATTEMPT
 val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
-val pExtExpr = pExpr ||| pVar
+val pVarExpr = pExpr ||| pVar
 //END_BAD_ATTEMPT
 */
 
 //BEGIN_INHERITANCE_APPROACH
-trait ExtParser extends BaseParser {
+trait VarExprParser extends ExprParser {
   val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
   override val pExpr = super.pExpr ||| pVar
 }
 
-val result2: String = parse(new ExtParser {}.pExpr)("1 + x").print // "(1 + x)"
+val result2: String = parse(new VarExprParser {}.pExpr)("1 + x").print // "(1 + x)"
 //END_INHERITANCE_APPROACH
 
 /*
