@@ -1,0 +1,78 @@
+\section{Discussion}\label{sec:discussion}
+
+The use of interface-based approach and Object Algebras enables us to do modular parsing. Programmers can easily follow the pattern
+captured in the previous section, build modular ASTs and hence have access to multiple dimensions of extensibility. This section
+explores more interesting features of this pattern, including overriding existing parsing rules, and framework of language components
+for modularity over hierarchies.
+
+\subsection{Overriding Existing Rules}
+
+Just as many parser generators do, our pattern also supports overriding part of existing parsers easily, but in a type-safe way.
+We can simply update existing production rules, namely the concrete syntax, with new implementations, or eliminate them in extended parsers.
+To illustrate, suppose we have an untyped lambda case in a base parser, but then we replace it with a typed one in its extended parser:
+
+\lstinputlisting[linerange=139-144]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
+The above parser shows part of the code, for the space reason we omit details. With OO inheritance, we can actually override \lstinline{pLam}
+in a subtype of \lstinline{BaseParser}, and give a different implementation. It will make a difference during runtime due to dynamic
+dispatch.
+
+\lstinputlisting[linerange=148-154]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
+On the other hand, the lexer can also be updated, since keywords and delimiters are represented by sets of strings.
+One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser.
+
+It is natural to keep overriding existing parsers, whereas another potential use of this pattern is to reuse old versions of a parser. For instance,
+we have a \lstinline{NewParser} that extends \lstinline{ExtParser}, with some more cases added, but for the lambda case we want to go back to the untyped one.
+It can be done by copying the code from \lstinline{BaseParser} again, yet does not achieve code reuse. Instead, we can instantiate an instance of \lstinline{BaseParser} to obtain the old \lstinline{pLam}:
+\haoyuan{I don't know if this works or makes sense.}
+
+\lstinputlisting[linerange=158-164]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
+
+\subsection{Framework of a Language Component}\label{subsec:framework}
+
+Having pointed out that our goal is to realize modular parsers, we expect the code written in an extensible way. We have been focusing on how to extend a language with some additional cases, just as many extensible compilers do, nevertheless, in other cases, languages are defined separately, and the composition of them is again a matter of code reuse. In this section, we propose a framework for defining small languages as modular components, in order for better composition.
+
+The framework we use for a language, or rather a language component in our case study, consists of three parts: syntax, parsing and operations on the AST. More
+specifically:
+\begin{itemize}
+    \item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax. The type parameters represent multiple sorts of syntax, and the methods are constructs.
+\item \textbf{Parser:} implementation of the parser with lexing, using inheritance and Object Algebras, with its scoping trait abstracted over the type parameters.
+\item \textbf{Algebra (optional):} some behaviors (operations) on the data structure, such as pretty-printing and so on.
+\end{itemize}
+
+Taking again the example in Section~\ref{subsec:parsingwithoa}. The language constructs consists of literals, additions and variables. First we define the
+language component in a Scala object, shown in the left part of Figure~\ref{fig:lng-components}.
+
+\begin{figure}[t]
+\begin{tabular}{m{0.42\linewidth}m{0.52\linewidth}}
+\lstinputlisting[linerange=7-22]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
+&
+\lstinputlisting[linerange=26-41]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+\end{tabular}
+\caption{Language \lstinline{VarExpr} (left) and language \lstinline{TypedLam} (right).}\label{fig:lng-components}
+\end{figure}
+
+For the example in Section~\ref{subsec:differentsyntax}, instead of building inheritance directly, we define the language separately,
+which consists of types and typed lambda expressions. Shape of the code is presented in the right of Figure~\ref{fig:lng-components}.
+
+At this point, one may want those two language components to be composed into one, and meanwhile ensure that the one is still a modular
+component ready for future composition. In that case modularity is realized over higher-order hierarchies. The composed language \lstinline{VarLamExpr}
+is shown below:
+
+\lstinputlisting[linerange=45-54]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+Note that lexing code is automatically combined under multiple inheritance. The combined language shows perfect modularity. The only
+drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty printers of
+\lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not
+support this feature, nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
+
+\subsection{Fusion of Concepts}\label{subsec:fusion}
+
+\haoyuan{Not sure if this section should be here, or in the related work. I tend to have a big discussion section.}
+\huang{These alternatives could be discussed in the discussion
+  section, not here. 6.1 could only talks about library code. And the
+  titles should be changed as well}\bruno{I think this subsection is
+  unnecessary. The code will be presented already at the end of S5, I
+  presume. }
+
+In the previous sections we have talked about Packrat Parsing, open recursion and Object Algebras. These components fuse together in our library implementation, for the initial goal, which is to build extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives. For example, Object Algebras are helpful to build extensible data structures, whereas in functional programming, there has been a large amount of related work on extensible datatypes, including DTC and MRM for the Haskell language. And a better
+parsing library would potentially introduce a lot of fancy features and parser combinators, run with high efficiency, or even support indirect left-recursion.
+\haoyuan{Open recursion could also have alternatives?} For now, our implementation integrates the existing ones, and has turned out to be practical in various applications.

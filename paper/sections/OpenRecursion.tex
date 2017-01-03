@@ -25,11 +25,11 @@ parameter can simply delegate their known cases to it.
 usefulness of open recursion, we first consider a standard recursive
 implementation of the Fibonacci function:
 
-\lstinputlisting[linerange=24-30]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIB
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIB
 
 \noindent An alternative implementation using open recursion is:
 
-\lstinputlisting[linerange=34-40]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIB2
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIB2
 \bruno{Fix should be replaces by Open. Please coordinate with Huang to
 ensure that your code and his code are coherent (i.e you use same
 names and same conventions),}
@@ -43,11 +43,11 @@ calls to the self reference.
 the open recursion using a \emph{lazy fixpoint combinator}:
 \bruno{definition of fib with fix here.}
 
-\lstinputlisting[linerange=44-44]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIB_FIX
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIB_FIX
 
 In Scala the lazy fixpoint combinator is straightforwardly implemented~\cite{} as follows:
 
-\lstinputlisting[linerange=20-20]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_FIX
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIX
 \bruno{can be defined in a single line.}
 \noindent Note that the function \lstinline{f} has a by-name parameter
 of type \lstinline{"=>} \lstinline{T"}. This is necessary to ensure
@@ -75,16 +75,16 @@ which behaves similarly as \lstinline{fib(2)}. The process of evaluation will te
 
 \bruno{We may want to use a better example than what is next.}
 Suppose now we want to make use of open recursion for additional operations. We first define a combinator which combines the results of two generators in a pair:
-\lstinputlisting[linerange=48-51]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_COMPOSE
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_COMPOSE
 
 Using Scala implicit class, \lstinline{*} can be used as an infix operator for composition in convenience.
 Then we define a generator which prints out a number as a string:
-\lstinputlisting[linerange=55-55]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_SHOW
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_SHOW
 
 Now \lstinline{fix(fib2 * show)(2)} results in \lstinline{(1, "2")}. We have seen that both \lstinline{fib2} and \lstinline{show} are integrated in the evaluation.
 
 Next we define a more general combinator \lstinline{merge} for open recursion. It is similar to the \lstinline{*} above, but instead of putting two values in a pair by default, \lstinline{merge} takes a parameter called \lstinline{op}, which tells the associative operation of two results. The definition is straightforward:
-\lstinputlisting[linerange=59-60]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=OPENRECURSION_MERGE
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_MERGE
 
 %\begin{itemize}
 %\item Fixpoints library + explaining delegation with some examples

@@ -43,7 +43,7 @@ Furthermore, one can define a new trait to implement evaluation on arithmetic ex
 \lstinputlisting[linerange=22-25]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
 
 On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Now we extend the language
-with variables. A new Object Algebra interface \lstinline{VarAlg} is defined as follows:
+with variables. A new Object Algebra interface \lstinline{VarAlg} is defined as follows:\haoyuan{Can we use var instead of varE?}
 
 \lstinputlisting[linerange=29-31]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
 Now pretty-printing on the new language can be realized without modifying existing code:
@@ -107,7 +107,7 @@ One intuition of using Object Algebras, as illustrated above, is to separate dat
 
 Hence we write code for the extended AST, pretty-printing operation and the extended parser:
 
-\lstinputlisting[linerange=100-128]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\lstinputlisting[linerange=100-129]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
 Besides lexing, the trait \lstinline{TypedLamOAParser} also introduces parsers for types, and the new case for expressions. For the same reason,
 we use \lstinline{pTypedLamT} and \lstinline{pTypedLamE} as copies of current \lstinline{pT} and \lstinline{pE}, recursively. \lstinline{pT} and \lstinline{pE} are actually the parsers for recursion.
 
@@ -116,5 +116,5 @@ exactly express multiple syntax. The isolation for different syntax
 is guaranteed by the type system. Now it is straightforward to show some client code
 for the new parser:
 
-\lstinputlisting[linerange=132-134]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
+\lstinputlisting[linerange=133-135]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
 Pretty-printing the parsed results just works as expected.

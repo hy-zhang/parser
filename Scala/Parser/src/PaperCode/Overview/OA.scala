@@ -115,7 +115,8 @@ trait TypedLamOAParser[E, T] extends VarExprOAParser[E] {
   override val alg: TypedLamAlg[E, T]
   
   val pIntT: Parser[T] = "int" ^^^ alg.intT
-  val pArrowT: Parser[T] = pT ~ ("->" ~> pT) ^^ { case t1 ~ t2 => alg.arrowT(t1, t2) }
+  val pArrowT: Parser[T] = pT ~ ("->" ~> pT) ^^
+    { case t1 ~ t2 => alg.arrowT(t1, t2) }
   val pTypedLamT: Parser[T] = pIntT ||| pArrowT
   
   val pLam: Parser[E] = ("\\" ~> ident) ~ (":" ~> pT) ~ ("." ~> pE) ^^
@@ -133,6 +134,35 @@ val result2 = parse(new TypedLamOAParser[String, String] {
   override val alg = new TypedLamPrint {}
 }.pE)("\\x:int->int. 1 + x") // "\x : int -> int. (1 + x)"
 //END_OVERVIEW_OA_MULTI_SYNTAX_CLIENT
+
+//BEGIN_BASEPARSER_UNTYPEDLAM
+trait BaseParser[E] {
+  ...
+  val alg: ...
+  val pLam: Parser[E] = ("\\" ~> ident) ~ ("." ~> pE) ^^ ...
+  val pE: Parser[E] = ...
+}
+//END_BASEPARSER_UNTYPEDLAM
+
+//BEGIN_EXTPARSER_TYPEDLAM
+trait ExtParser[E, T] extends BaseParser[E] {
+  ...
+  override val alg: ...
+  override val pLam = ("\\" ~> ident) ~ (":" ~> pT) ~ ("." ~> pE) ^^ ...
+  val pT: Parser[T] = ...
+  override val pE: Parser[E] = ...
+}
+//END_EXTPARSER_TYPEDLAM
+
+//BEGIN_NEWPARSER_UNTYPEDLAM
+trait NewParser[E, T] extends ExtParser[E, T] {
+  ...
+  override val alg: ...
+  val tempAlg = alg
+  override val pLam = new BaseParser[E] { override val alg = tempAlg }.pLam
+  ...
+}
+//END_NEWPARSER_UNTYPEDLAM
 
   def main(args: Array[String]): Unit = {
 

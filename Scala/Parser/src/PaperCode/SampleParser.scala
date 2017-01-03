@@ -2,6 +2,59 @@ package PaperCode
 
 import TAPL.Util._
 
+/*
+//BEGIN_LANGUAGE_COMPONENTS_VAREXPR
+object VarExpr {
+  // Abstract syntax
+  trait Alg[E] {
+    def lit(n: Int): E
+    def add(e1: E, e2: E): E
+    def varE(x: String): E
+  }
+  
+  // Parser
+  trait Parser[E] { ... }
+  
+  // Pretty-printer
+  trait Print extends Alg[String] {
+    ...
+  }
+}
+//END_LANGUAGE_COMPONENTS_VAREXPR
+
+//BEGIN_LANGUAGE_COMPONENTS_TYPEDLAM
+object TypedLam {
+  // Abstract syntax
+  trait Alg[E, T] {
+    def intT(): T
+    def arrowT(t1: T, t2: T): T
+    def lam(x: String, t: T, e: E): E
+  }
+  
+  // Parser
+  trait Parser[E] { ... }
+  
+  // Pretty-printer
+  trait Print extends Alg[String, String] {
+    ...
+  }
+}
+//END_LANGUAGE_COMPONENTS_TYPEDLAM
+
+//BEGIN_LANGUAGE_COMPONENTS_VARLAMEXPR
+object VarLamExpr {
+  trait Alg[E, T] extends VarExpr.Alg[E] with TypedLam.Alg[E, T]
+  
+  trait Parser[E, T] extends VarExpr.Parser[E] with TypedLam.Parser[E, T] {
+    override val alg: Alg[E, T]
+    override val pE = ...
+  }
+  
+  trait Print extends VarExpr.Print with TypedLam.Print
+}
+//END_LANGUAGE_COMPONENTS_VARLAMEXPR
+/*
+
 object SampleParser {
 
 //BEGIN_PACKRAT_EXAMPLE
@@ -12,51 +65,4 @@ val p: PackratParser[Int] =
   "str" ~> ("(" ~> numericLit <~ ")") ^^ { x => x.toInt }
 //END_PACKRAT_EXAMPLE
      
-}
-
-object OpenRecursion {
-
-//BEGIN_OPENRECURSION_FIX
-def fix[T](f: Open[T]): T = { lazy val a: T = f(a); a }
-//END_OPENRECURSION_FIX
-
-//BEGIN_OPENRECURSION_FIB
-def fib: Int => Int = {
-  case 0 => 0
-  case 1 => 1
-  case n => fib(n - 1) + fib(n - 2)
-}
-
-fib(2)  // 1
-//END_OPENRECURSION_FIB
-
-//BEGIN_OPENRECURSION_FIB2
-type Open[T] = (=> T) => T
-
-def fib2: Open[Int => Int] = self => {
-  case 0 => 0
-  case 1 => 1
-  case n => self.apply(n - 1) + self.apply(n - 2)
-}
-//END_OPENRECURSION_FIB2
-
-//BEGIN_OPENRECURSION_FIB_FIX
-fix(fib2)(2)  // 1
-//END_OPENRECURSION_FIB_FIX
-
-//BEGIN_OPENRECURSION_COMPOSE
-implicit class Compose[A, B, C](f: Open[A => B]) {
-  def *(g: Open[A => C]): Open[A => (B, C)] = self => x =>
-    (f(self.apply(_)._1)(x), g(self.apply(_)._2)(x))
-}
-//END_OPENRECURSION_COMPOSE
-
-//BEGIN_OPENRECURSION_SHOW
-def show: Open[Int => String] = self => x => x.toString
-//END_OPENRECURSION_SHOW
-
-//BEGIN_OPENRECURSION_MERGE
-def merge[E, F, G, H[_, _]](op: F => G => H[F, G], x: (=> E) => F, y: (=> E) => G)
-  : (=> E) => H[F, G] = e => op(x(e))(y(e))
-//END_OPENRECURSION_MERGE
 }
