@@ -84,7 +84,7 @@ parser = parseInt <|> parseAdd
 will only parse the input \inlinecode{"1 + 2"} to \inlinecode{"1"}, as \inlinecode{parseInt} successfully parses \inlinecode{"1"}
 and terminates parsing. With traditional alternative
 composition in recursive descent parsers, the parser in the front successfully parses a substring of the input, then it unexpectedly
-finishes parsing and discards the rest, in spite that latter parsers might be abl e to parse the whole input.
+finishes parsing and discards the rest, in spite that latter parsers might be able to parse the whole input.
 %\huang{I've rewritten this paragraph}\bruno{The example is good, I think but the explanation is not.
 %You want to say that when you know
 %  the full grammar, you can figure out where ``try'' is
@@ -128,7 +128,7 @@ Given the full grammar, we can decide where to put \inlinecode{try} for backtrac
 parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImpAs
 \end{lstlisting}
 
-\noindent Unfortunatelly, this results in the worst exponential time complexity!
+\noindent However, this results in the worst case exponential time complexity!
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}
 Fortunately some more advanced parsing techniques such as Packrat parsing~\cite{Ford2002}, address the limitations of simple parser combinators such as Parsec. Packrat parsers use memoization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated.  Moreover, theoretically the algorithm behind Packrat parsers supports both direct and indirect left-recursion~\cite{warth2008}. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in our modular parsing library.
@@ -139,9 +139,10 @@ combinators like Parsec, in cases that the performance and supporting
 of left-recursion are not major concerns. A different library can even build a new
 \name with fancy features or higher efficiency.
 \end{comment}
-In the current version of Scala (2.11), Packrat Parsing is included
-in the Scala standard parser combinator library. The library provides a number of
-parser combinators, together with some basic parsers. Below we present an example to illustrate Scala parsers.
+Scala has a standard parser combinator library\footnote{https://github.com/scala/scala-parser-combinators}
+which implements Packrat parsers.
+The library provides a number of parser combinators, together with some basic parsers.
+Below we present an example to illustrate Scala parsers.
 %
 %\bruno{So, we make a big fuss identifying the problems with other
 %parser combinators in the previous subsection and now we present
@@ -152,7 +153,7 @@ parser combinators, together with some basic parsers. Below we present an exampl
 %discussed previously applies!
 %}
 
-\paragraph{Parsing a simple Arithmetic Language}
+\paragraph{Parsing a Simple Arithmetic Language}
 Suppose we want to parse a simple language with literals and
 additions. The concrete syntax is as follows:
 %\bruno{Here's a good opportunity to both improve the paper and make it
@@ -172,6 +173,8 @@ It is straightforward to model ASTs by inheritance and write corresponding parse
 Note that a parser has type \lstinline{PackratParser[E]} for some
 \lstinline{E}, which indicates the type of results it produces. Figure~\ref{fig:packrat-arith} shows the abstract syntax and
 the parser code that generates expressions as ASTs. Meanwhile, pretty-printing shows up as an operation on the AST.
+
+\huang{doesn't compile}
 
 \begin{figure}[t]
 \centering

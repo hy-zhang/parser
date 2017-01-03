@@ -3,10 +3,14 @@
 
 To demonstrate the utility of our modular parsing approach, we
 implemented parsers of the first 18 calculi from book \textit{Types
-  and Programming Languages} (TAPL) []. TAPL introduces several
+  and Programming Languages} (TAPL) \cite{pierce2002types}. TAPL introduces several
 calculi from simple to complex, by gradually adding new features to
-syntax. We compared our implementation with a non-modular implementation we found online [], which is also written in Scala and uses the same Packrat parsing library. The comparison is made from two aspects, source lines of code (SLOC) and execution time. \huang{done}\bruno{mention that you compare against an existing
-  non-modular implementation.}
+syntax. We compared our implementation with a non-modular implementation
+we found online, which is also written in Scala and uses the same Packrat parsing library.
+We counted source lines of code (SLOC) and measured execution time for both implementations.
+Our implementation saves almost 70\% code comparing with that non-modular one.
+
+\huang{done}\bruno{mention that you compare against an existing non-modular implementation.}
 
 \subsection{Implementation}
 
@@ -158,8 +162,8 @@ a quantitative way in the next subsection.
 \subsection{Comparison}\label{subsec:cs-comparison}
 
 We compared our implementation of the parsers with an implementation
-by Ilya Klyuchnikov, available online []. Ilya's
-implementation is suitable for comparison, because it is also
+by Ilya Klyuchnikov, available online\footnote{https://github.com/ilya-klyuchnikov/tapl-scala/}.
+Ilya's implementation is suitable for comparison, because it is also
 written in Scala using the same parser combinator library.
 Furthermore, it includes parsers of all the 18 calculi we have, but
 written in a non-modular way. Thus it is not able to reuse existing
