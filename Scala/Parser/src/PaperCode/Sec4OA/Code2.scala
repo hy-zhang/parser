@@ -1,8 +1,6 @@
 package PaperCode.Sec4OA
 
 
-object Code2 {
-
 //BEGIN_OVERVIEW_OA_ALG
 trait ExprAlg[E] {
   def lit(n: Int): E
@@ -36,4 +34,29 @@ trait VarExprPrint extends VarExprAlg[String] with Print {
 }
 //END_OVERVIEW_OA_EXTPRINT
 
+
+object Code2 {
+
+//BEGIN_OVERVIEW_OA_MAKEEXP
+def makeExp[E](alg: VarExprAlg[E]): E = alg.add(alg.lit(1), alg.varE("x"))
+//END_OVERVIEW_OA_MAKEEXP
+
+//BEGIN_OVERVIEW_OA_REFACTOR
+trait Refactor[E] extends VarExprAlg[E] {
+  val alg: ExprAlg[E]
+  val env: Map[String, Int]
+  def lit(n: Int) = alg.lit(n)
+  def add(e1: E, e2: E) = alg.add(e1, e2)
+  def varE(x: String) = alg.lit(env(x))
+}
+
+val r = makeExp(new Refactor[String] {
+  override val alg = new Print {}
+  override val env = Map("x" -> 2)
+}) // "(1 + 2)"
+//END_OVERVIEW_OA_REFACTOR
+
+  def main(args: Array[String]): Unit = {
+    println(r)
+  }
 }

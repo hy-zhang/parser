@@ -30,8 +30,6 @@ object Code2 extends StandardTokenParsers with PackratParsers {
       pLit ||| pAdd
   }
 
-  def main(args: Array[String]): Unit = {
-
 //BEGIN_PACKRAT_RUNPARSER
 type Parser[E] = PackratParser[E]
 
@@ -40,9 +38,10 @@ def parse[E](p: Parser[E]): String => E = in => {
   if (t.successful) t.get else scala.sys.error(t.toString)
 }
 
-parse(new ExprParser {}.pExpr)("1 + 2").print // "(1 + 2)"
+val r = parse(new ExprParser {}.pExpr)("1 + 2").print // "(1 + 2)"
 //END_PACKRAT_RUNPARSER
 
-    println(parse(new ExprParser {}.pExpr)("1 + 2").print)
+  def main(args: Array[String]): Unit = {
+    println(r)
   }
 }

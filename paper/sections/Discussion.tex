@@ -11,12 +11,12 @@ Just as many parser generators do, our pattern also supports overriding part of 
 We can simply update existing production rules, namely the concrete syntax, with new implementations, or eliminate them in extended parsers.
 To illustrate, suppose we have an untyped lambda case in a base parser, but then we replace it with a typed one in its extended parser:
 
-\lstinputlisting[linerange=106-111]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
+\lstinputlisting[linerange=7-12]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
 The above parser shows part of the code, for the space reason we omit details. With OO inheritance, we can actually override \lstinline{pLam}
 in a subtype of \lstinline{BaseParser}, and give a different implementation. It will make a difference during runtime due to dynamic
 dispatch.
 
-\lstinputlisting[linerange=115-121]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
+\lstinputlisting[linerange=16-22]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
 On the other hand, the lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser.
 
@@ -25,7 +25,7 @@ we have a \lstinline{NewParser} that extends \lstinline{ExtParser}, with some mo
 It can be done by copying the code from \lstinline{BaseParser} again, yet does not achieve code reuse. Instead, we can instantiate an instance of \lstinline{BaseParser} to obtain the old \lstinline{pLam}:
 \haoyuan{I don't know if this works or makes sense.}
 
-\lstinputlisting[linerange=125-131]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
+\lstinputlisting[linerange=26-32]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
 
 \subsection{Framework of a Language Component}\label{subsec:framework}
 
@@ -44,9 +44,9 @@ language component in a Scala object, shown in the left part of Figure~\ref{fig:
 
 \begin{figure}[t]
 \begin{tabular}{m{0.42\linewidth}m{0.52\linewidth}}
-\lstinputlisting[linerange=7-22]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
+\lstinputlisting[linerange=44-59]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
 &
-\lstinputlisting[linerange=26-41]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+\lstinputlisting[linerange=63-78]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
 \end{tabular}
 \caption{Language \lstinline{VarExpr} (left) and language \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
@@ -58,7 +58,7 @@ At this point, one may want those two language components to be composed into on
 component ready for future composition. In that case modularity is realized over higher-order hierarchies. The composed language \lstinline{VarLamExpr}
 is shown below:
 
-\lstinputlisting[linerange=45-54]{../Scala/Parser/src/PaperCode/SampleParser.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+\lstinputlisting[linerange=82-91]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
 Note that lexing code is automatically combined under multiple inheritance. The combined language shows perfect modularity. The only
 drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty printers of
 \lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not

@@ -52,8 +52,12 @@ trait VarExprParser extends ExprParser {
   override val pExpr: Parser[Expr] = super.pExpr ||| pVar
 }
 
-parse(new VarExprParser {}.pExpr)("1 + x").print // "(1 + x)"
+val r = parse(new VarExprParser {}.pExpr)("1 + x").print // "(1 + x)"
 //END_INHERITANCE_APPROACH
+
+  def main(args: Array[String]): Unit = {
+    println(r)
+  }
 
 /*
 //BEGIN_MULTIPLE_INHERITANCE

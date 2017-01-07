@@ -113,16 +113,16 @@ Our exploration starts from a simple example, where a single parser only parses 
 such a parser, we need to import the library as
 well as defining the datatype for which it produces.
 
-\lstinputlisting[linerange=8-12]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PVAR
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PVAR
 
 Note that we are omitting lexing and demo code here. And we use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} throughout the paper. Furthermore, we would like the parser to support applications.
 Not only the implementation of that parser is needed, but also its corresponding datatype:
 
-\lstinputlisting[linerange=16-17]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PAPP
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PAPP
 
 Such a parser \lstinline{pApp} can only parse one-layer applications like \lstinline{"x y"}. Hence we revise it using recursion:
 
-\lstinputlisting[linerange=29-32]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PAPP2
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PAPP2
 
 Note that we are composing \lstinline{pVar} and \lstinline{pApp} using alternative. Alternation is a general operation to compose different parsers, since they represent different grammar rules with the logical relation ``or'' between one another. In this example, both sub-expressions of an application can be either a single variable or again an application. Now \lstinline{pApp} manages to parse an arbitrary number of applications like \lstinline{"x y z ..."} in a right-associative way.
 Nevertheless, even though we are not considering operations but the creation of objects only, such an approach does not turn out to be a modular extension, because if numeric literals are further accepted in our small language, the grammar becomes:
@@ -131,7 +131,7 @@ e ::= x | e ' ' e | n
 \end{lstlisting}
 Besides writing a new parser for literals, we need to rewrite the existing \lstinline{pApp}, since applications can now contain numbers, like \lstinline{"x 3"} and so on.
 
-\lstinputlisting[linerange=44-49]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PLIT
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PLIT
 \bruno{END: Text to be deleted/moved/rewritten in S2}
 
 \bruno{Now, here you can refer back to the example which is used in S2
@@ -156,15 +156,15 @@ self-reference of our whole parser, open to future extensions. Note
 that \lstinline{p} should be defined as a by-name parameter using
 \lstinline{"=>"}.
 
-\lstinputlisting[linerange=63-63]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PAPPFIX
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PAPPFIX
 
 Here the type \lstinline{Fix[Parser[Expr]]}, namely \lstinline{(=>} \lstinline{Parser[Expr])} \lstinline{=>} \lstinline{Parser[Expr]} is exactly what we want for a parser. Similarly \lstinline{pVar} is redefined also as a function using the explicit fix-point \lstinline{p}. To be more convenient for composition, we define an auxiliary combinator \lstinline{"|||"} for parsers of type \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} with the same \lstinline{R} and \lstinline{E}. It is more general using \lstinline{R} instead of \lstinline{Parser[E]}, because there might be multiple fix-points in the parameter. Such a function is overloaded and can be invoked as an infix operator when defined in an implicit class. It is implemented using the general \lstinline{merge} function in Section~\ref{subsec:openrecursion}.
 
-\lstinputlisting[linerange=67-75]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_COMBINATOR
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_COMBINATOR
 
 Now since \lstinline{pVar} and \lstinline{pApp} are defined independently, we are able to compose them using \lstinline{|||}:
 
-\lstinputlisting[linerange=79-79]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_PVARAPP
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PVARAPP
 
 Here \lstinline{pVarApp} is the combination of two parsers. But what we really want is something that has type \lstinline{Parser[Expr]}. One can be soon reminded that in Section~\ref{subsec:openrecursion}, we use \lstinline{fix} to get the fix-point of a function, in this case we write \lstinline{fix(pVarApp)}, which manages to parse an arbitrary number of applications.
 
@@ -186,7 +186,7 @@ We proceed to implement those parsers. An issue is that we need both a \lstinlin
 Hence we use a pair in the parameter:\bruno{I don't think the approach
 below, adding pairs, is very modular: it requires changing your }
 
-\lstinputlisting[linerange=83-102]{../Scala/Parser/src/PaperCode/ParsingWithOR.scala}% APPLY:linerange=PARSING_TYPEDEXPR
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_TYPEDEXPR
 
 Based on the old \lstinline{pVar} and \lstinline{pApp}, we implement \lstinline{pVar2} and \lstinline{pApp2} which take the pair as their fix-points instead.
 In that case the parsers are consistent, and hence can be composed using the combinator \lstinline{|||}.

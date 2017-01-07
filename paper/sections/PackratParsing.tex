@@ -43,14 +43,17 @@ parseSub = do
 \end{lstlisting}
 \end{tabular}
 
-To solve this issue, we have to rewrite the grammar as below to eliminate left-recursion and build the parser based on this new grammar.
+To solve this issue, we have to rewrite the grammar as below to eliminate left-recursion and build the parser based on this new grammar.\\
 
+\begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <expr> ::= <int> <expr'>
 
 <expr'> ::= <empty> \alt `-' <int> <expr'>
 \end{grammar}
+&
+\end{tabular}
 
 After left-recursion elimination, the structure of grammar is changed, as well as its corresponding parser. In a modular setting, it is possible but unnecessorily compilcated to analyse the grammar and rewrite it when doing extension. Anticipating that every non-terminal has left-recursive rules, even though some do not, is helpful for extension. However, it is inconvenient and introduces extra complexity for representation of grammar and implementation of parser.
 
@@ -239,6 +242,6 @@ It is worth mentioning that such a grammar is left-recursive, yet well supported
 longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, Packrat parsers do not suffer from the backtracking
 problem, as the technique uses memoization to record intermediate parsing results.
 
-To shorten our code, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing in the rest of paper. The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
+For more concise demonstration, in the rest of paper we assume that all the code are in an enclosing environment of traits \inlinecode{StandardTokenParsers} and \inlinecode{PackratParsers}. Futhermore, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing as below. The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
 
-\lstinputlisting[linerange=36-43]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
+\lstinputlisting[linerange=34-41]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
