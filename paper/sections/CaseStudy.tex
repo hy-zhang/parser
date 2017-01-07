@@ -224,13 +224,13 @@ in our implementation, because we only compose existing codes in such cases.
 
 To discover the reasons of slower execution time, we made some more experiments
 on two possible factors which could affect the performance.
-They are object algebra and the longest matching alternative combinator.
-We use object algebra for ASTs and the longest matching alternative combinator \inlinecode{|||} for parsing,
+They are object algebra and the longest match alternative combinator.
+We use object algebra for ASTs and the longest match alternative combinator \inlinecode{|||} for parsing,
 while Ilya's implementation uses case class and the ordinary alternative combinator.
 
 We implemented two more versions. One is a modified version of our implementation,
 with object algebra replaced by case class for the ASTs.
-The other is a modified version of Ilya's implementation, using the longest matching
+The other is a modified version of Ilya's implementation, using the longest match
 alternative combinator instead of the ordinary one.
 
 \huang{done}\bruno{A table showing a summary of results is missing here. We discussed this before.}
@@ -261,7 +261,7 @@ alternative combinator instead of the ordinary one.
 Table \ref{tab:ext-comparison} shows part of the comparison results of these four versions,
 full table is available online []. It suggests that the difference of running time between
 using object algebra and class is little, roughly 1\%.
-The usage of longest matching combinator slows the performance by 7\%. The main reason of slower
+The usage of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
 more intermediate function calls and method overriding. However, it is worth metioning that
 because of the memoization technique of Packrat parsers, we are only constant times

@@ -1,6 +1,6 @@
 \section{Packrat Parsing for Modularity}\label{sec:packrat}
 
-This section discusses the algorithmic challenges introduced by modular parsing and argues that parser combinators from Packrat Parsing
+This section discusses the algorithmic challenges introduced by modular parsing and argues that parser combinators from Packrat parsing
 are suitable to address those challenges.
 
 \subsection{Algorithmic Challenges of Modularity}
@@ -140,7 +140,7 @@ of left-recursion are not major concerns. A different library can even build a n
 \name with fancy features or higher efficiency.
 \end{comment}
 Scala has a standard parser combinator library\footnote{https://github.com/scala/scala-parser-combinators}
-which implements Packrat parsers.
+\cite{moors2008parser} which implements Packrat parsers.
 The library provides a number of parser combinators, together with some basic parsers.
 Below we present an example to illustrate Scala parsers.
 %
@@ -174,18 +174,16 @@ Note that a parser has type \lstinline{PackratParser[E]} for some
 \lstinline{E}, which indicates the type of results it produces. Figure~\ref{fig:packrat-arith} shows the abstract syntax and
 the parser code that generates expressions as ASTs. Meanwhile, pretty-printing shows up as an operation on the AST.
 
-\huang{doesn't compile}
-
 \begin{figure}[t]
 \centering
-\lstinputlisting[linerange=7-27]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_EXPR
+\lstinputlisting[linerange=6-29]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
 \caption{Packrat Parsing for an arithmetic language.}\label{fig:packrat-arith}
 \end{figure}
 
 
 In the trait \lstinline{ExprParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} can parse an integer for \lstinline{Lit},
 whereas \lstinline{pAdd} handles addition and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
-recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the alternative combinator with longest match.
+recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the longest match alternative combinator \inlinecode{|||}.
 Table~\ref{tab:packrat} gives a closer look at part of the API that we have used in our work.
 
 \begin{table}[t]
@@ -246,11 +244,10 @@ def |||[U >: T](q0: => Parser[U]): Parser[U]
   combinators used in the paper.}}\label{tab:packrat}
 \end{table}
 
-
-Finally, a generic \inlinecode{parse} function is used for testing:
-
-\lstinputlisting[linerange=52-57]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=PACKRAT_RUNPARSER
-
 It is worth mentioning that such a grammar is left-recursive, yet well supported by Packrat parsers. It also employs automatic
-longest match composition by using the library function \lstinline{|||}. Finally, Packrat parsers do not suffer from the backtracking
-problem, as the technique uses memoization to record intermediate parsing results. We will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} in the rest of paper.
+longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, Packrat parsers do not suffer from the backtracking
+problem, as the technique uses memoization to record intermediate parsing results.
+
+To shorten our code, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing in the rest of paper. The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
+
+\lstinputlisting[linerange=36-43]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER

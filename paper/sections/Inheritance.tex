@@ -81,8 +81,8 @@ of left-recursion are not major concerns. A different library can even build a n
 %that the techniques introduced by us, enable us to solve those two challenges.}
 
 \begin{itemize}
-\item \textbf{Extension 1}: adding a new case (or rather, a new construct) to \lstinline{Expr};
-\item \textbf{Extension 2}: adding a new operation to \lstinline{Expr}.
+\item \textbf{Extension 1}: adding a new case (or rather, a new construct) to \inlinecode{Expr};
+\item \textbf{Extension 2}: adding a new operation to \inlinecode{Expr}.
 \end{itemize}
 
 \paragraph{Attempt to Extend the Parser} Now we first consider
@@ -97,42 +97,43 @@ extension 1, namely we are extending the syntax as well as the parser. Hence we 
 As in an OO solution to the Expression Problem, it is easy to extend
 the corresponding AST:
 
-\lstinputlisting[linerange=98-100]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=OVERVIEW_SIMPLE_LAM
+\lstinputlisting[linerange=30-32]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_SIMPLE_LAM
 
 And since we already have the parser for literals and additions, we would
 like to build the new parser by reusing the old one. Here one may quickly come up
-with the following attempt, where a new parser is defined for \lstinline{Var}, then composed
-with \lstinline{pExpr}:
+with the following attempt, where a new parser is defined for \inlinecode{Var}, then composed
+with \inlinecode{pExpr}:
 
-\lstinputlisting[linerange=62-63]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=BAD_ATTEMPT
+\huang{Extending from old parser is necessory to get the `pExpr', added a surrounding trait.}
+\lstinputlisting[linerange=43-46]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_BAD_ATTEMPT
 
-Unfortunately, it fails to parse some expressions like \lstinline{"1 + x"}, which is obviously valid in the new grammar.
-The reason is that \lstinline{pAdd} makes two recursive calls to parse sub-expressions, by using \lstinline{pExpr}, which
-covers both cases in the old grammar. But the newly added case \lstinline{pVar} is not observed by the recursive \lstinline{pExpr},
-hence the parser does not work as expected. Still, one may continue to change the recursive call in \lstinline{pAdd} with \lstinline{pVarExpr},
+Unfortunately, it fails to parse some expressions like \inlinecode{"1 + x"}, which is obviously valid in the new grammar.
+The reason is that \inlinecode{pAdd} makes two recursive calls to parse sub-expressions, by using \inlinecode{pExpr}, which
+covers both cases in the old grammar. But the newly added case \inlinecode{pVar} is not observed by the recursive \inlinecode{pExpr},
+hence the parser does not work as expected. Still, one may continue to change the recursive call in \inlinecode{pAdd} with \inlinecode{pVarExpr},
 but modification on existing code sacrifices separate compilation, as mentioned by the Expression Problem.
 
 \subsection{Inheritance-Based Approach}\label{subsec:inheritance-approach}
+
+\huang{It seems a little bit weird since we were already using inheritance in the `bad attempt'. I think we could focus on overriding here}
 
 Fortunately in Scala we can make use of inheritance for modular parsing. Specifically,
 the new parser can be defined in an enclosing trait that extends
 the old one:
 
-\lstinputlisting[linerange=68-73]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=INHERITANCE_APPROACH
-Now \lstinline{VarExprParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
-method overriding in inheritance. When the input \lstinline{"1 + x"} is fed to the parser \lstinline{this.pExpr}, it firstly delegates
-the work to \lstinline{super.pExpr}, which parses literals and additions. However, the recursive call \lstinline{pExpr} in \lstinline{pAdd}
-actually refers to \lstinline{this.pExpr} again, due to dynamic dispatch. It implies that the recursive call has included the extension. This
+\lstinputlisting[linerange=50-55]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
+Now \inlinecode{VarExprParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
+method overriding in inheritance. When the input \inlinecode{"1 + x"} is fed to the parser \inlinecode{this.pExpr}, it firstly delegates
+the work to \inlinecode{super.pExpr}, which parses literals and additions. However, the recursive call \inlinecode{pExpr} in \inlinecode{pAdd}
+actually refers to \inlinecode{this.pExpr} again, due to dynamic dispatch. It implies that the recursive call has included the extension. This
 elegant inheritance-based approach opens the recursion of parsers in a modular way.
 
 Notice that Scala has a linearized-style multiple inheritance for traits. It can be very helpful when composing several languages. Suppose now
-we want to compose the parsers for expressions from pre-defined languages \lstinline{LanguageA} and \lstinline{LanguageB} using alternative.
-The use of keyword \lstinline{super} is able to
+we want to compose the parsers for expressions from pre-defined languages \inlinecode{LanguageA} and \inlinecode{LanguageB} using alternative.
+The use of keyword \inlinecode{super} is able to
 specify the implementation from inheritance, like:
 
-\lstinputlisting[linerange=78-84]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
+\lstinputlisting[linerange=60-66]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
 
 As we demonstrated, inheritance is the key technique to obtain semantic modularity.
 It enables type-safe code reuse and separate compilation for parsing OO style ASTs with extension 1.
-
-

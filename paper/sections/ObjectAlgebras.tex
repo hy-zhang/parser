@@ -1,18 +1,18 @@
 \section{Extensible ASTs with Object Algebras}\label{sec:algebrasandparsing}
 
 The inheritance-based approach benefits us from building extensible parsers, based on an OO class hierarchy.
-Nevertheless, the addition of new operations over the AST becomes problematic. Often it requires modification on
+Nevertheless, the addition of new operations over the ASTs becomes problematic. Often it requires modification on
 the existing code, which breaks modularity. In this section, we will have a closer look at how it motivates us to
 use Object Algebras for full extensibility.
 
 \subsection{Problem with Traditional OO ASTs}\label{subsec:problemwithoutoa}
 
 Now it comes to extension 2 in Section~\ref{subsec:dimensions}. In the previous code, we have presented pretty-printing as
-an example of operations on the AST. Suppose now we also want to collect free variables on the expression language, which models
+an example of operations on the ASTs. Suppose now we also want to collect free variables on the expression language, which models
 literals, additions and variables. Based on the traditional OO class hierarchy, one attempt would be extending \lstinline{Expr} with the new
 operation directly:
 
-\lstinputlisting[linerange=89-89]{../Scala/Parser/src/PaperCode/Overview/Overview.scala}% APPLY:linerange=ATTEMPT_EXPRWITHFREEVARS
+\lstinputlisting[linerange=19-19]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=ATTEMPT_EXPRWITHFREEVARS
 It refers to one Scala solution to the Expression Problem []. But then programmers have to define new classes for literals, additions and variables
 by extending the old ones together with \lstinline{FreeVarsExpr}. The critical issue is that, the existing parsing code only generates objects of the old
 types, again it is a modularity issue, since it is a bad idea to modify existing code again and again with extensions. Other solutions including modelling constructors as functions introduce unnecessary complexity.
@@ -30,25 +30,25 @@ In Object Algebras, ASTs as recursive data structures are defined using traits, 
 to an abstract method inside. The example from Section~\ref{subsec:packratparsing} is again used here for illustration.
 At first the language only supports literals and additions:
 
-\lstinputlisting[linerange=8-11]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALG
+\lstinputlisting[linerange=7-10]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALG
 The language has two constructors: literals and additions. The trait \lstinline{ExprAlg} is called an \textit{Object Algebra interface},
 whereas as a factory, it cannot produces objects for the expressions directly like traditional approaches, but abstract the results in its
 type parameter \lstinline{E} instead. To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
 provides implementations for all cases. Below is an example of pretty-printing an expression:
 
-\lstinputlisting[linerange=15-18]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
+\lstinputlisting[linerange=14-17]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
 Here \lstinline{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
 Furthermore, one can define a new trait to implement evaluation on arithmetic expressions:
 
-\lstinputlisting[linerange=22-25]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
+\lstinputlisting[linerange=21-24]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
 
 On the other hand, the data variants can be extended by inheriting \lstinline{ExprAlg} and adding new cases only. Now we extend the language
 with variables. A new Object Algebra interface \lstinline{VarAlg} is defined as follows:\haoyuan{Can we use var instead of varE?}
 
-\lstinputlisting[linerange=29-31]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
+\lstinputlisting[linerange=28-30]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
 Now pretty-printing on the new language can be realized without modifying existing code:
 
-\lstinputlisting[linerange=35-37]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
+\lstinputlisting[linerange=34-36]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
 We observe that only the new case is implemented for pretty-printing, and the others have been inherited.
 It offers programmers with great code reuse, in the sense that existing cases can also be
 overridden in \lstinline{VarExprPrint} using \lstinline{"override def"}.
@@ -56,7 +56,7 @@ overridden in \lstinline{VarExprPrint} using \lstinline{"override def"}.
 On this, to create an expression of \lstinline{VarExprAlg}, a generic method is defined as follows:
 
 \huang{todo: better name for build}\haoyuan{makeExp}
-\lstinputlisting[linerange=41-41]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
+\lstinputlisting[linerange=8-8]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
 Such a method implicitly represents the expression \lstinline{"1 + x"}. The code
 
 \begin{lstlisting}
@@ -70,7 +70,7 @@ there will be a lot of desugarings (or transformations). However, we argue that 
 in a very clever way. For example, if one wants to transform a \lstinline{VarExprAlg} expression to an \lstinline{ExprAlg} expression by
 replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:\haoyuan{mention in discussion that shy deals with boilerplate.}
 
-\lstinputlisting[linerange=45-56]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_REFACTOR
+\lstinputlisting[linerange=12-23]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_REFACTOR
 Here the \lstinline{VarExprAlg} expression \lstinline{"1 + x"} is changed to \lstinline{ExprAlg} expression \lstinline{"1 + 2"}, before the pretty-printing algebra is applied. The abstract method
 \lstinline{alg} in \lstinline{Refactor} can actually be any algebra simply for delegation. By passing a concrete implementation
 to \lstinline{alg}, \lstinline{Refactor} will be able to transform a \lstinline{VarExprAlg} expression before we obtain the result.
@@ -80,13 +80,13 @@ to \lstinline{alg}, \lstinline{Refactor} will be able to transform a \lstinline{
 Just as shown above, \lstinline{ExprAlg} is defined for a small language in an Object-Algebra style. Furthermore,
 A parser can be defined for this whole language at once. Since Object Algebras represent ``objects'' implicitly as functions like \lstinline{ExprAlg[E] =>} \lstinline{E} for generic \lstinline{E}, such a parser should have type \lstinline{ExprAlg[E] =>} \lstinline{Parser[E]}, where \lstinline{E} can be abstracted by the enclosing type.
 
-\lstinputlisting[linerange=60-68]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
+\lstinputlisting[linerange=27-35]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
 Such a parser works fine, yet it does not appear to be extensible. For example, we have demonstrated in Section~\ref{subsec:inheritance-approach} that method overriding can update \lstinline{pExpr} for an extended syntax, but now \lstinline{pExpr} will have a different type, like \lstinline{VarExprAlg[E] =>} \lstinline{Parser[E]} where the difference appears in the argument. The difference of types prohibits method overriding, however, this problem refers to \textit{binary methods}. \haoyuan{Shall we mention this?}
 
 One solution to this problem is taking out the argument as a single field, hence it supports overriding as well. Therefore we refactor the parsing code as follows:
-\lstinputlisting[linerange=72-81]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASE_OA_PARSER
+\lstinputlisting[linerange=39-48]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=BASE_OA_PARSER
 This is precisely the pattern that we advocate for modular parsing. Note that \lstinline{pE} is the one that is used recursively, exported by the trait and considered to be overridden from inheritance. The reason why we use an extra and seemingly redundant \lstinline{pExprE}, is that \lstinline{pE} can no longer be referred to by the \lstinline{super} keyword, as a limitation of Scala for generics, hence we can directly invoke \lstinline{pExprE} as the specific \lstinline{pE} in \lstinline{ExprOAParser}. And we still want code reuse for the composition of \lstinline{pLit} and \lstinline{pAdd}. Now it is worth trying on this pattern with an extension, like \lstinline{VarExprAlg} which we have been using:
-\lstinputlisting[linerange=85-96]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=EXT_OA_PARSER
+\lstinputlisting[linerange=52-63]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=EXT_OA_PARSER
 In the client code shown above, an instance of algebra is fed to \lstinline{VarExprOAParser} for pretty-printing expressions. Then the trait exports \lstinline{pE}, parses the input and applies the algebra. The result shows that such a pattern is a nice solution to modular parsing. At this point, one may argue that with a different operation like evaluation, the redundant code is required to obtain the parser, and it results in parsing the same input twice. This is generally solved in the original Object Algebras paper [] by composing two algebras into one in advance.
 
 \subsection{Parsing with Multiple Syntax}\label{subsec:differentsyntax}
@@ -107,7 +107,7 @@ One intuition of using Object Algebras, as illustrated above, is to separate dat
 
 Hence we write code for the extended AST, pretty-printing operation and the extended parser:
 
-\lstinputlisting[linerange=100-129]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\lstinputlisting[linerange=67-96]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
 Besides lexing, the trait \lstinline{TypedLamOAParser} also introduces parsers for types, and the new case for expressions. For the same reason,
 we use \lstinline{pTypedLamT} and \lstinline{pTypedLamE} as copies of current \lstinline{pT} and \lstinline{pE}, recursively. \lstinline{pT} and \lstinline{pE} are actually the parsers for recursion.
 
@@ -116,5 +116,5 @@ exactly express multiple syntax. The isolation for different syntax
 is guaranteed by the type system. Now it is straightforward to show some client code
 for the new parser:
 
-\lstinputlisting[linerange=133-135]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
+\lstinputlisting[linerange=100-102]{../Scala/Parser/src/PaperCode/Overview/OA.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
 Pretty-printing the parsed results just works as expected.
