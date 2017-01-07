@@ -14,60 +14,51 @@ problematic in a modular setting.
 
 \paragraph{Left-Recursion Elimination} The top-down, recursive descent parsing strategy adopted by those parser combinator libraries cannot support left-recursive grammars directly. The common solution is to rewrite the grammar into an equivalent but not left-recursive one, so called left-recursion elimination.
 
-A left-recursive grammar for a simple arithmetic expression language can be written in a straightforward way. An alternative grammar, that eliminates left recursion is also presented on the right side:
+The grammar below represents a simple arithmetic language containing only integers. Its corresponding parser is shown on the right side, written in Parsec.
 
-\begin{tabular}{m{0.4\linewidth}m{0.4\linewidth}}
+\begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
 \setlength{\grammarindent}{5em}
 \begin{grammar}
-<expr> ::= <int> \alt <expr> `+' <int>
+<expr> ::= <int>
 \end{grammar}
 &
+\begin{lstlisting}[language=PlainCode]
+parseExpr = parseInt
+\end{lstlisting}
+\end{tabular}
+
+Consider we extended the language by adding subtractions to the grammar. If we still write its parser by directly following the grammar structure, the new left-recursive case will get the parser into an infinite loop. Namely, \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
+
+\begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> \alt <expr> `-' <int>
+\end{grammar}
+&
+\begin{lstlisting}[language=PlainCode]
+parseExpr = parseSub <|> parseInt
+parseSub = do
+  e <- parseExpr
+  ...
+\end{lstlisting}
+\end{tabular}
+
+To solve this issue, we have to rewrite the grammar as below to eliminate left-recursion and build the parser based on this new grammar.
+
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <expr> ::= <int> <expr'>
 
-<expr'> ::= <empty> \alt `+' <int> <expr'>
+<expr'> ::= <empty> \alt `-' <int> <expr'>
 \end{grammar}
-\end{tabular}
 
-The main problem with left-recursion elimination is that it is a
-\emph{global} transformation on a grammar. Given that the full grammar
-is known, then it is possible to remove all left-recursive
-cases. However, when doing modular parsing, the full grammar is not
-known!
-
-For the example above, if we extend the original grammar to support
-subtraction, we must analyse the full grammar again to rewrite it.
-
-\begin{tabular}{m{0.4\linewidth}m{0.4\linewidth}}
-\setlength{\grammarindent}{5em}
-\begin{grammar}
-<expr> ::= <int> \alt <expr> `+' <int> \alt <expr> `-' <int>
-\end{grammar}
-&
-\setlength{\grammarindent}{5em}
-\begin{grammar}
-<expr> ::= <int> <expr'>
-
-<expr'> ::= <empty> \alt `+' <int> <expr'> \alt `-' <int> <expr'>
-\end{grammar}
-\end{tabular}
-
+After left-recursion elimination, the structure of grammar is changed, as well as its corresponding parser. In a modular setting, it is possible but unnecessorily compilcated to analyse the grammar and rewrite it when doing extension. Anticipating that every non-terminal has left-recursive rules, even though some do not, is helpful for extension. However, it is inconvenient and introduces extra complexity for representation of grammar and implementation of parser.
 
 Another issue of left-recursion elimination is that it requires extra
 bookkeeping work to retain the original semantics. For example, the
-expression $1+2-3$ is parsed as $(1+2)-3$ in the left-recursive
-grammar, but after rewrite the result is $1((+2)-3))$. The parse tree
+expression $1-2-3$ is parsed as $(1-2)-3$ in the left-recursive
+grammar, but after rewrite the result is $1((-2)-3))$. The parse tree
 must be transformed to recover its structure.
-
-\bruno{Huang, please fix this example ASAP.}
-\bruno{This example does not appear to be problematic: adding ``-''
-  does not affect the rest of the grammar. Isn't the problem that
-  sometimes adding a new case to the grammar, requires changing other
-parts? Otherwise I don't see why left-recursion is a problem, and we
-cannot simply claim that it is a problem. You have to make a better
-effort to find a problematic grammar.
-}
 
 \paragraph{Longest Match Composition} Another problematic issue
 in parser combinator libraries is the need for manually ordering

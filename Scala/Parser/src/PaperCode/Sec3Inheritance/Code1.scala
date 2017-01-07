@@ -40,7 +40,7 @@ class Var(x: String) extends Expr {
   }
 
 //BEGIN_INHERITANCE_BAD_ATTEMPT
-object Attempt extends ExprParser {
+trait Attempt extends ExprParser {
   val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
   val pVarExpr: Parser[Expr] = pExpr ||| pVar
 }
