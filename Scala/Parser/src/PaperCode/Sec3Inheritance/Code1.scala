@@ -1,10 +1,9 @@
 package PaperCode.Sec3Inheritance
 
-import scala.util.parsing.combinator.syntactical._
-import scala.util.parsing.combinator._
+import PaperCode.Common
 
 
-object Code1 extends StandardTokenParsers with PackratParsers {
+object Code1 extends Common {
 
   trait Expr {
     def print: String
@@ -22,7 +21,7 @@ object Code1 extends StandardTokenParsers with PackratParsers {
       numericLit ^^ { x => new Lit(x.toInt) }
     val pAdd: PackratParser[Expr] =
       pExpr ~ ("+" ~> pExpr) ^^ { case e1 ~ e2 => new Add(e1, e2) }
-    val pExpr: PackratParser[Expr] =
+    def pExpr: PackratParser[Expr] =
       pLit ||| pAdd
   }
 
@@ -31,13 +30,6 @@ class Var(x: String) extends Expr {
   def print = x
 }
 //END_INHERITANCE_SIMPLE_LAM
-
-  type Parser[E] = PackratParser[E]
-
-  def parse[E](p: Parser[E]): String => E = in => {
-    val t = phrase(p)(new lexical.Scanner(in))
-    if (t.successful) t.get else scala.sys.error(t.toString)
-  }
 
 //BEGIN_INHERITANCE_BAD_ATTEMPT
 trait Attempt extends ExprParser {
@@ -49,7 +41,7 @@ trait Attempt extends ExprParser {
 //BEGIN_INHERITANCE_APPROACH
 trait VarExprParser extends ExprParser {
   val pVar: Parser[Expr] = ident ^^ { x => new Var(x) }
-  override val pExpr: Parser[Expr] = super.pExpr ||| pVar
+  override def pExpr: Parser[Expr] = super.pExpr ||| pVar
 }
 
 val r = parse(new VarExprParser {}.pExpr)("1 + x").print // "(1 + x)"

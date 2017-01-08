@@ -26,7 +26,7 @@ object Code2 extends StandardTokenParsers with PackratParsers {
       numericLit ^^ { x => new Lit(x.toInt) }
     val pAdd: PackratParser[Expr] =
       pExpr ~ ("+" ~> pExpr) ^^ { case e1 ~ e2 => new Add(e1, e2) }
-    val pExpr: PackratParser[Expr] =
+    def pExpr: PackratParser[Expr] =
       pLit ||| pAdd
   }
 

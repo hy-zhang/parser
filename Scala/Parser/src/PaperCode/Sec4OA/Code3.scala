@@ -1,10 +1,9 @@
 package PaperCode.Sec4OA
 
-import scala.util.parsing.combinator.syntactical._
-import scala.util.parsing.combinator._
+import PaperCode.Common
 
 
-object Code30 extends StandardTokenParsers with PackratParsers {
+object Code30 extends Common {
 //BEGIN_BASE_OA_PARSER_BAD
 trait ExprOAParser[E] {
   lexical.delimiters += "+"
@@ -19,7 +18,7 @@ trait ExprOAParser[E] {
 }
 
 
-object Code3 extends StandardTokenParsers with PackratParsers {
+object Code3 extends Common {
 //BEGIN_BASE_OA_PARSER
 trait ExprOAParser[E] {
   lexical.delimiters += "+"
@@ -48,11 +47,6 @@ val r = parse(new VarExprOAParser[String] {
   override val alg = new VarExprPrint {}
 }.pE)("1 + x") // "(1 + x)"
 //END_EXT_OA_PARSER
-
-  def parse[E](p: Parser[E]): String => E = in => {
-    val t = phrase(p)(new lexical.Scanner(in))
-    if (t.successful) t.get else scala.sys.error(t.toString)
-  }
 
   def main(args: Array[String]): Unit = {
     println(r)
