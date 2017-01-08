@@ -163,20 +163,18 @@ keywordstyle=\ttfamily\bfseries,
   allow complete parsers to be built out of modular parsing
   components, but also enable the parsing components to be
   \emph{modularly type-checked} and \emph{separately compiled}. We
-  present \name: a parsing combinator library that enables modular
+  present a technique based parsing combinators that enables modular
   parsing. Interestingly, the modularity requirements for modular
   parsing rule out several existing parsing combinator approaches,
   which rely on some non-modular techniques. We show that Packrat
   parsing techniques, provide solutions for such modularity problems,
-  and enable reasonable performance in a modular setting.  Thus \name
-  is built on top of a Packrat parsing library, but adds new parsing
-  combinators to enable modular parsing. The new parsing combinators
-  employ \emph{delegation-based} techniques and \emph{Object Algebras}
-  to support extensibility. To evaluate \name we conduct a case study
-  based on the ``Types and Programming Languages'' interpreters. The
-  case study shows that \name is effective at reusing parsing code
-  from existing interpreters, and the total parsing code is 60\%
-  shorter than the non-modular parsing code.
+  and enable reasonable performance in a modular setting.
+  Extensibility is achieved using \emph{Object Algebras}.  To evaluate
+  the approach we conduct a case study based on the ``Types and
+  Programming Languages'' interpreters. The case study the
+  effectiveness at reusing parsing code from existing interpreters,
+  and the total parsing code is 68\% shorter than the non-modular
+  parsing code.
 
 \end{abstract}
 
