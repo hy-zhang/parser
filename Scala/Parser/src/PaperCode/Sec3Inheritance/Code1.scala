@@ -51,6 +51,20 @@ val r = parse(new VarExprParser {}.pExpr)("1 + x").print // "(1 + x)"
     println(r)
   }
 
+  // ---------------------------------------------------
+
+  trait LanguageA {
+    def pExpr: Parser[String] = ident
+  }
+
+  trait LanguageB {
+    def pExpr: Parser[String] = ident
+  }
+
+  trait LanguageC extends LanguageA with LanguageB {
+    override def pExpr = super[LanguageA].pExpr ||| super[LanguageB].pExpr
+  }
+
 /*
 //BEGIN_MULTIPLE_INHERITANCE
 trait LanguageA {...}
@@ -58,7 +72,7 @@ trait LanguageA {...}
 trait LanguageB {...}
 
 trait LanguageC extends LanguageA with LanguageB {
-  override val pExpr = super[LanguageA].pExpr ||| super[LanguageB].pExpr
+  override def pExpr = super[LanguageA].pExpr ||| super[LanguageB].pExpr
 }
 //END_MULTIPLE_INHERITANCE
 */
