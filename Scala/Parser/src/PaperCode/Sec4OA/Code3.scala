@@ -40,7 +40,7 @@ trait VarExprOAParser[E] extends ExprOAParser[E] {
   val pVar: Parser[E] = ident ^^ alg.varE
   val pVarExpr: Parser[E] = pExpr ||| pVar
 
-  override val pE = pVarExpr
+  override val pE: Parser[E] = pVarExpr
 }
 
 val r = parse(new VarExprOAParser[String] {

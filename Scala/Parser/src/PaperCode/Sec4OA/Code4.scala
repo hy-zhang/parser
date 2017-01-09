@@ -55,7 +55,7 @@ trait TypedLamOAParser[E, T] extends VarExprOAParser[E] {
   val pTypedLamE: Parser[E] = pVarExpr ||| pLam
 
   val pT: Parser[T] = pTypedLamT
-  override val pE = pTypedLamE
+  override val pE: Parser[E] = pTypedLamE
 }
 //END_OVERVIEW_OA_MULTI_SYNTAX
 

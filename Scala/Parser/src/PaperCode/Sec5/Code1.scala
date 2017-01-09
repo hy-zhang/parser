@@ -64,7 +64,7 @@ object TypedLam {
   // Abstract syntax
   trait Alg[E, T] {
     def intT(): T
-    def arrowT(t1: T, t2: T): T
+    def arrT(t1: T, t2: T): T
     def lam(x: String, t: T, e: E): E
   }
 

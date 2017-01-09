@@ -57,7 +57,7 @@ covers both cases in the old grammar. But the newly added case \inlinecode{pVar}
 hence the parser does not work as expected. It is possible to build the correct parser by replacing the recursive call in \inlinecode{pAdd} with \inlinecode{pVarExpr}.
 However, modification on existing code sacrifices separate compilation, as mentioned by the Expression Problem.
 
-\subsection{Overriding for Extensibility}
+\subsection{Overriding for Extensibility}\label{subsec:overriding}
 
 It is actually quite simple to let \inlinecode{pExpr} cover the newly extended case without modifying existing code. Method overriding is a standard feature which often comes with inheritance, and it allows us to explain inherited method again, such as \inlinecode{pExpr}. We can build the new parser which correctly parses \inlinecode{"1 + x"} as below.
 

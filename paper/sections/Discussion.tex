@@ -1,9 +1,6 @@
-\section{Discussion}\label{sec:discussion}
+\section{More Features}
 
-The use of interface-based approach and Object Algebras enables us to do modular parsing. Programmers can easily follow the pattern
-captured in the previous section, build modular ASTs and hence have access to multiple dimensions of extensibility. This section
-explores more interesting features of this pattern, including overriding existing parsing rules, and framework of language components
-for modularity over hierarchies.
+The use of inheritance-based approach and Object Algebras enables us to build modular parsers, which are able to evolve with syntax together. This section explores more interesting features, including overriding existing parsing rules, language components for abstracting language features, and alternative techniques under the whole framework.
 
 \subsection{Overriding Existing Rules}
 
@@ -17,7 +14,7 @@ in a subtype of \lstinline{BaseParser}, and give a different implementation. It 
 dispatch.
 
 \lstinputlisting[linerange=16-22]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
-On the other hand, the lexer can also be updated, since keywords and delimiters are represented by sets of strings.
+Futhermore, the lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser.
 
 It is natural to keep overriding existing parsers, whereas another potential use of this pattern is to reuse old versions of a parser. For instance,
@@ -27,7 +24,7 @@ It can be done by copying the code from \lstinline{BaseParser} again, yet does n
 
 \lstinputlisting[linerange=26-32]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
 
-\subsection{Framework of a Language Component}\label{subsec:framework}
+\subsection{Language Component}
 
 Having pointed out that our goal is to realize modular parsers, we expect the code written in an extensible way. We have been focusing on how to extend a language with some additional cases, just as many extensible compilers do, nevertheless, in other cases, languages are defined separately, and the composition of them is again a matter of code reuse. In this section, we propose a framework for defining small languages as modular components, in order for better composition.
 
@@ -36,7 +33,7 @@ specifically:
 \begin{itemize}
     \item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax. The type parameters represent multiple sorts of syntax, and the methods are constructs.
 \item \textbf{Parser:} implementation of the parser with lexing, using inheritance and Object Algebras, with its scoping trait abstracted over the type parameters.
-\item \textbf{Algebra (optional):} some behaviors (operations) on the data structure, such as pretty-printing and so on.
+\item \textbf{Algebras (optional):} concrete operations on ASTs, such as pretty-printing.
 \end{itemize}
 
 Taking again the example in Section~\ref{subsec:parsingwithoa}. The language constructs consists of literals, additions and variables. First we define the
@@ -64,15 +61,8 @@ drawback is that the glue code of composition appears to be boilerplate. As show
 \lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not
 support this feature, nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
 
-\subsection{Fusion of Concepts}\label{subsec:fusion}
-
-\haoyuan{Not sure if this section should be here, or in the related work. I tend to have a big discussion section.}
-\huang{These alternatives could be discussed in the discussion
-  section, not here. 6.1 could only talks about library code. And the
-  titles should be changed as well}\bruno{I think this subsection is
-  unnecessary. The code will be presented already at the end of S5, I
-  presume. }
-
+\subsection{Alternative Techniques}
+\huang{to rewrite}
 In the previous sections we have talked about Packrat Parsing, open recursion and Object Algebras. These components fuse together in our library implementation, for the initial goal, which is to build extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives. For example, Object Algebras are helpful to build extensible data structures, whereas in functional programming, there has been a large amount of related work on extensible datatypes, including DTC and MRM for the Haskell language. And a better
 parsing library would potentially introduce a lot of fancy features and parser combinators, run with high efficiency, or even support indirect left-recursion.
 \haoyuan{Open recursion could also have alternatives?} For now, our implementation integrates the existing ones, and has turned out to be practical in various applications.

@@ -45,9 +45,9 @@ def makeExp[E](alg: VarExprAlg[E]): E = alg.add(alg.lit(1), alg.varE("x"))
 trait Refactor[E] extends VarExprAlg[E] {
   val alg: ExprAlg[E]
   val env: Map[String, Int]
-  def lit(n: Int) = alg.lit(n)
-  def add(e1: E, e2: E) = alg.add(e1, e2)
-  def varE(x: String) = alg.lit(env(x))
+  def lit(n: Int): E = alg.lit(n)
+  def add(e1: E, e2: E): E = alg.add(e1, e2)
+  def varE(x: String): E = alg.lit(env(x))
 }
 
 val r = makeExp(new Refactor[String] {
