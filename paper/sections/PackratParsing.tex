@@ -3,7 +3,7 @@
 This section discusses the algorithmic challenges introduced by modular parsing and argues that parser combinators from Packrat parsing
 are suitable to address those challenges.
 
-\subsection{Algorithmic Challenges of Modularity}
+\subsection{Algorithmic Challenges of Modularity}\label{subsec:challenges}
 At a first look, parser combinators are very suitable for modular parsing, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to composed them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and also are the parsers it takes. Thus in a statically typed programming language they can be statically type-checked.
 Unfortunately many parser combinators have important limitations.
 In particular several parser combinators,

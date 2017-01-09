@@ -15,12 +15,12 @@
 
 Our work integrates several components including extensible parsing,
 parser combinators and extensibility techniques. There has been a
-great amount of related papers on those hot topics, of which some
-inspired us of this paper and encourages us for more exploration. This
+great amount of related papers on those hot topics. Some
+inspired us of this paper and encourage us for more exploration. This
 section will try to lead a discussion on what difference we have made.
 
 \paragraph{Syntactically Extensible Parsing} Extensible parsing is achieved in many
-different areas, of which parser generators are a mainstream area
+different areas, among them parser generators are a mainstream area
 specially designed for modular syntax and parsing. Many parser
 generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016} support
 modular grammars. They allow users to create new
@@ -45,51 +45,45 @@ for Java using library imports. Composition of syntactic
 sugar is easy for users, but it requires many rounds of parsing
 and adaption. This significantly affects efficiency of compilation,
 moreover, the implementation was based on SDF~\cite{Heering1989} and
-Stratego~\cite{Visser2001}, which focused little on separate
-compilation\bruno{focused little or did not have it at all?}.\haoyuan{The authors have
+Stratego~\cite{Visser2001}, which did not focus on separate
+compilation.\bruno{focused little or did not have it at all?}.\haoyuan{The authors have
 mentioned separate compilation as a possible yet unimportant feature; they decided to discard it.}
-Extensible compilers like JastAdd~\cite{Ekman2007} and
+Racket adopts macro system for library-based language extensibility. It is powerful with attributed
+ASTs for contextual information, and extensions can be integrated in a modular way. Whereas
+such modularity is not flexible enough for language unification, as the syntax is only built from extensions.
+Moreover, existing macros cannot be further changed after definition. \haoyuan{correct?}
+On the other hand, extensible compilers like JastAdd~\cite{Ekman2007} and
 Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
 is mostly done using parser generators. Moreover
 they focus on the extensions to a host language. Our library
 is designed for modular language parsers in a type-safe way, with
-flexible language composition. Although overriding existing production
-rules is tricky with our approach, we could perhaps make use of
-embedded domain-specific languages on top of parser combinators and
-transformations for overriding, but it is anyway an orthogonal issue.
-\bruno{Not sure that I understand the last sentence}
-\haoyuan{???} \haoyuan{BTW what about Racket?} \bruno{Have you read
-Languages as Libraries? That is probably an important reference, which
-I think we should cite.}\haoyuan{what about
-  metafront? it is a macro system but does it have type safety?}
-\haoyuan{Extensible syntax with lexical scoping?} \haoyuan{"Extensible
-  syntax" proposes a system for extensible syntax, where users write
-  EDSLs in their language with concrete syntax. Users can write rules
-  for type-based disambiguation. But separate compilation is again not
-  mentioned. Shall we mention that thesis?} \haoyuan{attribute
-  grammars?}
+flexible language composition.
+%\bruno{Have you read
+%Languages as Libraries? That is probably an important reference, which
+%I think we should cite.}
+%\haoyuan{what about
+%  metafront? it is a macro system but does it have type safety?}
+%\haoyuan{Extensible syntax with lexical scoping?} \haoyuan{"Extensible
+%  syntax" proposes a system for extensible syntax, where users write
+%  EDSLs in their language with concrete syntax. Users can write rules
+%  for type-based disambiguation. But separate compilation is again not
+%  mentioned. Shall we mention that thesis?} \haoyuan{attribute
+%  grammars?}
 
 \paragraph{Extensible Parsing Algorithms}
 Extensible parsing algorithms are another area that indeed relates to
 separate compilation. Specifically, \cite{Bravenboer2009} introduces
-\textit{parse table composition}, where grammars\bruno{what
-  is a paper grammar?}\haoyuan{Revised} are compiled
-to the generation of parse tables\bruno{I don't understand the last
-  part; please rephrase. Also please break the sentence into multple
-  sentences. Generally speaking go over the text you wrote and watch
-  out for long sentences. You have a tendency to write very long
-  sentences. }, which are DFAs or NFAs, later they
+\textit{parse table composition}, where grammars are compiled
+to the generation of parse tables. Those parse tables are expressed as DFAs or NFAs, later they
 can be composed by an algorithm, so as to provide separate compilation
 for parsing. Nevertheless, the generation of parse tables is rather
-expensive\bruno{expensive in terms of what? why is it expensive?}.
-\haoyuan{in terms of performance. The sentence is copied from original paper.}
-Furthermore, \name supports \emph{both} separate compilation
+expensive in terms of performance.
+Furthermore, our approach supports \emph{both} separate compilation
 as well as \emph{modular type-checking}. The extensibility of
-parsing in our approach is further available at language composition
-and lexical level. \haoyuan{I mentioned one shortcoming of our
-  approach here, which is we cannot override existing production
-  rules; another one is that we do not have explicit
-  correspondence/relationship between abstract syntax and the parser.}
+parsing is further available at language composition
+and lexical level.
+%\haoyuan{we do not have explicit
+%  correspondence/relationship between abstract syntax and the parser.}
 
 \paragraph{Parser Combinators} Since~\cite{burge1975} firstly
 introduced parser generators, and after Wadler discussed more details
@@ -100,25 +94,10 @@ parsers by introducing functional, or more specifically, monadic
 parser combinators with a foundation on~\cite{nott237}. Related work
 includes Parsec~\cite{Leijen2001}, which is frequently used in Haskell
 for context-sensitive grammars with infinite lookahead. Nevertheless,
-left-recursion is known as a big issue in recursive descent parsers,
-in which case programmers using libraries like Parsec have to manually
-eliminate left-recursion in the grammar, which is cumbersome, but also
-it distorts the shape of its old grammar, restricting the modularity
-of parsing to extreme extent. It is possible to avoid some of
- the limitations of parser combinators.
-\bruno{I'm not sure that th following text should be here. It could
-be in the paper, but somewhere else.}
-For example, we have
-conducted our previous experiment in Haskell, by using open recursion,
-MRM~\cite{Oliveira2015} and Parsec. To support direct left-recursive
-grammars, we made use of the state monad in Parsec to ensure that a
-left-recursive production rule will not be applied successively in
-parsing. It turned out to be successful, yet introduced complexity in
-programming, hence we believe that the parsing library is obligated
-for left-recursion.
+Parsec users suffer from manual left-recursion elimination, back-tracking and
+longest match composition issues, as we discussed before.
 
-Some more recent papers~\cite{Ford2002,Might2011,Frost2008}
-\haoyuan{Pracitical, general parser combinators?} proposed a series of
+Some more recent papers~\cite{Ford2002,Might2011,Frost2008} proposed a series of
 novel parsing techniques that addressed the issue
 of left-recursion. We have selected Packrat
 Parsing for our prototype implementation, as the combinators are
@@ -126,32 +105,22 @@ convenient to use in Scala, which is a platform where functional
 laziness and Object Algebras can perfectly coexist. Also, its support
 for direct left-recursion is already helpful for designing real-world
 parsers practically, though~\cite{warth2008} further demonstrated that
-general left-recursion is supported from the theoretical point of
-view. We have also mentioned that the components used in our library
-can have alternatives, for instance, a different set of parser
-combinators may support ambiguous and left-recursive grammars, or be
-applicable to a different subset of context-free grammars or more, or
-even lead us to another level of performance.
+general left-recursion is supported theoretically.
+Yet we have mentioned that the components used in our approach
+can have alternatives to achieve better modular parsing.
 
 
-To the best of our knowledge, no previous work on parser combinators
-deals with semantic modularity and
-extensibility of parsing. The modularity of abstract syntax trees is
-necessary for modular parsing that supports separate compilation and
-modular type-checking. In our library, Object Algebras have been
-adopted for extensible ASTs, together with the behaviors on them.
 
-\paragraph{Extensibility} There has been alot of work on building
-modular programs, in both functional and object-oriented programming .
+
+\paragraph{Extensibility} To the best of our knowledge, none of the existing techniques
+address the problem of producing extensible ASTs. Certainly, there has been a lot of work on extensible
+data types, in both functional and object-oriented programming.
 For instance, the famous DTC paper~\cite{swierstra2008} represents
 modular ASTs using co-products of every two functors, which forms a
-binary tree structure. It supports extensible datatypes, as well as
-the operations on them by implementing instances of functors. Later
+binary tree structure. Later
 Oliveira et al. presented MRM~\cite{Oliveira2015} in Haskell, which is
 similar to DTC but adopts a list of functors in type-level lists
-instead. As mentioned above, we have conducted our early experiment
-with MRM for modular datatypes, whereas the complexity of library
-implementation was comparably high. Other related work
+instead. Other related work
 includes~\cite{Bahr2014}, where data types are flexible with
 composition as well as decomposition.
 
@@ -174,8 +143,7 @@ also mentioned the dual process of folds, namely
 \textit{anamorphisms}. It is potentially related to our work, as
 parsing is a representative kind of unfolds, whereas they only
 discussed the composition of a cv-coalgebra and a term homomorphism,
-which differs from modular parsing. \haoyuan{From Object Algebras to
-  Attribute Grammars?}
+which differs from modular parsing.
 
 Another interesting observation, as we have mentioned
 in~\ref{subsec:objectalgebras}, is that transformation algebras are
@@ -185,14 +153,7 @@ calculus, as well as other syntactic sugars. In the Shy
 framework~\cite{Zhang2015}, the pattern of transformations is captured
 into a template for Java annotation processing, and most of
 boilerplate code is automatically generated, hence users only need to
-override a few interesting cases, conveniently. The idea of overriding
-existing cases was also proposed in MRM. It is potentially useful to
-our framework.\bruno{The discussion on Extensibility can be
-  considerably shorter. We just need to point out that there are many
-  techniques for extensibility (without discussing alot of details),
-  but most of that work does not address the problem of
-\emph{producing extensible ASTs} (rather than consuming those. Then
-you can talk about Baht's work, and have the discussion on
-transformations. Generally speaking, go over your text, polish it, and
-trim it. You are a bit too ``chatty'' (that is you talk too much): go
-straight to the point.}
+override a few interesting cases, conveniently. It is potentially useful
+in our case. By the way, the idea of overriding
+existing cases was also proposed in MRM. Our approach allows existing parsing
+code to be overridden during inheritance.

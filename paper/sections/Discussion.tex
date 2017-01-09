@@ -62,7 +62,8 @@ drawback is that the glue code of composition appears to be boilerplate. As show
 support this feature, nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
 
 \subsection{Alternative Techniques}
-\huang{to rewrite}
-In the previous sections we have talked about Packrat Parsing, open recursion and Object Algebras. These components fuse together in our library implementation, for the initial goal, which is to build extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives. For example, Object Algebras are helpful to build extensible data structures, whereas in functional programming, there has been a large amount of related work on extensible datatypes, including DTC and MRM for the Haskell language. And a better
+In the previous sections we have talked about Packrat Parsing, inheritance and Object Algebras. These components fuse together in our library implementation, for building extensible parsers. We want to argue here that those aspects are totally orthogonal, and hence can have their alternatives.
+
+For example, we have conducted some previous experiments of modular paring on the Haskell language, based on open recursion, MRM [] and Parsec. \haoyuan{I mention our previous work here. } The delegation-based open recursion can be an alternative for inheritance. It exposes recursion explicitly by a parameter for ``self-reference''.
+Furthermore, there has been a lot of related work that realizes extensible data types in functional programming, including MRM using a list of functors. We used Parsec as the parsing library, but suffered from the issues already illustrated in Section~\ref{subsec:challenges}. As a workaround, we made use of state monad in Parsec to ensure that a left-recursive production rule will not be applied successively in parsing. Whereas a better
 parsing library would potentially introduce a lot of fancy features and parser combinators, run with high efficiency, or even support indirect left-recursion.
-\haoyuan{Open recursion could also have alternatives?} For now, our implementation integrates the existing ones, and has turned out to be practical in various applications.
