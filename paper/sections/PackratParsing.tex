@@ -127,7 +127,7 @@ parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImp
 \noindent However, this results in the worst case exponential time complexity, if the library does not have related optimization.
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}
-Fortunately some more advanced parsing techniques such as Packrat parsing~\cite{Ford2002} have been developed to address limitations of simple parser combinators. Packrat parsers use memoization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated.  Moreover, Packrat parsing supports both direct and indirect left-recursion~\cite{warth2008} theoretically. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in our modular parsing library.
+Fortunately some more advanced parsing techniques such as Packrat parsing~\cite{Ford2002} have been developed to address limitations of simple parser combinators. Packrat parsers use memoization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated. Moreover, Packrat parsing supports both direct and indirect left-recursion~\cite{warth2008} theoretically. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in our modular parsing library.
 \begin{comment}
 It is worth mentioning that the choice of parser combinators will not
 affect the other parts of our library. One can choose other parser
