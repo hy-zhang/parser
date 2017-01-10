@@ -78,7 +78,7 @@ to the generation of parse tables. Those parse tables are expressed as DFAs or N
 can be composed by an algorithm, so as to provide separate compilation
 for parsing. Nevertheless, the generation of parse tables is rather
 expensive in terms of performance.
-Furthermore, our approach supports \emph{both} separate compilation
+Furthermore, our approach supports both \emph{separate compilation}
 as well as \emph{modular type-checking}. The extensibility of
 parsing is further available at language composition
 and lexical level.
@@ -101,8 +101,8 @@ Some more recent papers~\cite{Ford2002,Might2011,Frost2008} proposed a series of
 novel parsing techniques that addressed the issue
 of left-recursion. We have selected Packrat
 Parsing for our prototype implementation, as the combinators are
-convenient to use in Scala, which is a platform where functional
-laziness and Object Algebras can perfectly coexist. Also, its support
+convenient to use in Scala, and Object Algebras can be naturally realized with
+OO inheritance. Also, its support
 for direct left-recursion is already helpful for designing real-world
 parsers practically, though~\cite{warth2008} further demonstrated that
 general left-recursion is supported theoretically.
@@ -112,7 +112,7 @@ can have alternatives to achieve better modular parsing.
 
 
 
-\paragraph{Extensibility} To the best of our knowledge, none of the existing techniques
+\paragraph{Extensibility} To the best of our knowledge, none of the existing parsing techniques
 address the problem of producing extensible ASTs. Certainly, there has been a lot of work on extensible
 data types, in both functional and object-oriented programming.
 For instance, the famous DTC paper~\cite{swierstra2008} represents
