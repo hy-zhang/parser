@@ -55,7 +55,13 @@ To solve this issue, we have to rewrite the grammar as below to eliminate left-r
 &
 \end{tabular}
 
-After left-recursion elimination, the structure of grammar is changed, as well as its corresponding parser. In a modular setting, it is possible but unnecessorily compilcated to analyse the grammar and rewrite it when doing extension. Anticipating that every non-terminal has left-recursive rules, even though some do not, is helpful for extension. However, it is inconvenient and introduces extra complexity for representation of grammar and implementation of parser.
+After left-recursion elimination, the structure of grammar is changed,
+as well as its corresponding parser. In a modular setting, it is
+possible but unnecessarily compilcated to analyse the grammar and
+rewrite it when doing extension. Anticipating that every non-terminal
+has left-recursive rules is helpful for extensibility but overkill,
+since it is inconvenient and introduces extra complexity for
+representation of grammar and implementation of parser.
 
 Another issue of left-recursion elimination is that it requires extra
 bookkeeping work to retain the original semantics. For example, the
@@ -127,7 +133,12 @@ parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImp
 \noindent However, this results in the worst case exponential time complexity in Parsec, because it does not have related optimization.
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}
-Fortunately some more advanced parsing techniques such as Packrat parsing~\cite{Ford2002} have been developed to address limitations of simple parser combinators. Packrat parsers use memoization to record the result of applying each parser at each position of the input, so that repeated computation is eliminated. Moreover, Packrat parsing supports both direct and indirect left-recursion~\cite{warth2008} theoretically. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in our modular parsing library.
+Fortunately some more advanced parsing techniques such as Packrat
+parsing~\cite{Ford2002} have been developed to address limitations of
+simple parser combinators. Packrat parsers use memoization to record
+the result of applying each parser at each position of the input, so
+that repeated computation is eliminated. Moreover, Packrat parsing, in
+theory, supports both direct and indirect left-recursion~\cite{warth2008}. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in for modular parsing.
 \begin{comment}
 It is worth mentioning that the choice of parser combinators will not
 affect the other parts of our library. One can choose other parser
@@ -168,7 +179,8 @@ additions. The concrete syntax is as follows:
 It is straightforward to model ASTs by inheritance and write corresponding parsers for all cases.
 Note that a parser has type \lstinline{PackratParser[E]} for some
 \lstinline{E}, which indicates the type of results it produces. Figure~\ref{fig:packrat-arith} shows the abstract syntax and
-the parser code that generates expressions as ASTs. Meanwhile, pretty-printing shows up as an operation on the AST.
+the parser code that generates expressions as ASTs. The AST supports
+pretty-printing via the \lstinline{print} method.
 
 \begin{figure}[t]
 \centering
@@ -240,7 +252,7 @@ def |||[U >: T](q0: => Parser[U]): Parser[U]
   combinators used in the paper.}}\label{tab:packrat}
 \end{table}
 
-It is worth mentioning that such a grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees the efficiency.
+It is worth mentioning that the grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees the efficiency.
 
 For more concise demonstration, in the rest of paper we assume that all the code are in an enclosing environment of traits \inlinecode{StandardTokenParsers} and \inlinecode{PackratParsers}. Futhermore, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing as below. The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
 
