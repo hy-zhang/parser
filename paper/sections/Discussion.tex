@@ -4,18 +4,17 @@ The use of inheritance-based approach and Object Algebras enables us to build mo
 
 \subsection{Overriding Existing Rules}
 
-Just as many parser generators do, our pattern also supports overriding part of existing parsers easily, but in a type-safe way.
-We can simply update existing production rules, namely the concrete syntax, with new implementations, or eliminate them in extended parsers.
-To illustrate, suppose we have an untyped lambda case in a base parser, but then we replace it with a typed one in its extended parser:
+Just as many parser generators do\huang{???}, our pattern also supports overriding part of existing parsers, but in a type-safe way.
+We can easily update existing parsing rules with new implementations, or eliminate them in extended parsers. As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
 
 \lstinputlisting[linerange=7-12]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
-The above parser shows part of the code, for the space reason we omit details. With OO inheritance, we can actually override \lstinline{pLam}
-in a subtype of \lstinline{BaseParser}, and give a different implementation. It will make a difference during runtime due to dynamic
-dispatch.
+
+Then we want to replace the untyped lambda abstractions by typed lambdas. With inheritance and method overriding, it is easy to only change the implementation of \lstinline{pLam} in the extended parser. The new \inlinecode{pLam} parses a colon and a type in addition, between the identifier and the dot. Due to dynamic dispatch, our new explanation of lambdas will make a difference without affecting the other parts of the parser.
 
 \lstinputlisting[linerange=16-22]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
-Futhermore, the lexer can also be updated, since keywords and delimiters are represented by sets of strings.
-One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser.
+
+
+One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 
 It is natural to keep overriding existing parsers, whereas another potential use of this pattern is to reuse old versions of a parser. For instance,
 we have a \lstinline{NewParser} that extends \lstinline{ExtParser}, with some more cases added, but for the lambda case we want to go back to the untyped one.
