@@ -19,17 +19,17 @@ this problem we employ multiple inheritance, which is supported in
 Scala via traits.
 
 \subsection{The Mismatch Between OO ASTs and Grammars}
-Object-oriented ASTs are ASTs encoded via standard OO techniques, 
-such as the {\sc Composite} or {\sc Interpreter} patterns~\cite{gamma94design}. Such ASTs 
-fix the operations required in the AST, but allow the easy addition of new 
-language constructs. This is in contrast with ASTs modelled using 
-functional programming algebraic datatypes or OO style Visitors, where 
+Object-oriented ASTs are ASTs encoded via standard OO techniques,
+such as the {\sc Composite} or {\sc Interpreter} patterns~\cite{gamma94design}. Such ASTs
+fix the operations required in the AST, but allow the easy addition of new
+language constructs. This is in contrast with ASTs modelled using
+functional programming algebraic datatypes or OO style Visitors, where
 adding new operations is easy, but adding new language constructs is hard.
-The AST in Figure~\ref{} provides a simple example of an OO AST. The same 
-AST could be encoded using algebraic datatypes (or alternatively Visitors) 
+The AST in Figure~\ref{} provides a simple example of an OO AST. The same
+AST could be encoded using algebraic datatypes (or alternatively Visitors)
 as:
 
-\begin{lstlisting} 
+\begin{lstlisting}
 data Exp = Lit Int | Add Exp Exp
 \end{lstlisting}
 
@@ -42,21 +42,21 @@ addition of operations. So using such ASTs at least preserves one
 dimension of extensibility.
 
 Unfortunatelly, when parsing OO style ASTs, there are difficulties with
-the two dimensions of extensibility. On the one hand it is naturally hard to 
-add new operations to the AST, as usual in the OO style. On the hand 
+the two dimensions of extensibility. On the one hand it is naturally hard to
+add new operations to the AST, as usual in the OO style. On the hand
 grammars are not modularly extensible, thus the addition of new
 language constructs is problematic. Therefore,
-it is perhaps not a suprise that parser generators that also generate 
-AST code (auch as ANTLR~\cite{}), normally generate code based on 
-visitors. Clearly this seems a better choice since generating code 
-based on the {\sc Interpreter} or {\sc Composite} pattern would 
+it is perhaps not a suprise that parser generators that also generate
+AST code (auch as ANTLR~\cite{}), normally generate code based on
+visitors. Clearly this seems a better choice since generating code
+based on the {\sc Interpreter} or {\sc Composite} pattern would
 simply be too inflexible, due to the dual limitation on extensibility.
 
-In the remainder of this section we show a technique for 
-defining \emph{extensible} parsing code. That is new 
-language constructs can be modularly added without changing 
-existing parsing code. The technique employs standard OO 
-style mechanisms such as subtyping and inheritance, as well as, 
+In the remainder of this section we show a technique for
+defining \emph{extensible} parsing code. That is new
+language constructs can be modularly added without changing
+existing parsing code. The technique employs standard OO
+style mechanisms such as subtyping and inheritance, as well as,
 Packrat parsing combinators.
 
 
@@ -122,24 +122,40 @@ actually refers to \inlinecode{this.pExpr} again due to dynamic dispatch, and it
 
 \subsection{Multiple Extensions and Independent Extensibility}
 A nice feature of Scala is its support for a form of multiple inheritance.
-Scala has a linearized-style multiple inheritance for traits~\cite{}. 
-This can be very helpful when composing several languages, which 
+Scala has a linearized-style multiple inheritance for traits~\cite{}.
+This can be very helpful when composing several languages, which
 may have been independently developed. Suppose now
 we want to compose the parsers for expressions from pre-defined
 languages \inlinecode{LanguageA} and \inlinecode{LanguageB} using
-alternative.\bruno{You can present the abstract example, as you do
-  here, but you should also present a concrete example. You 
-already have Var, maybe you can add another language extension for 
+alternative. The new parser can be built by inheriting both parsers
+at the same time:
+
+\lstinputlisting[linerange=67-73]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
+
+\huang{added explanation of the `super' keyword}
+
+The \inlinecode{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method \inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish the method of the same name. Therefore in the new parser, we use \inlinecode{super} to specify which \inlinecode{pExpr} we are referring to.
+
+\huang{added a concrete example}
+
+As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
+
+\lstinputlisting[linerange=79-95]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=BOOL_EXAMPLE
+
+\begin{comment}
+\bruno{You can present the abstract example, as you do
+  here, but you should also present a concrete example. You
+already have Var, maybe you can add another language extension for
 boolean literals. Show the code for the boolean literals parsing as
 well as the composition code.}
-The use of keyword \inlinecode{super} is able to
-specify the implementation from inheritance, like:
 
-\lstinputlisting[linerange=70-76]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
-
-Interestingly note that, due to the use of multiple inheritance, we 
-need two different super calls.\bruno{expand here. People may not 
-be familiar with scala super calls, you have to explain what the 
+Interestingly note that, due to the use of multiple inheritance, we
+need two different super calls.\bruno{expand here. People may not
+be familiar with scala super calls, you have to explain what the
 syntax does.}
-As we demonstrated, inheritance is the key technique to obtain semantic modularity.
+\end{comment}
+
+Then the new parser, which contains both integer and boolean expressions, is able to parse hybrid expressions such as \inlinecode{"if true then 1 + 2 else 3 + 4"}.
+
+As we demonstrated, inheritance with method overriding is the key technique to obtain semantic modularity.
 It enables type-safe code reuse and separate compilation for parsing OO style ASTs.
