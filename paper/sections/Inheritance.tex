@@ -35,7 +35,7 @@ data Exp = Lit Int | Add Exp Exp
 
 Algebraic datatypes and grammars fit well together. Indeed there are
 obvious similarities in declaring a grammar, and declaring an
-algebraic datatype. It is difficult to add new language
+algebraic datatype. It is difficult to modularly add new language
 constructs to both grammars and ASTs based on algebraic datatypes. However,
 ASTs modelled with algebraic datatypes naturally allow for the easy
 addition of operations. So using such ASTs at least preserves one
@@ -79,8 +79,10 @@ In the rest of Section~\ref{sec:inheritance}, we will introduce an solution for 
 
 \subsection{Extensible Parsing via Inheritance}
 
-To illustrate how to modularly add new language constructs and the 
-corresponding parsing code, we continue with the expression language of literals and additions in Section~\ref{subsec:packratparsing}. We introduce variables as a new case:
+To illustrate how to modularly add new language constructs and the
+corresponding parsing code, we continue with the expression language
+of literals and additions in Section~\ref{subsec:packratparsing}. We
+introduce variables as a new case:
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}

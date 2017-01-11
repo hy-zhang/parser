@@ -1,17 +1,23 @@
 \section{Full Extensibility with Object Algebras}\label{sec:algebrasandparsing}
 
-The inheritance-based approach benefits us from building extensible parsers, based on an OO class hierarchy.
-Nevertheless, the addition of new operations over ASTs is problematic using traditional OO classes. Often it requires modification on existing code, which breaks modularity. In this section, we will have a closer look at how Object Algebras is applied for full extensibility.
+The inheritance-based approach allows building extensible parsers, based on an OO class hierarchy.  Nevertheless, the addition of new operations over ASTs is problematic using traditional OO ASTs. In this section, we 
+show how to support both the forms of extensibility for ASTs (easy 
+addition of language contructs, and easy addition of operations)
+using Object Algebras~\cite{}.
 
 \subsection{Problem with Traditional OO ASTs}\label{subsec:problemwithoutoa}
 
-Now it comes to Extension 2 in Section~\ref{subsec:parsingproblem}. In the previous code, we have pretty-printing as
-an example of operations on ASTs. Suppose we also want to collect free variables on the expression language which models
+OO ASTs allow easily adding new language constructs, but it is hard 
+to add new operations over the AST. The OO AST in Figure~\ref{}, 
+supports a pretty-printing operation. Suppose we also want to collect free variables on the expression language which models
 literals, additions and variables. Based on the traditional OO class hierarchy, one attempt would be extending \inlinecode{Expr} with the new
 operation directly:
 
 \lstinputlisting[linerange=19-19]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=ATTEMPT_EXPRWITHFREEVARS
 
+\bruno{The following text is not very good, needs to be revised. I think 
+we need to show the full code and where it breaks. Since I removed text 
+about the Expression problem in S3, I think we need to talk more about it here.}
 It refers to one Scala solution to the Expression Problem.\huang{what's the solution? does it have the later "critical issue"? if so, why is it a "solution"} But then programmers have to define new classes for literals, additions and variables
 by extending the old ones together with \inlinecode{FreeVarsExpr}. The critical issue is that, the existing parsing code only generates objects of the old
 types, again it is a modularity issue, since it is a bad idea to modify existing code again and again with extensions. Other solutions including modelling constructors as functions introduce unnecessary complexity.
@@ -20,15 +26,18 @@ In contrast, Object Algebras~\cite{Oliveira2012} enables us to solve this proble
 and operations, and offers high flexibility in the choice of operations to be performed over ASTs. Before adopting it for parsing, the next section introduces the background of Object Algebras.
 
 \subsection{Object Algebras}\label{subsec:objectalgebras}
-Object Algebras captures a design pattern to address the Expression Problem nicely, achieving two dimensions of extensibility (data variants and operations) in a modular and type-safe way. The definition of data structures is separated from their behaviors, and future extensions on both dimensions no longer require existing code to be modified, supporting separate compilation.
+Object Algebras captures a design pattern to address the Expression Problem, achieving two dimensions of extensibility (language constructs and operations) in a modular and type-safe way. The definition of data structures is separated from their behaviors, and future extensions on both dimensions no longer require existing code to be modified, supporting separate compilation.
 
-Using Object Algebras in Scala, ASTs as recursive data structures are defined by traits, where each constructor corresponds to an abstract method inside. The example from Section~\ref{subsec:packratparsing} is used here again for illustration.
+Using Object Algebras in Scala, ASTs as recursive data structures are defined by traits, where each constructor corresponds to an abstract method inside.
+Essentially, Object Algebras generalize the {\sc Abstract Factory} pattern~\cite{}, and promote the use of factory methods, instead of constructors, for instantiating objects. The example from Section~\ref{subsec:packratparsing} is used here again for illustration.
 At first the language only supports literals and additions:
 
 \lstinputlisting[linerange=5-8]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALG
-We have two constructors \inlinecode{lit} and \inlinecode{add}, corresponding to literals and additions. The trait \inlinecode{ExprAlg} is called an \textit{Object Algebra interface},
-whereas as a factory, it cannot produces objects for the expressions directly like traditional approaches, but abstract the results in its
-type parameter \inlinecode{E} instead. To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
+We have two constructors \inlinecode{lit} and \inlinecode{add}, corresponding to literals and additions. The trait \inlinecode{ExprAlg} is called an \textit{Object Algebra interface}. The trait is parametrized by the type
+\inlinecode{E}, which abstracts over the concrete type of the AST. 
+
+\paragraph{Adding New Operations}
+To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
 provides implementations for all cases. Below is an example of pretty-printing an expression:
 
 \lstinputlisting[linerange=12-15]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
@@ -37,7 +46,8 @@ One can define evaluation operation as a new trait on this expression langauge:
 
 \lstinputlisting[linerange=19-22]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
 
-Futhermore, the data variants can be extended by inheriting \inlinecode{ExprAlg} and adding new cases only. Now we extend the language
+\paragraph{Adding New AST Constructs}
+Futhermore, new language constructs can be added by extending \inlinecode{ExprAlg} and adding new cases only. Now we extend the language
 with variables. A new Object Algebra interface \inlinecode{VarAlg} is defined as follows:
 
 \lstinputlisting[linerange=26-28]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
@@ -45,19 +55,24 @@ Now pretty-printing on the new language can be realized without modifying existi
 
 \lstinputlisting[linerange=32-34]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
 An observation is that only the new case is implemented for pretty-printing, and the others have been inherited.
-It offers programmers great code reuse, in the sense that existing cases can also be
-overridden in \inlinecode{VarExprPrint}.
+In other words, existing code was reused and was not modified!
 
 To create an expression representing \inlinecode{1 + x}, a generic method is defined as follows:
 
 \lstinputlisting[linerange=41-41]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
 
-The code below results in \inlinecode{"(1 + x)"}, as the result of pretty-printing that expression.
+Note how the construction of the asbtract syntax happens throught 
+the use of factory methods, instead of constructors.
+The pretty print the expression, resulting in \inlinecode{"(1 + x)"},
+we pass an insteance of \inlinecode{VarExprPrint} to \inlinecode{makeExp}.
 
 \begin{lstlisting}
 makeExp(new VarExprPrint {})
 \end{lstlisting}
 
+\bruno{This is a good discussion, but it is out-of-place. We haven't 
+yet talking about parsing with object algebras, so I think this discussion 
+should come later.}
 Now we observe that an ``object'' of expression actually
 has the function type \inlinecode{VarExprAlg[E] =>} \inlinecode{E} for generic \inlinecode{E}. Comparing with traditional objects, one may have concern that if a parser produces function structures, it could be hard to further process them. Especially, in the design of a compiler
 there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
@@ -71,7 +86,11 @@ to \inlinecode{alg}, \inlinecode{Refactor} will be able to transform a \inlineco
 
 \subsection{Parsing with Object Algebras}\label{subsec:parsingwithoa}
 
-Just as shown above, \inlinecode{ExprAlg} is defined for a small language using Object Algebras. Since Object Algebras represent ``objects'' implicitly as functions like \inlinecode{ExprAlg[E] =>} \inlinecode{E} for abstract \inlinecode{E}, we first try to build the corresponding parser by type \inlinecode{ExprAlg[E] =>} \inlinecode{Parser[E]}.
+Parsing builds the AST as a result. When Object Algebras are used 
+to build ASTs, an Object Algebra containing the constructor/factory
+methods has to be passed to the parsing function.
+
+\inlinecode{ExprAlg} is defined for a small language using Object Algebras. Since Object Algebras represent ``objects'' implicitly as functions like \inlinecode{ExprAlg[E] =>} \inlinecode{E} for abstract \inlinecode{E}, we first try to build the corresponding parser by type \inlinecode{ExprAlg[E] =>} \inlinecode{Parser[E]}.
 
 \lstinputlisting[linerange=8-16]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
 Such a parser works fine, yet it does not appear to be extensible. For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, now \inlinecode{pExpr} has type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}, where the type of Object Algebra interface appears in \emph{contravariant} position. This difference prohibits method overriding, because Object Algebra interfaces extended from \inlinecode{VarExprAlg} are subtypes of it, but the types of their parsers are supertypes of \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}.

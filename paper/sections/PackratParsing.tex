@@ -3,8 +3,10 @@
 This section discusses the algorithmic challenges introduced by
 modular parsing and argues that Packrat parser combinators 
 are suitable to address those challenges. The algorithm challenges 
-are important because they dictate how modular parsers should be
-written. Generally speaking, the methodology we propose is that:
+are important because they rule out various common techniques 
+used by non-modular code using parsing combinators. 
+To avoid pitfalls related to those algortihmic challenges,
+we propose a the following methodology:
 
 \begin{itemize}
 
@@ -14,8 +16,11 @@ written. Generally speaking, the methodology we propose is that:
 
 \end{itemize}
 
-Moreover, the underlying parsing formalism should make backtracking 
+Moreover, the underlying parsing formalism should make backtracking
 cheap, since \emph{backtracking is pervasive in modular parsing}.
+Although we chose Packrat parsing (due to its immediate availability
+and support), any other parsing formalism that provides similar
+features should be adequate for modular parsing.
 
 \subsection{Algorithmic Challenges of Modularity}\label{subsec:challenges}
 At a first look, parser combinators are very suitable for modular parsing, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to composed them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and also are the parsers it takes. Thus in a statically typed programming language they can be statically type-checked.
