@@ -4,24 +4,24 @@ The use of inheritance-based approach and Object Algebras enables us to build mo
 
 \subsection{Overriding Existing Rules}
 
-Just as many parser generators do\huang{???}, our pattern also supports overriding part of existing parsers, but in a type-safe way.
-We can easily update existing parsing rules with new implementations, or eliminate them in extended parsers. As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
+As many syntactically extensible parsers, our approach also supports changing part of existing parsers, but in a type-safe way. We can easily update existing parsing rules with new implementations, or eliminate them in extended parsers. As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
 
-\lstinputlisting[linerange=7-12]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
+\lstinputlisting[linerange=76-81]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
 
 Then we want to replace the untyped lambda abstractions by typed lambdas. With inheritance and method overriding, it is easy to only change the implementation of \lstinline{pLam} in the extended parser. The new \inlinecode{pLam} parses a colon and a type in addition, between the identifier and the dot. Due to dynamic dispatch, our new explanation of lambdas will make a difference without affecting the other parts of the parser.
 
-\lstinputlisting[linerange=16-22]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
+\lstinputlisting[linerange=85-90]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
 
 
 One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 
 It is natural to keep overriding existing parsers, whereas another potential use of this pattern is to reuse old versions of a parser. For instance,
 we have a \lstinline{NewParser} that extends \lstinline{ExtParser}, with some more cases added, but for the lambda case we want to go back to the untyped one.
-It can be done by copying the code from \lstinline{BaseParser} again, yet does not achieve code reuse. Instead, we can instantiate an instance of \lstinline{BaseParser} to obtain the old \lstinline{pLam}:
-\haoyuan{I don't know if this works or makes sense.}
+It can be achieved by instantiating an instance of \lstinline{BaseParser} to obtain the old \lstinline{pLam}. However, we must have \inlinecode{lazy} modifier for all the \inlinecode{pLam} starting from \inlinecode{BaseParser}.
 
-\lstinputlisting[linerange=26-32]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
+\huang{i finally managed to make it work, with two overriding. i think this case may not be very common and the solution is kind of unly. not sure whether to keep this case or not}\haoyuan{I don't know if this works or makes sense.}
+
+\lstinputlisting[linerange=94-102]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
 
 \subsection{Language Component}
 
@@ -43,9 +43,9 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 
 \begin{figure}[t]
 \begin{tabular}{m{0.42\linewidth}m{0.52\linewidth}}
-\lstinputlisting[linerange=44-59]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
+\lstinputlisting[linerange=113-128]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
 &
-\lstinputlisting[linerange=63-78]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+\lstinputlisting[linerange=132-147]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
 \end{tabular}
 \caption{Language \lstinline{VarExpr} (left) and language \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
@@ -53,7 +53,7 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 As shown below, those two language components can be merged into one to obtain the language we want. Futhermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
-\lstinputlisting[linerange=82-91]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+\lstinputlisting[linerange=151-160]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
 Such composition shows perfect modularity. The only
 drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty printers of
 \lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not
