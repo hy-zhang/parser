@@ -115,8 +115,8 @@ It is widely used in Haskell (with various ``clones'' in other languages)
 for context-sensitive grammars with infinite lookahead. Nevertheless,
 Parsec users suffer from manual left-recursion elimination, 
 high cost for backtracking and longest match composition issues, 
-as we discussed in Section~\ref{}. Those limitation make Parsec 
-inadequate for modular parsing.
+as we discussed in Section~\ref{}. Those limitations make Parsec 
+(and similar parsing techniques) inadequate for modular parsing.
 
 Some more recent work on parser
 combinators~\cite{Ford2002,Might2011,Frost2008} proposed a series of
@@ -136,24 +136,53 @@ should be applicable to modular parsing.
 %Yet we have mentioned that the components used in our approach can
 %have alternatives to achieve better modular parsing.
 
-\paragraph{Extensibility} To the best of our knowledge, none of the existing parsing techniques
-address the problem of producing extensible ASTs. Certainly, there has been a lot of work on extensible
-data types, in both functional and object-oriented programming.
-For instance, the famous DTC paper~\cite{swierstra2008} represents
-modular ASTs using co-products of every two functors, which forms a
-binary tree structure. Later
-Oliveira et al. presented MRM~\cite{Oliveira2015} in Haskell, which is
-similar to DTC but adopts a list of functors in type-level lists
-instead. Other related work
-includes~\cite{Bahr2014}, where data types are flexible with
-composition as well as decomposition.
+\paragraph{Extensibility} Various design patterns~\cite{}, in multiple
+languages, have been proposed over the years to address extensibility
+problems, such as the Expression Problem~\cite{}. However, to the best
+of our knowledge, none of the existing extensibility techniques
+address the problem of \emph{modularly 
+parsing extensible ASTs}.  There has been
+a lot of work on extensible ASTs, in both functional and
+object-oriented programming.  For instance, the famous ``Datatypes \`a
+la Carte'' (DTC)
+paper~\cite{swierstra2008} represents modular ASTs using co-products
+of every two functors, which forms a binary tree structure. 
+Several variants of DTC have been later proposed~\cite{Bahr2011,Bahr2014,Oliveira2015}
+All of that work essentially covers how to traverse and 
+consume extensible ASTs. 
+Only in Bahr's~\cite{Bahr2011} work a brief mention of \emph{unfolds} 
+(which are a class of algorithms that \emph{build} ASTs) are mentioned. 
+However Bahr's work does not cover parsing.
 
-In OO languages, however, things get much better with the mechanism of
-inheritance. Furthermore, Object Algebras~\cite{Oliveira2012} were
-proposed as a design pattern for the extensibility of both data
-variants and operations in a modular type-safe way. The code is
-concise and expressive using Object Algebras, building a foundation
-for our new library with various dimensions of extensibility.
+In OO languages, there are also many design patterns that achieve 
+type-safe extensibility~\cite{torgerson,odersky,Oliveira09,Oliveira12,Wang16}. 
+We chose Object Algebras~\cite{Oliveira2012} because the pattern is 
+relatively lightweight and makes good use of existing OO features,
+such as inheritance, generics and subtyping. As seen throughout the paper, 
+the parsing code is concise and expressive using Object Algebras.
+In principle our approach is not coupled to the use of Object
+Algebras, and variants of our approach could be used with other 
+extensibility techniques. Similarly to the work in functional
+programming, the extensibility techniques in OOP have focused 
+on traversing and processing ASTs. We are unware of any work on OOP
+that covers how to do modular parsing for extensible ASTs.
+
+It is worth mentioning that Scala case classes~\cite{} provide a near
+solution to the Expression Problem. Case classes are similar to
+algebraic datatypes but, unlike algebraic datatypes, new cases can be
+modularly added. The reason why case classes are not a complete
+solution to the Expression Problem is that they do not enforce
+exhaustiveness of pattern matching for extensible operations. In other
+words run-time pattern matching errors can happen when writting
+extensible code with case classes.  So full static type-safety is not
+ensured. Nevertheless case classes are a pragmatic approach, which is
+widely used in practice. Therefore modular parsing techniques may be
+of value for extensible code using case classes.  The approach we
+presented in Section 3~\ref{} can readily be adapted to case classes:
+all that the users need to do is to use case classes, instead of
+standard OO classes in their code.
+
+\begin{comment}
 Moreover, in~\cite{Oliveira2012} the authors have discussed the
 composition of algebras. In our parsing approach, a parser consumes an
 algebra, which is delegated to return the results, during its process
@@ -168,7 +197,11 @@ also mentioned the dual process of folds, namely
 parsing is a representative kind of unfolds, whereas they only
 discussed the composition of a cv-coalgebra and a term homomorphism,
 which differs from modular parsing.
+\end{comment}
 
+\bruno{There's a problem with the text in 4.2. We need to first 
+fix the problem in S4.2 and then come back to the text below and 
+adapt it accordingly.}
 Another interesting observation, as we have mentioned
 in~\ref{subsec:objectalgebras}, is that transformation algebras are
 frequently used in parsing, as concrete syntax may not always coincide
@@ -177,7 +210,7 @@ calculus, as well as other syntactic sugars. In the Shy
 framework~\cite{Zhang2015}, the pattern of transformations is captured
 into a template for Java annotation processing, and most of
 boilerplate code is automatically generated, hence users only need to
-override a few interesting cases, conveniently. It is potentially useful
-in our case. By the way, the idea of overriding
-existing cases was also proposed in MRM. Our approach allows existing parsing
-code to be overridden during inheritance.
+override a few interesting cases, conveniently. It is potentially
+useful in our case. The idea of overriding existing cases was also
+proposed in MRM. Our approach allows existing parsing code to be
+overridden during inheritance.
