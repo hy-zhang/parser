@@ -60,9 +60,10 @@ trait TypedLamOAParser[E, T] extends VarExprOAParser[E] {
 //END_OVERVIEW_OA_MULTI_SYNTAX
 
 //BEGIN_OVERVIEW_OA_MULTI_SYNTAX_CLIENT
-val r = parse(new TypedLamOAParser[String, String] {
+val p = new TypedLamOAParser[String, String] {
   override val alg = new TypedLamPrint {}
-}.pE)("\\x:int->int. 1 + x") // "\x : int -> int. (1 + x)"
+}
+val r = parse(p.pE)("\\x:int->int. 1 + x") // "\x : int -> int. (1 + x)"
 //END_OVERVIEW_OA_MULTI_SYNTAX_CLIENT
 
   def main(args: Array[String]): Unit = {

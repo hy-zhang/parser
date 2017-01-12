@@ -42,11 +42,14 @@ trait VarExprOAParser[E] extends ExprOAParser[E] {
 
   override val pE: Parser[E] = pVarExpr
 }
-
-val r = parse(new VarExprOAParser[String] {
-  override val alg = new VarExprPrint {}
-}.pE)("1 + x") // "(1 + x)"
 //END_EXT_OA_PARSER
+
+//BEGIN_EXT_OA_PARSER_CLIENT
+val p = new VarExprOAParser[String] {
+  override val alg = new VarExprPrint {}
+}
+val r = parse(p.pE)("1 + x") // "(1 + x)"
+//END_EXT_OA_PARSER_CLIENT
 
   def main(args: Array[String]): Unit = {
     println(r)
