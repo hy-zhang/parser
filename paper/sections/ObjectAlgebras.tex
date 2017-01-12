@@ -88,23 +88,60 @@ to \inlinecode{alg}, \inlinecode{Refactor} will be able to transform a \inlineco
 
 Parsing builds the AST as a result. When Object Algebras are used 
 to build ASTs, an Object Algebra containing the constructor/factory
-methods has to be passed to the parsing function.
+methods has to be used by the parsing function. Thus, a first attempt 
+at defining the parser for the small arithmetic language is:
 
+\begin{comment}
 \inlinecode{ExprAlg} is defined for a small language using Object Algebras. Since Object Algebras represent ``objects'' implicitly as functions like \inlinecode{ExprAlg[E] =>} \inlinecode{E} for abstract \inlinecode{E}, we first try to build the corresponding parser by type \inlinecode{ExprAlg[E] =>} \inlinecode{Parser[E]}.
+\end{comment}
 
 \lstinputlisting[linerange=8-16]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
-Such a parser works fine, yet it does not appear to be extensible. For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, now \inlinecode{pExpr} has type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}, where the type of Object Algebra interface appears in \emph{contravariant} position. This difference prohibits method overriding, because Object Algebra interfaces extended from \inlinecode{VarExprAlg} are subtypes of it, but the types of their parsers are supertypes of \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}.
+Such a parser works fine, but it is not extensible! For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method override for \inlinecode{pExpr} would require a type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}, where the type of the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This difference prohibits method/field overriding. Scala supports type-refinement of fields if the overriding 
+field has a type which is a \emph{subtype} of the original field.
+Unfortunatelly, in this case, although \inlinecode{VarExprAlg} is a subtype 
+of \inlinecode{ExprAlg}, the function type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]} is a supertype of \inlinecode{ExprAlg[E] =>} \inlinecode{Parser[E]}. Thus it is not possible to have overriding. 
 
-This problem refers to \textit{binary methods}. \haoyuan{Shall we mention this?}\huang{???}
+% because Object Algebra interfaces extended from \inlinecode{VarExprAlg} %are subtypes of it, but the types of their parsers are supertypes of %\inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}.
 
-One solution to this problem is taking out the argument as a single field, hence it supports overriding as well. We rewrite the parsing code as follows:
+\paragraph{A Solution}
+A solution to this problem is instead have a field with the Object Algebra
+in \lstinline{ExprOAParser}. This approach supports overriding as well. 
+The parsing code is as follows:
 
 \lstinputlisting[linerange=23-33]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
-This is precisely the pattern that we advocate for modular parsing. Note that \inlinecode{pE} is the one that is used for recursive calls, exported by the trait and considered to be overridden during inheritance. The reason why we use an extra and seemingly redundant \inlinecode{pExpr}, is a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use fields defined by keyword \inlinecode{def}, can not use those defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
+This is precisely the pattern that we advocate for modular parsing. 
+One important remark is we introduce \inlinecode{pE} for recursive calls. 
+The reason why we use an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use fields defined by keyword \inlinecode{def}, can not use those defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
 
-Now let's try this pattern with the extension of varibles, which we have been using:
+\paragraph{Extensions}
+Now let's try this pattern with the variables extension:
 \lstinputlisting[linerange=37-48]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
-In the client code shown above, an instance of algebra is fed to \inlinecode{VarExprOAParser} for pretty-printing expressions. Then the trait exports \inlinecode{pE}, parses the input and applies the algebra. The result shows that such a pattern is a nice solution to modular parsing. At this point, one may argue that with a different operation like evaluation, the redundant code is required to obtain the parser, and it results in parsing the same input twice. However, that is generally solved~\cite{Oliveira2012} \huang{it was "original object algebra paper", i added the citation here, is it the correct one? i'll check later} by composing two algebras into one in advance.
+\bruno{break code into 2 parts: the definition of the trait; and the client 
+code.}
+\bruno{the following text should be for explaining the definition of the trait}
+\noindent The type of the object algebra field \lstinline{alg} is first refined 
+to \lstinline{VarExpAlg[E]}, to allow calling the additional factory method 
+for variables. Note that, unlike the previous attempt, \lstinline{VarExpAlg[E]}
+is a subtype of \lstinline{ExpAlg[E]}, thus the type-refinement of the 
+field is allowed. Now, the code for parsing variables (\lstinline{pVar}) can 
+call \lstinline{alg.varE}. The following code illustrates how to use 
+the parser from a client perspective:
+
+\bruno{put the client code here.}
+
+\bruno{have we defined the ``parse'' method?? I don't think we have!
+We need to first present the parse method. }
+In the client code shown above, we first need to chose a concrete 
+object algebra to initialize the \lstinline{alg} field in \lstinline{VarExprOAParser}. Here we pick the 
+pretty-printing algebra \lstinline{VarExprPrint}, but any other object 
+algebra that implements \lstinline{VarExprAlg} would work. 
+With an instance of \lstinline{VarExprOAParser} in hand, we can call 
+\lstinline{pE} to obtain the parser to feed to the \lstinline{parse} method. 
+The result shows that such a pattern provides modular parsing. 
+
+\begin{comment}
+At this point, one may argue that with a different operation like evaluation, the redundant code is required to obtain the parser, and it results in parsing the same input twice. However, that is generally solved~\cite{Oliveira2012} \huang{it was "original object algebra paper", i added the citation here, is it the correct one? i'll check later} by composing two algebras into one in advance.
+\end{comment}
 
 \subsection{Parsing Multi-sort Syntax}\label{subsec:differentsyntax}
 
