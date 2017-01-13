@@ -16,7 +16,7 @@ object Code1 {
   }
 
 //BEGIN_ATTEMPT_EXPRWITHFREEVARS
-trait FreeVarsExpr extends Expr { def freeVars: Set[String] }
+trait FVarsExpr extends Expr { def fVars: Set[String] }
 //END_ATTEMPT_EXPRWITHFREEVARS
 
 }

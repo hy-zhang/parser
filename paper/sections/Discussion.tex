@@ -2,6 +2,21 @@
 
 The use of inheritance-based approach and Object Algebras enables us to build modular parsers, which are able to evolve with syntax together. This section explores more interesting features, including overriding existing parsing rules, language components for abstracting language features, and alternative techniques under the whole framework.
 
+\subsection{Composition of Algebras}
+
+\haoyuan{I add a new subsection here, please review.}
+By adopting Object Algebras, we also inherit some advanced features from the pattern. Specifically, in the original paper~\cite{Oliveira2012}, there are two kinds of Object Algebras: \textit{queries} and \textit{transformations}. A query traverses the abstract syntax tree, collects information and returns the result. The aforementioned \lstinline{Print} and \lstinline{Eval} are traditional queries. But as we discussed before, an algebra is first fed to the parser, then \lstinline{parse} is invoked to do the parsing. It is tedious to fed \lstinline{Print} and \lstinline{Eval} separately, as the same input is parsed twice. Instead, we can firstly compose two queries into one, then feed it to the parser. For space reasons we omit the code here.
+
+Another interesting observation, if we look back at the end of Section~\ref{subsec:objectalgebras}, is that \lstinline{makeExp} represents an ``object'' of the expression AST. Or rather, what OA parsers generate are ``implicit objects'', which are actually functions of type \lstinline{Alg[E]} \lstinline{=>} \lstinline{E} for generic \lstinline{E}. Comparing with traditional objects, one may have concern that if a parser produces function structures, it could be hard to further process them. Especially, in the design of a compiler
+there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
+in a very clever way. Continuing from the old example, if one wants to transform a \inlinecode{VarExprAlg} expression to an \inlinecode{ExprAlg} expression by
+replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:\haoyuan{mention in discussion that shy deals with boilerplate.}
+
+\lstinputlisting[linerange=45-56]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_REFACTOR
+Here the \inlinecode{VarExprAlg} expression \inlinecode{"1 + x"} is changed to \inlinecode{ExprAlg} expression \inlinecode{"1 + 2"}, before the pretty-printing algebra is applied. The abstract method
+\inlinecode{alg} in \inlinecode{Refactor} can actually be any algebra simply for delegation. By passing a concrete implementation
+to \inlinecode{alg}, \inlinecode{Refactor} will be able to transform a \inlinecode{VarExprAlg} expression before we obtain the result. Furthermore, transformations can be composed in a linear pipeline-style, before a query algebra is fed ~\cite{Zhang2015}.
+
 \subsection{Overriding Existing Rules}
 
 As many syntactically extensible parsers, our approach also supports changing part of existing parsers, but in a type-safe way. We can easily update existing parsing rules with new implementations, or eliminate them in extended parsers. As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
