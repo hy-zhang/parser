@@ -2,9 +2,9 @@
  
 The quest for improved modularity, variability and extensibility of
 programs has been going on since the early days of Software
-Engineering~\cite{}. Modern Programming Languages enable a certain
+Engineering~\cite{McIlroy68}. Modern Programming Languages enable a certain
 degree of modularity, but they have limitations as illustrated by
-well-known problems such as the Expression Problem~\cite{}. The
+well-known problems such as the Expression Problem~\cite{wadler1998expression}. The
 Expression Problem refers to the difficulty of writing data
 abstractions that can be easily extended with both new operations and
 new data variants. Traditionally the kinds of data abstraction found
@@ -13,6 +13,7 @@ adding new data variants is difficult. The traditional object-oriented
 approach to data abstraction facilitates adding new data variants
 (classes), while adding new operations is more difficult.
 
+\begin{comment}
 A reason why a solution to the Expression Problem is important in
 practice is that it is necessary for the development of
 \emph{Software-Product Lines} (SPLs)~\cite{}. A software-product line
@@ -30,6 +31,7 @@ languages will include arithmetic constructs, and will require
 evaluation for such constructs as well. In this case 
 both the component for evaluation of binders and arithmetic 
 expressions can be combined to implement the desired functionality.
+\end{comment}
 
 \begin{comment}
 Most programming languages share alot of features in
@@ -78,31 +80,42 @@ composition techniques such as \emph{superimposition}~\cite{} to
 enable the development modular program features. Such textual
 composition techniques collect the code for multiple features and
 merge it together when a concrete combination of features is needed
-for a particular program. As Kastner~\cite{} notes, the typical
+for a particular program. As Kastner et. al~\cite{Kastner11road} note, the typical
 drawback of such techniques is that
 ``\emph{most feature-oriented implementation mechanisms lack proper
   interfaces and support neither modular type checking nor separate
-  compilation}''\bruno{reference to ``The road to
-  Feature Modularity''}. Syntactic modularization techniques have also
-been applied to the problem of \emph{extensible parsing}. There are
-several approaches~\cite{} that enable the development of
-\emph{syntactically} modular parsers or grammars. However these
-approaches do not support separate compilation or modular
-type-checking either.
+  compilation}''. 
+
+Syntactic modularization techniques have also been applied to the
+problem of \emph{extensible parsing}. There are several approaches
+that enable the development of \emph{syntactically} modular parsers or
+grammars. Many parser
+generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016} support
+modular grammars. For instance, \textit{Rats!}~\cite{Grimm2006} has
+its own module system for the collection of grammars.  Extensible
+compilers like JastAdd~\cite{Ekman2007} and
+Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
+is mostly done ultimately resorting to standard (non-modular) parser
+generators. Various techniques supporting languages that can extend
+their own syntax, such as SugarJ~\cite{Erdweg2011}, also offer a form
+of extensible parsing. However these syntactic approaches do not
+support separate compilation and/or modular type-checking of parsing
+code either.
 
 Semantic modularization techniques go one step further in terms of modularity,
 and also enable components or features to be modularly type-checked
 and separately compiled. Modular type-checking and separate
 compilation are desirable properties to have from a software
-engineering point-of-view. Furthermore they enable the composition of compiled
-binaries as well as ensuring the type-safety of the code composed of
-multiple components. Examples of semantic modularization techniques 
-include various approaches to \emph{family polymorphism}~\cite{},
-virtual classes~\cite{}, as 
-well as several other techniques for solving the Expression Problem~\cite{}. 
-\bruno{strenghten? mention dynamic languages (separate compilation 
-but no modular type-checking), and techniques that weaken type-safety 
-requirements.} 
+engineering point-of-view. Modular type-checking can report errors 
+earlier and in terms of the modular code programmers have written 
+in the first place. Separate compilation avoids global compilation
+steps, which can be very costly. Furthermore semantic modularization 
+enables the composition of compiled binaries as well as ensuring the 
+type-safety of the code composed of multiple components. Examples of semantic modularization techniques 
+include various approaches to \emph{family polymorphism}~\cite{ernst01FP},
+virtual classes~\cite{Ernst:2006}, as 
+well as several other techniques for solving the Expression
+Problem~\cite{Oliveira:2012}\bruno{more here; yanlin; Torgersen; Odersky...}. 
 
 Semantic modularization techniques are less widely used in practice 
 than syntactic techniques. This is partly due to the perceived need
@@ -110,7 +123,7 @@ for sophisticated type systems, which are not available in mainstream
 languages and may require more knowledge from users. However, recently 
 several lightweight modularization techniques have been shown to work 
 in mainstream programming languages like Java or Scala. Object
-Algebras are one such technique, which 
+Algebras~\cite{Oliveira:2012} are one such technique, which 
 Most semantic
 modularization techniques have focused on operations that traverse or 
 or process extensible datastructures, such as ASTs.
@@ -136,6 +149,15 @@ languages, modular parsing is a necessity.
   parsing techniques turns out to be important for achieving
   performance in a modular setting. \bruno{left recursion, and
     backtracking removal.} 
+
+\begin{itemize}
+
+\item {\bf Algorithmic challenges:} answer Packrat parsing
+
+\item {\bf Typing and Reusability Challenges:} answer Multiple
+  inheritance and Object Algebras.
+
+\end{itemize}
 
   By analising the \emph{full} grammar it is possible to remove
   backtracking, which would otherwise increase parsing times. Many
