@@ -2,7 +2,7 @@
  
 The quest for improved modularity, variability and extensibility of
 programs has been going on since the early days of Software
-Engineering~\cite{McIlroy68}. Modern Programming Languages enable a certain
+Engineering~\cite{McIlroy68}. Modern Programming Languages (PLs) enable a certain
 degree of modularity, but they have limitations as illustrated by
 well-known problems such as the Expression Problem~\cite{wadler1998expression}. The
 Expression Problem refers to the difficulty of writing data
@@ -113,51 +113,58 @@ steps, which can be very costly. Furthermore semantic modularization
 enables the composition of compiled binaries as well as ensuring the 
 type-safety of the code composed of multiple components. Examples of semantic modularization techniques 
 include various approaches to \emph{family polymorphism}~\cite{ernst01FP},
-virtual classes~\cite{Ernst:2006}, as 
+\emph{virtual classes}~\cite{Ernst:2006}, as 
 well as several other techniques for solving the Expression
 Problem~\cite{Oliveira:2012}\bruno{more here; yanlin; Torgersen; Odersky...}. 
 
 Semantic modularization techniques are less widely used in practice 
-than syntactic techniques. This is partly due to the perceived need
-for sophisticated type systems, which are not available in mainstream 
+than syntactic techniques. This is partly due to the need
+for more sophisticated type systems, which are not available in mainstream 
 languages and may require more knowledge from users. However, recently 
 several lightweight modularization techniques have been shown to work 
 in mainstream programming languages like Java or Scala. Object
-Algebras~\cite{Oliveira:2012} are one such technique, which 
-Most semantic
-modularization techniques have focused on operations that traverse or 
-or process extensible datastructures, such as ASTs.
-\bruno{Object Algebras here?} However, as far as
-we know there is little work on operations that build/produce ASTs. 
-In particular the problem of modular parsing has not been studied in
-semantic modularization approaches. This is a shame because, to
-realise the vision of software product-lines for programming
-languages, modular parsing is a necessity. 
+Algebras~\cite{Oliveira:2012} are one such technique, which works in
+Java-like languages and uses simple generics only. So far research on semantic
+modularization techniques have focused on operations that \emph{traverse} or 
+or \emph{process} extensible datastructures, such as ASTs. Indeed 
+many documented applications of semantic modularization techniques
+focus on modularizing various aspects of PL implementations.
+However, as far as we know there is little work on operations that build/produce ASTs. 
+In particular the problem of how to modularize parsing has not been studied in
+semantic modularization approaches. This is a shame because parsing
+is a fundamental part of PL implementations, and it ought to be
+modularized as well.
 
-\paragraph{Modular and Extensible Parsing}
-  This paper investigates presents \name: a parsing
-  combinator library that enables modular parsing.
-  \name provides a solution for the problem of \emph{semantic modular
-    parsing}. That is, the solutions should not only
-  allow complete parsers to be built out of modular parsing
-  components, but also enable the parsing components to be \emph{modularly
-  type-checked} and \emph{separately compiled}. \name is
-  built on top of a Packrat parsing library, but adds new parsing
-  combinators to enable modular parsing. The new parsing combinators 
-  employ \emph{delegation-based} techniques and \emph{Object Algebras} 
-  to support extensibility. The choice of Packrat parsing over other
-  parsing techniques turns out to be important for achieving
-  performance in a modular setting. \bruno{left recursion, and
-    backtracking removal.} 
+%\paragraph{Modular and Extensible Parsing}
+
+This paper investigates presents a technique for doing semantically
+modular parsing.  That is, our approach not only allows complete
+parsers to be built out of modular parsing components, but also enables
+those parsing components to be \emph{modularly type-checked} and
+\emph{separately compiled}. In developing our techniques we encontered 
+two different classes of challenges:
 
 \begin{itemize}
 
-\item {\bf Algorithmic challenges:} answer Packrat parsing
+\item {\bf Algorithmic challenges:} A first challenge was todo with
+  the parsing algorithms themselves. Since many parsing formalisms
+  were not designed with extensibility in mind, some of the employed 
+  techniques were non-modular, or performed poorly in a modular setting. 
 
-\item {\bf Typing and Reusability Challenges:} answer Multiple
-  inheritance and Object Algebras.
+\item {\bf Typing and Reusability Challenges:} The second class of
+  challenges were problems related to modularity, reusability and
+  typing.
 
 \end{itemize}
+
+\name is built on top of a Packrat parsing
+library, but adds new parsing combinators to enable modular
+parsing. The new parsing combinators employ \emph{delegation-based}
+techniques and \emph{Object Algebras} to support extensibility. The
+choice of Packrat parsing over other parsing techniques turns out to
+be important for achieving performance in a modular
+setting. \bruno{left recursion, and backtracking removal.}
+
 
   By analising the \emph{full} grammar it is possible to remove
   backtracking, which would otherwise increase parsing times. Many
