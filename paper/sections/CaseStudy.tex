@@ -61,7 +61,7 @@ The parsing result can be changed as long as the concrete algebra is available.
 
 \paragraph{Dependency Overview}
 Figure \ref{fig:dependency} shows the
-dependency of all the components and calculi in our case study. Gray
+dependency of all the components and calculi in our case study. Grey
 boxes are calculi and white boxes are components. An arrow starting
 from box A to box B denotes that B includes and thus reuses A.
 
@@ -186,6 +186,6 @@ full table is available online []. It suggests that the difference of running ti
 using object algebra and class is little, roughly 1\%.
 The usage of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
-more intermediate function calls and method overriding. However, it is worth metioning that
+more intermediate function calls and method overriding. However, it is worth mentioning that
 because of the memoization technique of Packrat parsers, we are only constant times
 slower, the algorithmic complexity is still the same.

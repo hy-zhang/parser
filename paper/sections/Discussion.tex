@@ -9,7 +9,7 @@ As illustrated above, using Object Algebras separates data structures from behav
  on structures, with both code reuse and separate compilation supported.
 \end{comment}
 
-Another advantage of using Object Algebras is that is is easy to
+Another advantage of using Object Algebras is that it is easy to
 model multi-sorted languages. If the syntax contains multiple sorts, we can distinguish them by different type parameters. As an example, we extend the language of literals, additions and variables by introducing types as a new kind of type argument, and we add lambda abstractions to expressions. Now the language has two sorts in the syntax, types and expressions:\\
 
 \begin{tabular}{m{0.45\linewidth}m{0.45\linewidth}}
@@ -36,7 +36,7 @@ Besides lexing, the trait \inlinecode{TypedLamOAParser} also introduces parsers 
 We use \inlinecode{pTypedLamT} and \inlinecode{pTypedLamE} as copies of current \inlinecode{pT} and \inlinecode{pE}, due to the issue
 with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are the parsers used for performing recursion.
 
-From the code we observe that the multi-sorts of Object Algebra interface
+From the code, we observe that the multi-sorts of Object Algebra interface
 express multiple syntax. The isolation for different syntax
 is guaranteed by the type system. The following illustrates some client code
 for the new parser:
@@ -55,7 +55,7 @@ Then we want to replace the untyped lambda abstractions by typed lambdas. With i
 \lstinputlisting[linerange=85-90]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
 
 
-One can even ``eliminate'' a production rule in the extension, by actually overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
+One can even ``eliminate'' a production rule in the extension, by overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 
 It is natural to keep overriding existing parsers, whereas another potential use of this pattern is to reuse old versions of a parser. For instance,
 we have a \lstinline{NewParser} that extends \lstinline{ExtParser}, with some more cases added, but for the lambda case we want to go back to the untyped one.
@@ -92,14 +92,13 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 \caption{Language components \lstinline{VarExpr} (left) and \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
 
-As shown below, those two language components can be merged into one to obtain the language we want. Futhermore, the new language is still a modular
+As shown below, those two language components can be merged into one to obtain the language we want. Furthermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
 \lstinputlisting[linerange=160-170]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
 Such composition shows perfect modularity. The only
 drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty-printers of
-\lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not
-support this feature, nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
+\lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}~\cite{ernst01FP} which is unfortunately not supported in Scala. Nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
 
 \subsection{Alternative Techniques}
 
@@ -113,11 +112,11 @@ Our approach does not depend on a particular parser combinator library or parsin
 
 \item {\bf Composing and Extending Parsers}
 
-We use traits to model parsers, OO inheritance to compose them, and method overriding for their extensibility. These language features may not be supported in other programming languages, especially in functional languages such as Haskell. Nevertheless, \textit{open recursion} could be used as an alternative. An explict ``self-reference'' parameter is able to explain the recursive calls dynamically, by the real argument passed at runtime.
+We use traits to model parsers, OO inheritance to compose them, and method overriding for their extensibility. These language features may not be supported in other programming languages, especially in functional languages such as Haskell. Nevertheless, \textit{open recursion} could be used as an alternative. An explicit ``self-reference'' parameter is able to explain the recursive calls dynamically, by the real argument passed at runtime.
 
 \item {\bf Extensible ASTs}
 
-Besides Object Algebras, many other techniques including \textit{Data types à la carte} (DTC) [] and \textit{Modular reifiable matching} (MRM) [] also support extensible data structures. These alternatives can also be adopted to build ASTs and corresponding parsers.
+Besides Object Algebras, many other techniques including \textit{Data types à la carte} (DTC)~\cite{swierstra2008data} and \textit{Modular reifiable matching} (MRM)~\cite{Oliveira2015} also support extensible data structures. These alternatives can also be adopted to build ASTs and corresponding parsers.
 
 \end{itemize}
 
