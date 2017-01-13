@@ -2,18 +2,14 @@
 
 
 To demonstrate the utility of our modular parsing approach, we
-implemented parsers of the first 18 calculi from book \textit{Types
-  and Programming Languages} (TAPL) \cite{pierce2002types}. TAPL introduces several
-calculi from simple to complex, by gradually adding new features to
-syntax. We compared our implementation with a non-modular implementation
+implemented parsers of the first 18 calculi from book \textit{Types and Programming Languages} (TAPL) \cite{pierce2002types}. We compared our implementation with a non-modular implementation
 we found online, which is also written in Scala and uses the same Packrat parsing library.
 We counted source lines of code (SLOC) and measured execution time for both implementations.
-Our implementation saves 69\% code comparing with that non-modular one.
+The result suggests that our implementation saves 69\% code comparing with that non-modular one.
 
 \subsection{Implementation}\label{subsec:implementation}
 
-The calculi in the TAPL book are suitable for our case study for mainly two reasons.
-Firstly, they capture many of the language features
+TAPL introduces several calculi from simple to complex, by gradually adding new features to syntax. These calculi are suitable for our case study for mainly two reasons. Firstly, they capture many of the language features
 required in realistic programming languages, such as lambdas, records and variants. Secondly, the evolution of
 calculi in the book reveals the advantages of modular representation
 of abstract syntax and modular parsing, which is the key functionality
