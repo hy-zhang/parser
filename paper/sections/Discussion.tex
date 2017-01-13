@@ -23,7 +23,7 @@ It can be achieved by instantiating an instance of \lstinline{BaseParser} to obt
 
 \lstinputlisting[linerange=94-102]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
 
-\subsection{Language Component}
+\subsection{Language Component}\label{subsec:language-component}
 
 Modular parsing not only enables us to build a corresponding parser which evolves with the language together, but also allows us to abstract language features as reusable, independent components. Generally, a language feature includes related abstract syntax, methods to \textit{build} the syntax (parsing), and methods to \textit{process} the syntax (evaluation, pretty-printing, etc.). From this perspective, not only one language, but many languages can be developed in a modular way, with common language features reused.
 
@@ -47,7 +47,7 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 &
 \lstinputlisting[linerange=136-156]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
 \end{tabular}
-\caption{Language \lstinline{VarExpr} (left) and language \lstinline{TypedLam} (right).}\label{fig:lng-components}
+\caption{Language components \lstinline{VarExpr} (left) and \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
 
 As shown below, those two language components can be merged into one to obtain the language we want. Futhermore, the new language is still a modular
