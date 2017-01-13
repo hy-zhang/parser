@@ -55,7 +55,7 @@ component ready for future composition. In that case modularity is realized over
 
 \lstinputlisting[linerange=160-170]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
 Such composition shows perfect modularity. The only
-drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty printers of
+drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty-printers of
 \lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not
 support this feature, nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
 

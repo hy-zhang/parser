@@ -54,7 +54,7 @@ parsing functions accordingly.
 
 \paragraph{Demo code}
 We have demo code for every calculus in order to test and evaluate our implementation.
-We feed the pretty printing algebra to the parser and print out the result.
+We feed the pretty-printing algebra to the parser and print out the result.
 The parsing result can be changed as long as the concrete algebra is available.
 
 \lstinputlisting[linerange=68-78]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_DEMO
@@ -86,9 +86,14 @@ a quantitative way in the next subsection.
 
 \subsection{Comparison}\label{subsec:cs-comparison}
 
-We compared our implementation of the parsers with an implementation
-by Ilya Klyuchnikov, available online\footnote{https://github.com/ilya-klyuchnikov/tapl-scala/}.
-Ilya's implementation is suitable for comparison, because it is also
+\newcommand\ourimpl{$\texttt{Mod}_{\texttt{OA}}$}
+\newcommand\ilyaimpl{\texttt{NonMod}}
+\newcommand\ourclass{$\texttt{Mod}_{\texttt{CLASS}}$}
+\newcommand\ilyalongest{$\texttt{NonMod}_{\texttt{|||}}$}
+
+We compared our implementation (named \ourimpl{}) with an implementation
+by Ilya Klyuchnikov (named \ilyaimpl{}), available online\footnote{https://github.com/ilya-klyuchnikov/tapl-scala/}.
+\ilyaimpl{} is suitable for comparison, because it is also
 written in Scala using the same parser combinator library.
 Furthermore, it includes parsers of all the 18 calculi we have, but
 written in a non-modular way. Thus it is not able to reuse existing
@@ -104,26 +109,24 @@ Thus we compared the execution time of parsing random expressions between two im
 In the SLOC comparison, all blank lines and comment lines are excluded,
 and we formatted the code of both implementations to guarantee that
 the length of each line does not exceed 120 characters. Furthermore,
-because Ilya's implementation has extra code such as semantics,
+because \ilyaimpl{} has extra code such as semantics,
 we removed all irrelevant code and only keep abstract
-syntax definition, parser and pretty printer for each calculus, to
+syntax definition, parser and pretty-printer for each calculus, to
 ensure a fair comparison.
 
 For the comparison of execution time, we built a generator to randomly
 generate valid expressions of each calculus, according to the syntax. These expressions are
 written to test files, one file per calculus. Each test file consists of 500
 expressions randomly generated, and the size of test files varies from 20KB to 100KB.
-Then we run the corresponding parser to parse the file and the pretty printer to print the result.
+Then we run the corresponding parser to parse the file and the pretty-printer to print the result.
 The average execution time of 5 runs excluding reading input file was calculated, in milliseconds.
-
-\huang{done}\bruno{say something about what those expressions are, size, and how they were generated.}
 
 \begin{table}
     \centering
     \begin{tabular}{|l|r|r|r|r|r|r|}
       \hline
         \multirow{2}{*}{\bfseries Calculus Name} & \multicolumn{3}{ c| }{\bfseries SLOC} & \multicolumn{3}{ c| }{\bfseries Time (ms)} \\ \cline{2-7}
-        \multicolumn{1}{|c|}{} & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% & \bfseries Ilya's & \bfseries Ours & \bfseries (+/-)\% \\
+        \multicolumn{1}{|c|}{} & \ilyaimpl{} & \ourimpl{} & \bfseries (+/-)\% & \ilyaimpl{} & \ourimpl{} & \bfseries (+/-)\% \\
       \hline
       \input{resources/CaseStudyTable.tex}
       \hline
@@ -140,8 +143,7 @@ library, and our implementation is 42.7\% slower.
 The good SLOC result is because of that the code of common language features
 such as variables, lambda abstractions, etc., are reused lots of times in
 the whole case study. We can see that in the first two calculi
-\lstinline{Arith} and \lstinline{Untyped} we are not better than Ilya's
-implementation, because in such two cases we do not reuse any existing
+\lstinline{Arith} and \lstinline{Untyped} we are not better than \ilyaimpl{}, because in such two cases we do not reuse any existing
 components. However in the following 16 calculi, we can reuse
 language components, resulting considerably code reduction. In particular,
 the calculi \inlinecode{EquiRec}, \inlinecode{Recon} and some others are only 22 lines
@@ -151,20 +153,16 @@ To discover the reasons of slower execution time, we made some more experiments
 on two possible factors which could affect the performance.
 They are object algebra and the longest match alternative combinator.
 We use object algebra for ASTs and the longest match alternative combinator \inlinecode{|||} for parsing,
-while Ilya's implementation uses case class and the ordinary alternative combinator.
+while \ilyaimpl{} uses case class and the ordinary alternative combinator.
 
-We implemented two more versions. One is a modified version of our implementation,
-with object algebra replaced by case class for the ASTs.
-The other is a modified version of Ilya's implementation, using the longest match
-alternative combinator instead of the ordinary one.
-
-\huang{done}\bruno{A table showing a summary of results is missing here. We discussed this before.}
+We implemented two more versions. One is a modified version of our implementation, named \ourclass{}, with object algebra replaced by case class for the ASTs.
+The other is a modified version of \ilyaimpl{}, named \ilyalongest{}, using the longest match alternative combinator instead of the ordinary one.
 
 \begin{table}
     \centering
     \begin{tabular}{|l|r|r|r|r|r|r|r|}
       \hline
-        \multirow{2}{*}{\bfseries Calculus Name} & \bfseries Ilya's & \multicolumn{2}{ c| }{\bfseries Ours} & \multicolumn{2}{ c| }{\bfseries Ilya's with \inlinecode{|||}} & \multicolumn{2}{ c| }{\bfseries Ours with class} \\ \cline{3-8}
+        \multirow{2}{*}{\bfseries Calculus Name} & \ilyaimpl{} & \multicolumn{2}{ c| }{\ourimpl{}} & \multicolumn{2}{ c| }{\ilyalongest{}} & \multicolumn{2}{ c| }{\ourclass{}} \\ \cline{2-8}
         \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{\bfseries Time} & \bfseries Time & \bfseries (+/-)\% & \bfseries Time & \bfseries (+/-)\% & \bfseries Time & \bfseries (+/-)\% \\
       \hline
         Arith & 741 & 913 & +23.2 & 793 & +7.0 & 932 & +25.8 \\

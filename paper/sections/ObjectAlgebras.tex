@@ -63,8 +63,8 @@ To create an expression representing \inlinecode{1 + x}, a generic method is def
 
 Note how the construction of the asbtract syntax happens throught
 the use of factory methods, instead of constructors.
-The pretty print the expression, resulting in \inlinecode{"(1 + x)"},
-we pass an insteance of \inlinecode{VarExprPrint} to \inlinecode{makeExp}.
+To pretty-print the expression,
+we pass an insteance of \inlinecode{VarExprPrint} to \inlinecode{makeExp}, resulting in \inlinecode{"(1 + x)"}.
 
 \begin{lstlisting}
 makeExp(new VarExprPrint {})
