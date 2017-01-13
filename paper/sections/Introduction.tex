@@ -78,11 +78,11 @@ composition techniques such as \emph{superimposition}~\cite{} to
 enable the development modular program features. Such textual
 composition techniques collect the code for multiple features and
 merge it together when a concrete combination of features is needed
-for a particular program. The typical drawback of such techniques is
-the lack of modular type-checking and separate compilation:
+for a particular program. As Kastner~\cite{} notes, the typical
+drawback of such techniques is that
 ``\emph{most feature-oriented implementation mechanisms lack proper
   interfaces and support neither modular type checking nor separate
-  compilation}''~\cite{kastner11road}\bruno{reference to ``The road to
+  compilation}''\bruno{reference to ``The road to
   Feature Modularity''}. Syntactic modularization techniques have also
 been applied to the problem of \emph{extensible parsing}. There are
 several approaches~\cite{} that enable the development of
@@ -171,3 +171,48 @@ of modular parser. The library uses \emph{delegation} and
   parsing in terms of reuse.
 
 \end{itemize}
+
+
+\haoyuan{I suggest this part to be moved to Introduction, and only discuss why Packrat is selected among
+different parser combinators in Overview.}
+
+\begin{comment}
+Although there are many parsing techniques, not all of them are
+suitable for type-safe modular parsing. In particular there are many
+techniques which fail to provide modular type-checking and separate
+compilation. Moreover, even if modular type-checking and separate
+compilation are supported, efficiency is another
+concern. A parsing technique should have low overhead when applied
+in a modular setting. In the remaider of this section, we eliminate
+various techniques that fail to satisfy our requirements, and argue
+that that Packrat parsing~\cite{Ford2002} is a suitable candidate for
+type-safe modular parsing.
+
+\paragraph{Parser Generators} The most widely use tools for parsing
+are parser generators. Parser generators help users generate parsers automatically or
+semi-automatically from a given grammar. There is no restriction on
+the algorithm, while most of them adopts table-based LL~\cite{lewis1968syntax} and LR~\cite{knuth1965translation} parsing
+algorithms.
+Although efficient, the main drawback of parser generators is that they do not support
+modular type-checking and separate compilation.
+
+Modular parsing based on parser generators is supported by many libraries~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016}. Users can separate the syntax definition and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA~\cite{Gouseti2014} uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence those libraries only have syntactic modularity.
+
+Generating parsers often requires full information of grammars, thus semantic modularity is difficult to achieve in this way.
+
+\paragraph{Parser Combinators}
+Comparing with the parser generators, a \textit{parser combinator}~\cite{burge1975,Wadler1985}
+takes several parsers and produce a new parser as its output. Parser combinators are
+popular in functional programming, where the parsers are represented
+by functions and parser combinators are higher-order functions accepts
+them.
+
+At a first look, parser combinators are very suitable for our purpose, because of two
+reasons. Firstly, they are naturally modular. The manner of using them
+is to write small parsers and use combinators to composed them
+together. The construction procedure is explicit and fully controlled
+by the programmer. Secondly, each parser combinator is represented by
+a piece of code, and also are the parsers it takes. Thus in a
+statically typed programming language they can be statically
+type-checked.
+\end{comment}

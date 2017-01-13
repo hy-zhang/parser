@@ -1,38 +1,36 @@
 \section{Case Studies}\label{sec:casestudy}
 
 
-To demonstrate the utility of our modular parsing library, we
+To demonstrate the utility of our modular parsing approach, we
 implemented parsers of the first 18 calculi from book \textit{Types
-  and Programming Languages} (TAPL). TAPL introduces several
+  and Programming Languages} (TAPL) \cite{pierce2002types}. TAPL introduces several
 calculi from simple to complex, by gradually adding new features to
-syntax. \bruno{mention that you compare against an existing
-  non-modular implementation.}
+syntax. We compared our implementation with a non-modular implementation
+we found online, which is also written in Scala and uses the same Packrat parsing library.
+We counted source lines of code (SLOC) and measured execution time for both implementations.
+Our implementation saves almost 70\% code comparing with that non-modular one.
 
-\subsection{Overview}\label{subsec:cs-overview}
+\huang{done}\bruno{mention that you compare against an existing non-modular implementation.}
+
+\subsection{Implementation}\label{subsec:implementation}
 
 The calculi in the TAPL book are suitable for our case study for mainly two reasons.
-Firstly, the calculi are arguably capture many of the language features 
+Firstly, the calculi are arguably capture many of the language features
 required in realistic programming languages. Secondly, the evolution of
 calculi in the book reveals the advantages of modular representation
 of abstract syntax and modular parsing, which is the key functionality
-of our library. By decomposing those calculi into smaller components
-and reusing the common ones, we can obtain considerably code reuse in
-parsing with little performance penalty, as shown later.
+of our approach. By extracting common components from those calculi
+and reusing them, we obtain considerably code reuse with reasonable performance penalty, as shown later.
 
 \paragraph{Extracting Language Components}
 Using the modular parsing techniques discussed before, we extract
-reusable \textit{components} from syntax of all the calculi. Each
-component, which may contain several syntactical structures, is a
-reusable fragment representing a certain feature in the syntax. For
-example, \lstinline{VarApp} component represents the variable case and
-application case of expressions. In our case study, each component is
-represented by a Scala object which has three parts. \lstinline{Alg}
-is an object algebra interface for the abstract syntax.
-\lstinline{Print} is an object algebra implements that interface
-\lstinline{Alg}, for the pretty printing operation. It is not
-necessary for parsing, but we include it here for demonstration.
-\lstinline{Parser} is the modular parser for this piece of syntax.
+reusable components from syntax of all the calculi. Each
+component, which may contain several syntactical structures,
+represents a certain feature of the language. For
+example, the \lstinline{VarApp} component below represents variables and
+function applications.
 
+\huang{todo: move the code, rename PackratParser}
 \begin{lstlisting}
 object VarApp {
   trait Alg[E] {
@@ -40,44 +38,46 @@ object VarApp {
     def TmApp(e1: E, e2: E): E
   }
   trait Print extends Alg[String] {
-    def TmVar(x: String) = x
-    def TmApp(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
+    def TmVar(x: String): String = x
+    def TmApp(e1: String, e2: String): String = "[" + e1 + " " + e2 + "]"
   }
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+  trait Parser[E] extends EParser[E] {
     lexical.delimiters += ("(", ")")
-    val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      val e = l.pE
-      ident ^^ alg.TmVar |||
-      e ~ e ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) } |||
-      "(" ~> e <~ ")"
+    val alg: Alg[E]
+    val pVarAppE: PackratParser[E] = {
+      lcid ^^ alg.TmVar |||
+        pE ~ pE ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) } |||
+        "(" ~> pE <~ ")"
     }
   }
 }
 \end{lstlisting}
 
-We use some naming conventions in our code, \lstinline{E} represents
+In our case study, each component is represented by a Scala object which has three parts.
+\lstinline{Alg} is an object algebra interface for the abstract syntax.
+\lstinline{Print} is an object algebra implements that interface
+\lstinline{Alg}, for the pretty printing operation. They are standard object algebra operations.
+\lstinline{Parser} is the modular parser for this piece of syntax.
+
+We have some naming conventions in our code, \lstinline{E} represents
 expressions, \lstinline{T} represents types and \lstinline{K}
-represents kinds. In this component \lstinline{VarApp} we only have
-expressions. The \lstinline{Alg} and \lstinline{Print} are standard
-object algebra operations, thus we will focus on the modular parser
-\lstinline{Parser}. Each parser carries lexical information and
-parsing functions. The lexical information includes reserved words,
-delimiters, etc. Parsing functions are similar with we described
-before, except that we use record types under some subtyping
-constraints here for the explicit self-reference. The record type
-contains a parser for expressions \lstinline{pE}, a parser for types
-\lstinline{pT} and a parser for kinds \lstinline{pK}, if the
-corresponding one is needed when parsing the syntax of this component.
-Here the type of self-reference, namely \lstinline{F}, is only
-required to have a parser of expressions \lstinline{pE}. Then we can
-build the parsing function \lstinline{pVarAppE}, the suffix
-\lstinline{E} also denotes that it will parse an expression.
+represents kinds. They are the three sorts of syntax in our case study.
+In this particular component \lstinline{VarApp} we only have expressions.
+
+Similar as before, each parser carries lexical information, an object algebra field, and
+parsing functions. We have some helper traits for convenience, such as \inlinecode{EParser}
+containing \inlinecode{pE} for parsing expressions.
+
+\begin{lstlisting}
+trait EParser[E] {
+  val pE: PackratParser[E]
+}
+\end{lstlisting}
 
 \paragraph{Composing Language Components}
 Each calculus could be composed directly from components and other
-calculi, if it has those common structures in the syntax. For example,
-the calculus \lstinline{Untyped}, representing the famous untyped
-lambda calculus, can be constructed from components \lstinline{VarApp}
+calculi as needed. For example, the calculus \lstinline{Untyped} in our case study,
+representing the famous untyped lambda calculus, is constructed from components \lstinline{VarApp}
 and untyped lambda abstraction \lstinline{UntypedAbs}.
 
 \begin{lstlisting}
@@ -86,44 +86,58 @@ object UntypedAbs {
     def TmAbs(x: String, e: E): E
   }
   trait Print extends Alg[String] {
-    def TmAbs(x: String, e: String) = "\\" + x + "." + e
+    def TmAbs(x: String, e: String): String = "\\" + x + "." + e
   }
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = {...}
+  trait Parser[E] extends EParser[E] {
+    lexical.delimiters += ("\\", ".", "(", ")")
+    val alg: Alg[E]
+    val pUntypedAbsE: PackratParser[E] =
+      ("\\" ~> lcid) ~ ("." ~> pE) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } |||
+      "(" ~> pE <~ ")"
   }
 }
 
 object Untyped {
   trait Alg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]
   trait Print extends Alg[String] with UntypedAbs.Print with VarApp.Print
-  trait Parser[E, L <: {val pE : PackratParser[E]}] extends UntypedAbs.Parser[E, L] with VarApp.Parser[E, L] {
-    val pUntypedE = pUntypedAbsE | pVarAppE
+  trait Parser[E] extends UntypedAbs.Parser[E] with VarApp.Parser[E] {
+    override val alg: Alg[E]
+    val pUntypedE: PackratParser[E] = pUntypedAbsE ||| pVarAppE
+    override val pE: PackratParser[E] = pUntypedE
   }
 }
 \end{lstlisting}
 
-When composing the calculus from components, all the fields can be
-easily combined by Scala’s \lstinline{extends...with} keywords as
-shown in the code. For \lstinline{Parser}, the subtyping constraint
-for the explicit self-reference should satisfy all the requirement of
-the parsers it extends from. \huang{Talk about | here?}
+When composing the calculus from components, all the traits can be
+easily combined by Scala's \inlinecode{extends...with} keywords.
+In \lstinline{Parser}, we need to override the object algebra interface and
+parsing functions accordingly.
 
-Finally, we have demo code for every calculus. The parsing result is a
-string because we provide the pretty printing algebra to the parser,
-and it can be changed as long as the concrete algebra is available. In
-this case study we only have pretty printing as the operation, since
-it is enough for demonstration.
+\paragraph{Demo code}
+We have demo code for every calculus in order to test and evaluate our implementation.
+We feed the pretty printing algebra to the parser and print out the result.
+The parsing result can be changed as long as the concrete algebra is available.
 
 \begin{lstlisting}
 object TestUntyped {
-    to be polished
+  def work[E](inp: String)(a: Untyped.Alg[E]): E = {
+    val lang = new Untyped.Parser[E] {
+      override val alg: Untyped.Alg[E] = a
+    }
+    parse(lang.pE)(inp)
+  }
+  def parseAndPrint(inp: String): Unit = println(work(inp)(new Untyped.Print {}))
+  def main(args: Array[String]): Unit = {
+    parseAndPrint("(\\x.x) (\\y.y)")
+  }
 }
 \end{lstlisting}
 
-In the next section we will show more examples and talk further about
-how we extend and compose these components and calculi.
-
-\subsection{Extensibility}\label{subsec:cs-extensibility}
+\paragraph{Dependency Overview}
+Figure \ref{fig:dependency} shows the
+dependency of all the components and calculi in our case study. Gray
+boxes are calculi and white boxes are components. An arrow starting
+from box A to box B denotes that B includes and thus reuses A.
 
 \begin{figure}
     \centering
@@ -132,111 +146,52 @@ how we extend and compose these components and calculi.
     \label{fig:dependency}
 \end{figure}
 
-As mentioned before, we decompose all the calculi into reusable
-components for modularity. Figure \ref{fig:dependency} shows the
-dependency of all the components and calculi in our case study. Gray
-boxes are calculi and white boxes are components. An arrow starting
-from box A to box B denotes that B includes and thus reuses A.
-
 As shown in the graph, some components such as \lstinline{VarApp} are
 created from scratch, while others such as \lstinline{Typed} are
-extended from existing components. The \lstinline{Typed} component
-extends from \lstinline{VarApp} and has two more syntactical
-structures which are typed lambda abstraction and function type (arrow
-type). It is the core of many calculi in this case study, and we use
-it here as an example for demonstrating the extensibility of
-components.
+extended from existing components. Since calculi and components have the similar signature, each calculus
+can also be extended and reused directly. For example, calculus \lstinline{FullRef} extends from
+calculus \lstinline{FullSimple}.
 
-\begin{lstlisting}
-object Typed {
-  trait Alg[E, T] extends VarApp.Alg[E] {
-    def TmAbs(x: String, t: T, e: E): E
-    def TyArr(t1: T, t2: T): T
-  }
-  trait Print extends Alg[String, String] with VarApp.Print {
-    def TmAbs(x: String, t: String, e: String) = "\\(" + x + ":" + t + ")." + e
-    def TyArr(t1: String, t2: String) = t1 + "->" + t2
-  }
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends VarApp.Parser[E, F] {
-    ...
-    private val pAbsE: Alg[E, T] => (=> F) => PackratParser[E] = {...}
-    val pTypedE: Alg[E, T] => (=> F) => PackratParser[E] = pVarAppE | pAbsE
-    val pTypedT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      val t = l.pT
-      t ~ ("->" ~> t) ^^ { case t1 ~ t2 => alg.TyArr(t1, t2) } ||| "(" ~> t <~ ")"
-    }
-  }
-}
-\end{lstlisting}
-
-Except building a component by extending an existing one, here we have
-another extension which is adding a new sort of syntax. It has been
-discussed in section \ref{subsec:openrecursion}. In this example,
-originally \lstinline{VarApp} has only one sort of syntax which is
-expressions, and then \lstinline{Typed} introduces types to the
-syntax. We add an extra type parameter \lstinline{T} for it, so that
-it is able to be distinguished. The \lstinline{Parser} also requires
-the self-reference to have a field \lstinline{pT} for parsing types,
-which is represented by the subtyping constraint. With this support,
-the \lstinline{pTypedT} function parses arrow types using
-\lstinline{pT}. Another point worth mentioning is that we use a
-private local function \lstinline{pAbsE} here for parsing the typed
-lambda abstraction case, and we can directly combine it with the
-inherited \lstinline{pVarApp} to obtain our parsing function of
-expressions.
-
-Since calculi and components have the similar signature, each calculus
-can also be extended and reused directly. Our last example shows how
-to build calculus \lstinline{FullRef} from extending
-\lstinline{FullSimple}, another calculus.
-
-\begin{lstlisting}
-object FullRef {
-  trait Alg[E, T] extends FullSimple.Alg[E, T] with TopBot.Alg[T] with Ref.Alg[E, T]
-  trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print
-  trait Parser[E, T, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] {
-    val pFullRefE = pFullSimpleE | pRefE
-    val pFullRefT = pFullSimpleT | pRefT | pTopBotT
-  }
-}
-\end{lstlisting}
-
-Using our modular parsing library, dividing the syntax into small
-pieces and bind them with corresponding parsers to form reusable
-language component is convenient. From the dependency graph we know
-that the common components such as \lstinline{VarApp} are reused in
+Using our modular parsing approach, it is convenient to extract language
+features as components and reuse them. From the dependency graph, we know
+that common components such as \lstinline{VarApp} are reused in
 lots of calculi. Such reuse could shorten the code considerably. We
 will show this advantage and exam the possible performance penalty in
-a quantitative way in the next section.
+a quantitative way in the next subsection.
 
 \subsection{Comparison}\label{subsec:cs-comparison}
 
 We compared our implementation of the parsers with an implementation
-by  Ilya Klyuchnikov, available online. Ilya's
-implementation is suitable for comparison, because it is also
+by Ilya Klyuchnikov, available online\footnote{https://github.com/ilya-klyuchnikov/tapl-scala/}.
+Ilya's implementation is suitable for comparison, because it is also
 written in Scala using the same parser combinator library.
 Furthermore, it includes parsers of all the 18 calculi we have, but
 written in a non-modular way. Thus it is not able to reuse existing
-code of parsing common syntactical features.
+code when those calculi share common features.
 
-Because Ilya's implementation has extra code such as semantics of
-those calculi, we removed all irrelevant code and only keep abstract
+The comparison is made from two aspects. First, we want to discover
+the amount of code reuse using our modular parsing approach.
+For this propose, we measured source lines of code (SLOC) of two implementations.
+Second, we are interested to assess the performance penalty caused by modularity.
+Thus we compared the execution time of parsing random expressions between two implementations.
+
+\paragraph{Standard of Comparison}
+In the SLOC comparison, all blank lines and comment lines are excluded,
+and we formatted the code of both implementations to guarantee that
+the length of each line does not exceed 120 characters. Furthermore,
+because Ilya's implementation has extra code such as semantics,
+we removed all irrelevant code and only keep abstract
 syntax definition, parser and pretty printer for each calculus, to
 ensure a fair comparison.
 
-The comparison is made from two aspects. First, we want to show that
-using our modular parsing library, the code can be reused in a
-significant way. For this propose, we measured source lines of code
-(SLOC) of the two implementations. All blank lines and comment lines
-are excluded, and we formatted the code of both implementations so
-that the length of each line does not exceed 120 characters. Second,
-we are interested to assess the performance penalty caused by modularity. Thus
-we compared the execution time, as a major measurement of performance,
-between the two implementations. We prepared test files containing
-valid expressions in each calculus,\bruno{say something about what
-  those expressions are, size, and how they were generated.} then we used the corresponding
-parser to parse the file and the pretty printer to print the result.
-The execution time excluding reading input file was calculated.
+For the comparison of execution time, we built a generator to randomly
+generate valid expressions of each calculus, according to the syntax. These expressions are
+written to test files, one file per calculus. Each test file consists of 500
+expressions randomly generated, and the size of test files varies from 20KB to 100KB.
+Then we run the corresponding parser to parse the file and the pretty printer to print the result.
+The average execution time of 5 runs excluding reading input file was calculated, in milliseconds.
+
+\huang{done}\bruno{say something about what those expressions are, size, and how they were generated.}
 
 \begin{table}
     \centering
@@ -252,35 +207,63 @@ The execution time excluding reading input file was calculated.
     \label{tab:comparison}
 \end{table}
 
-Table \ref{tab:comparison} shows data of the comparison. The overall
-result of SLOC comparison is that 66.3\% of code is reduced using our
-library. That is because the code of some common syntax structures
-such as variables, lambda abstractions, etc., are reused several times in
-the whole project. We can see that in the first two calculi
-\lstinline{Arith} and \lstinline{Untyped} we do worse than Ilya's
+\paragraph{Comparison Results}
+Table \ref{tab:comparison} shows results of the comparison.
+The overall result is that 69.2\% of code is reduced using our
+library, and our implementation is 42.7\% slower.
+
+The good SLOC result is because of that the code of common language features
+such as variables, lambda abstractions, etc., are reused lots of times in
+the whole case study. We can see that in the first two calculi
+\lstinline{Arith} and \lstinline{Untyped} we are not better than Ilya's
 implementation, because in such two cases we do not reuse any existing
-components. But in each of the following 16 calculi, we can compose
-our syntax definition, parser and pretty printer from extending
-reusable components, resulting considerably code reduction.
+components. However in the following 16 calculi, we can reuse
+language components, resulting considerably code reduction. In particular,
+the calculi \inlinecode{EquiRec}, \inlinecode{Recon} and some others are only 22 lines
+in our implementation, because we only compose existing codes in such cases.
 
-\paragraph{Performance}
-For the execution time comparison, we built a generator to randomly
-generate valid expressions according to the syntax of each calculus.
-Each test file corresponds with one calculus and it consists of 500
-expressions randomly generated. The size of test files varies from
-20KB to 100KB. After testing both implementation, we found that our
-version is about \huang{60\%} slower. \bruno{A table showing a summary
-of results is missing here. We discussed this before.}
- Part of the reason is that our
-library requires more intermediate function calls, and the object
-algebra and self-references need to be passed as arguments every
-time. However, another important reason is that, because of the
-modular setting, we use a different alternative combinator which will
-try both branches and match the longest one. \huang{ref to somewhere
-  before?} In contrast Ilya uses the ordinary alternative combinator
-which tries the second branch only if the first one fails. Although
-this difference slows our version, we want to mention that because of
-the memoization of Packrat parsers, we are just constant times
-slower, the big-O complexity is still the same.
+To discover the reasons of slower execution time, we made some more experiments
+on two possible factors which could affect the performance.
+They are object algebra and the longest match alternative combinator.
+We use object algebra for ASTs and the longest match alternative combinator \inlinecode{|||} for parsing,
+while Ilya's implementation uses case class and the ordinary alternative combinator.
 
+We implemented two more versions. One is a modified version of our implementation,
+with object algebra replaced by case class for the ASTs.
+The other is a modified version of Ilya's implementation, using the longest match
+alternative combinator instead of the ordinary one.
+
+\huang{done}\bruno{A table showing a summary of results is missing here. We discussed this before.}
+
+\begin{table}
+    \centering
+    \begin{tabular}{|l|r|r|r|r|r|r|r|}
+      \hline
+        \multirow{2}{*}{\bfseries Calculus Name} & \bfseries Ilya's & \multicolumn{2}{ c| }{\bfseries Ours} & \multicolumn{2}{ c| }{\bfseries Ilya's with \inlinecode{|||}} & \multicolumn{2}{ c| }{\bfseries Ours with class} \\ \cline{3-8}
+        \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{\bfseries Time} & \bfseries Time & \bfseries (+/-)\% & \bfseries Time & \bfseries (+/-)\% & \bfseries Time & \bfseries (+/-)\% \\
+      \hline
+        Arith & 741 & 913 & +23.2 & 793 & +7.0 & 932 & +25.8 \\
+        Untyped & 770 & 1018 & +32.2 & 821 & +6.6 & 1007 & +30.8 \\
+      \hline
+        \multicolumn{1}{|c|}{\dots} & \multicolumn{7}{c|}{\dots} \\
+      \hline
+        FullRecon & 1094 & 1645 & +50.4 & 1161 & +6.1 & 1652 & +51.0 \\
+        FullPoly & 1398 & 2086 & +49.2 & 1511 & +8.1 & 2019 & +44.4 \\
+        FullOmega & 1451 & 2352 & +62.1 & 1582 & +9.0 & 2308 & +59.1 \\
+      \hline
+        Total & 21746 & 31024 & +42.7 & 23260 & +7.0 & 30795 & +41.6 \\
+      \hline
+    \end{tabular}
+    \caption{Execution time of four versions}
+    \label{tab:ext-comparison}
+\end{table}
+
+Table \ref{tab:ext-comparison} shows part of the comparison results of these four versions,
+full table is available online []. It suggests that the difference of running time between
+using object algebra and class is little, roughly 1\%.
+The usage of longest match combinator slows the performance by 7\%. The main reason of slower
+execution time may be the overall structure of the modular parsing approach, because we indeed have
+more intermediate function calls and method overriding. However, it is worth metioning that
+because of the memoization technique of Packrat parsers, we are only constant times
+slower, the algorithmic complexity is still the same.
 

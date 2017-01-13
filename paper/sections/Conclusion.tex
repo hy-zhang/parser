@@ -1,1 +1,9 @@
 \section{Conclusion}\label{sec:conclusion}
+
+\haoyuan{Huang: to write a couple of sentences for a summary.}
+
+For a better user experience, there are certainly some aspects in our pattern for modular parsing that needs
+improvements. Specifically, in Section~\ref{subsec:implementation} we have observed that the glue code in \lstinline{Untyped}
+appears to be boilerplate, as we need to compose the data structures, parsers and operations respectively from the same set of super types. Such an issue refers to \textit{family polymorphism} [], and we may rely it on a language feature or meta-programming techniques. Moreover, to make better use of Object Algebras, we can possibly adopt some patterns in Shy, together with the composition of algebras, to reduce boilerplate by using code generation.
+
+For future work, we will experiment more on how open recursion contributes to extensible parsing in functional languages, by making use of laziness. It is also interesting to see that parsing, to some extent, can be viewed as a special example of unfolds. So it is worthwhile considering to generalize the composition of unfolds under certain circumstances.
