@@ -15,8 +15,26 @@ object Code1 {
     def print = "(" + e1.print + " + " + e2.print + ")"
   }
 
-//BEGIN_ATTEMPT_EXPRWITHFREEVARS
+  class Var(x: String) extends Expr {
+    def print = x
+  }
+
+//BEGIN_FVARSEXPR
 trait FVarsExpr extends Expr { def fVars: Set[String] }
-//END_ATTEMPT_EXPRWITHFREEVARS
+//END_FVARSEXPR
+
+//BEGIN_FVAR_CLASSES
+class FVarsLit(x: Int) extends Lit(x) with FVarsExpr {
+  def fVars = Set()
+}
+
+class FVarsAdd(e1: FVarsExpr, e2: FVarsExpr) extends Add(e1, e2) with FVarsExpr {
+  def fVars = e1.fVars ++ e2.fVars
+}
+
+class FVarsVar(x: String) extends Var(x) with FVarsExpr {
+  def fVars = Set(x)
+}
+//END_FVAR_CLASSES
 
 }

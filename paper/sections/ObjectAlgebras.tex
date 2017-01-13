@@ -3,32 +3,21 @@
 The inheritance-based approach allows building extensible parsers, based on an OO class hierarchy.  Nevertheless, the addition of new operations over ASTs is problematic using traditional OO ASTs. In this section, we
 show how to support both the forms of extensibility for ASTs (easy
 addition of language contructs, and easy addition of operations)
-using Object Algebras~\cite{}.
+using Object Algebras~\cite{Oliveira2012}.
 
 \subsection{Problem with Traditional OO ASTs}\label{subsec:problemwithoutoa}
 
-OO ASTs allow easily adding new language constructs, but it is hard
-to add new operations over the AST. The code in Section~\ref{subsec:packratparsing},
-supports a pretty-printing operation. Suppose we also want to collect free variables on the expression language which models
-literals, additions and variables. Based on the traditional OO class hierarchy, one attempt would be extending \inlinecode{Expr} with the new
-operation directly:
+The Expression Problem illustrates the difficulty of extending data structures or ASTs in two dimensions. For traditional OO ASTs, adding new language constructs is easy, but adding new operations is hard. In the last section, we have a simple language containing literals, additions and variables. The corresponding ASTs are built using classes with a pretty-printing operation. Now suppose we want to collect free variables over the ASTs. By traditional OO approach, one attempt would be extending \inlinecode{Expr} with the new operation to obtain a new abstract type for ASTs:
 
-\lstinputlisting[linerange=19-19]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=ATTEMPT_EXPRWITHFREEVARS
+\lstinputlisting[linerange=23-23]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=FVARSEXPR
 
-But then programmers have to define new classes for all the constructs, including literals, additions and variables, by extending the old ones together with \lstinline{FVarsExpr}, and implementing the corresponding \lstinline{fVars} respectively.
+But then programmers have to define a new class for each construct by extending the old class with \lstinline{FVarsExpr}, and implementing the corresponding \lstinline{fVars} method:
 
-\begin{lstlisting}
-class FVarsLit(x: Int) extends Lit(x) with FVarsExpr {
-def fVars = Set()
-}
-class FVarsAdd(e1: FVarsExpr, e2: FVarsExpr) extends Add(e1, e2) with FVarsExpr {
-def fVars = e1.fVars ++ e2.fVars
-}
-class FVarsVar(x: String) extends Var(x) with FVarsExpr {
-def fVars = Set(x)
-}
-\end{lstlisting}
-The above code already appears as boilerplate, especially, more classes have to be defined along with future extensions. It pollutes the namespace heavily. Moreover, the \lstinline{ExprParser} code is no longer useful; to generate expressions that support free variables, we have to substitute \lstinline{FVarsExpr}, \lstinline{FVarsLit}, \lstinline{FVarsAdd} and \lstinline{FVarsVar} for the old \lstinline{Expr}, \lstinline{Lit}, \lstinline{Add} and \lstinline{Var} correspondingly. Again, to avoid modifying existing code, we have to sacrifice code reuse. In fact, one would not like to make a choice from them, but expect both. We have to seek for a different approach to build ASTs. \haoyuan{Please check text.}
+\lstinputlisting[linerange=27-37]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=FVAR_CLASSES
+
+Besides introducing boilerplate code, more classes have to be defined along with future extensions. They pollutes the namespace heavily. More importantly, the \lstinline{VarExprParser} we defined is no longer suitable for parsing the new ASTs! All the methods in the previous parser has type \inlinecode{Parser[Expr]}, which indicates the result has type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
+
+Therefore, in order to generate new AST structures, we have to substitute \lstinline{FVarsExpr}, \lstinline{FVarsLit}, \lstinline{FVarsAdd} and \lstinline{FVarsVar} for the old \lstinline{Expr}, \lstinline{Lit}, \lstinline{Add} and \lstinline{Var} correspondingly. Again, to avoid modifying existing code, we have to sacrifice code reuse. In fact, there is a trade-off between separate compilation and type-safe code reuse. For semantic modularity, we need a different approach for building ASTs.
 
 %\bruno{The following text is not very good, needs to be revised. I think
 %we need to show the full code and where it breaks. Since I removed text
