@@ -1,10 +1,10 @@
 \section{Packrat Parsing for Modularity}\label{sec:packrat}
 
 This section discusses the algorithmic challenges introduced by
-modular parsing and argues that Packrat parser combinators 
-are suitable to address those challenges. The algorithm challenges 
-are important because they rule out various common techniques 
-used by non-modular code using parsing combinators. 
+modular parsing and argues that Packrat parser combinators
+are suitable to address those challenges. The algorithm challenges
+are important because they rule out various common techniques
+used by non-modular code using parsing combinators.
 To avoid pitfalls related to those algortihmic challenges,
 we propose a the following methodology:
 
@@ -104,19 +104,7 @@ and terminates parsing.
 parser = parseInt <|> parseAdd
 \end{lstlisting}
 
-Using traditional alternative composition, when a preceding parser successfully parses a prefix of the input, it will finish parsing and return the result, in spite that subsequent parsers may be able to parse the whole input.
-%\huang{I've rewritten this paragraph}\bruno{The example is good, I think but the explanation is not.
-%You want to say that when you know
-%  the full grammar, you can figure out where ``try'' is
-%  needed. Without the full grammar you'd need assume the worst
-%  case. Make an effort to make your explanation cristal clear!
-%I think you want to miss the abstract explanation that you give first,
-%with the explanation about the concrete example.
-%Start with ``The need for backtracking is also problematic
-%in a modular setting. For example, suppose ...'' and synchronize
-%the abstract explanation and the explanation for the example.
-%}
-In contrast with the parser above, \inlinecode{parser = parseAdd <|> parseInt} works as expected with the two cases swapped.
+Using traditional alternative composition, when a preceding parser successfully parses a prefix of the input, it will finish parsing and return the result, in spite that subsequent parsers may be able to parse the whole input. In contrast with the parser above, \inlinecode{parser = parseAdd <|> parseInt} works as expected with the two cases swapped.
 
 In this case, reordering the alternatives ensures that
 the \emph{longest match} is picked among the possible results. However, manual reording for the longest match is inconvenient, and worst still, it is essentially non-modular. When the grammar is extended with new rules, programmers are supposed to \emph{manually} adjust
@@ -169,49 +157,40 @@ Scala has a standard parser combinator library\footnote{https://github.com/scala
 \cite{moors2008parser} which implements Packrat parsers.
 The library provides a number of parser combinators, including the longeset match alternative combinator.
 Below we present an example to illustrate Scala parsers.
-%
-%\bruno{So, we make a big fuss identifying the problems with other
-%parser combinators in the previous subsection and now we present
-%an example that does not suffer from any of the previous problems!
-%What makes sense here is an example that uses: a \emph{left-recursive grammar}; the \emph{longest match combinator}; and where we can argue that
-%there's no need for the user to do manual backtracking. Just use
-%the example with the left-recursive grammar for parsing integers and additions and argue that none of the limitations
-%discussed previously applies!
-%}
+
+\paragraph{Code Demonstration}
+For more concise demonstration, we assume that all the Scala code in the rest of this paper are in the object \inlinecode{Code}, as shown in Figure~\ref{fig:papercode}. It extends traits \inlinecode{StandardTokenParsers} and \inlinecode{PackratParsers} from the Scala parser combinator library. Futhermore, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing.
+
+\begin{figure}[t]
+\centering
+\lstinputlisting[linerange=42-53]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_PAPERCODE
+\caption{Helper object for code demonstration in this paper.}\label{fig:papercode}
+\end{figure}
 
 \paragraph{Parsing a Simple Arithmetic Language}
 Suppose we want to parse a simple language with literals and
 additions. The concrete syntax is as follows:
-%\bruno{Here's a good opportunity to both improve the paper and make it
-%more compact! This is the example that should be illustrated and
-%discussed at the end of Section 2. Then we can just create a figure to
-%refer to the code in Section 2 and refer again to the figure here. No
-%need for two different examples.}
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <expr> ::= <int>
     \alt <expr> `+' <expr>
 \end{grammar}
-%\alt `(' <expr> `)'
 
-It is straightforward to model ASTs by inheritance and write corresponding parsers for all cases.
-Note that a parser has type \lstinline{PackratParser[E]} for some
-\lstinline{E}, which indicates the type of results it produces. Figure~\ref{fig:packrat-arith} shows the abstract syntax and
-the parser code that generates expressions as ASTs. The AST supports
-pretty-printing via the \lstinline{print} method.
+It is straightforward to model the abstract syntax by classes as below. The ASTs support pretty-printing via the \lstinline{print} method.
 
-\begin{figure}[t]
-\centering
-\lstinputlisting[linerange=6-29]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
-\caption{Packrat Parsing for an arithmetic language.}\label{fig:packrat-arith}
-\end{figure}
+\lstinputlisting[linerange=9-17]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
 
+Then we write corresponding parsers for all cases.
+Note that a parser has type \lstinline{Parser[E]} for some
+\lstinline{E}, which indicates the type of results it produces.
+
+\lstinputlisting[linerange=21-29]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
 
 In the trait \lstinline{ExprParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
 \lstinline{pAdd} handles the addition case and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
 recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the longest match alternative combinator \inlinecode{|||}.
-Table~\ref{tab:packrat} gives a closer look at part of the API that we have used in our work.
+Table~\ref{tab:packrat} gives a closer look at part of the API used in our work.
 
 \begin{table}[t]
 \begin{tabular}{l}
@@ -273,6 +252,6 @@ def |||[U >: T](q0: => Parser[U]): Parser[U]
 
 It is worth mentioning that the grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees the efficiency.
 
-For more concise demonstration, in the rest of paper we assume that all the code are in an enclosing environment of traits \inlinecode{StandardTokenParsers} and \inlinecode{PackratParsers}. Futhermore, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing as below. The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
+The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
 
-\lstinputlisting[linerange=34-41]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
+\lstinputlisting[linerange=33-33]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER

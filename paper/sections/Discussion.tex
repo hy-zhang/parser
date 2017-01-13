@@ -43,9 +43,9 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 
 \begin{figure}[t]
 \begin{tabular}{m{0.42\linewidth}m{0.52\linewidth}}
-\lstinputlisting[linerange=113-128]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
+\lstinputlisting[linerange=113-132]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
 &
-\lstinputlisting[linerange=132-147]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+\lstinputlisting[linerange=136-156]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
 \end{tabular}
 \caption{Language \lstinline{VarExpr} (left) and language \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
@@ -53,7 +53,7 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 As shown below, those two language components can be merged into one to obtain the language we want. Futhermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
-\lstinputlisting[linerange=151-160]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+\lstinputlisting[linerange=160-170]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
 Such composition shows perfect modularity. The only
 drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty printers of
 \lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}[]. Unfortunately Scala does not

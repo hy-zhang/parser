@@ -1,10 +1,9 @@
 package PaperCode.Sec2Packrat
 
-import scala.util.parsing.combinator.syntactical._
-import scala.util.parsing.combinator._
+import PaperCode.Common
 
 
-object Code2 extends StandardTokenParsers with PackratParsers {
+object Code2 extends Common {
 
   // Abstract syntax
   trait Expr {
@@ -31,13 +30,6 @@ object Code2 extends StandardTokenParsers with PackratParsers {
   }
 
 //BEGIN_PACKRAT_RUNPARSER
-type Parser[E] = PackratParser[E]
-
-def parse[E](p: Parser[E]): String => E = in => {
-  val t = phrase(p)(new lexical.Scanner(in))
-  if (t.successful) t.get else scala.sys.error(t.toString)
-}
-
 val r = parse(new ExprParser {}.pExpr)("1 + 2").print // "(1 + 2)"
 //END_PACKRAT_RUNPARSER
 
@@ -45,3 +37,18 @@ val r = parse(new ExprParser {}.pExpr)("1 + 2").print // "(1 + 2)"
     println(r)
   }
 }
+
+//BEGIN_PACKRAT_PAPERCODE
+import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import scala.util.parsing.combinator.PackratParsers
+
+object Code extends StandardTokenParsers with PackratParsers {
+  type Parser[E] = PackratParser[E]
+
+  def parse[E](p: Parser[E]): String => E = in => {
+    val t = phrase(p)(new lexical.Scanner(in))
+    if (t.successful) t.get else scala.sys.error(t.toString)
+  }
+  // Any Scala code in the paper comes here
+}
+//END_PACKRAT_PAPERCODE

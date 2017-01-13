@@ -106,7 +106,7 @@ trait NewParser[E, T] extends ExtParser[E, T] {
 }
 
 
-object Code2 {
+object Code2 extends Common {
 
 /*
 //BEGIN_LANGUAGE_COMPONENTS_VAREXPR
@@ -119,7 +119,11 @@ object VarExpr {
   }
 
   // Parser
-  trait Parser[E] { ... }
+  trait Parsing[E] {
+    val alg: Alg[E]
+    val pE: Parser[E] = ...
+    ...
+  }
 
   // Pretty-printer
   trait Print extends Alg[String] {
@@ -138,7 +142,12 @@ object TypedLam {
   }
 
   // Parser
-  trait Parser[E] { ... }
+  trait Parsing[E, T] {
+    val alg: Alg[E, T]
+    val pE: Parser[E] = ...
+    val pT: Parser[T] = ...
+    ...
+  }
 
   // Pretty-printer
   trait Print extends Alg[String, String] {
@@ -151,9 +160,10 @@ object TypedLam {
 object VarLamExpr {
   trait Alg[E, T] extends VarExpr.Alg[E] with TypedLam.Alg[E, T]
 
-  trait Parser[E, T] extends VarExpr.Parser[E] with TypedLam.Parser[E, T] {
+  trait Parsing[E, T] extends VarExpr.Parsing[E] with TypedLam.Parsing[E, T] {
     override val alg: Alg[E, T]
-    override val pE = ...
+    override val pE: Parser[E] = ...
+    ...
   }
 
   trait Print extends VarExpr.Print with TypedLam.Print
