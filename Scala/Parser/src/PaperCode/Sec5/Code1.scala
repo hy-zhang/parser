@@ -119,7 +119,7 @@ object VarExpr {
   }
 
   // Parser
-  trait Parsing[E] {
+  trait Parse[E] {
     val alg: Alg[E]
     val pE: Parser[E] = ...
     ...
@@ -142,7 +142,7 @@ object TypedLam {
   }
 
   // Parser
-  trait Parsing[E, T] {
+  trait Parse[E, T] {
     val alg: Alg[E, T]
     val pE: Parser[E] = ...
     val pT: Parser[T] = ...
@@ -160,7 +160,7 @@ object TypedLam {
 object VarLamExpr {
   trait Alg[E, T] extends VarExpr.Alg[E] with TypedLam.Alg[E, T]
 
-  trait Parsing[E, T] extends VarExpr.Parsing[E] with TypedLam.Parsing[E, T] {
+  trait Parse[E, T] extends VarExpr.Parse[E] with TypedLam.Parse[E, T] {
     override val alg: Alg[E, T]
     override val pE: Parser[E] = ...
     ...

@@ -2,77 +2,41 @@
 
 
 To demonstrate the utility of our modular parsing approach, we
-implemented parsers of the first 18 calculi from book \textit{Types
-  and Programming Languages} (TAPL) \cite{pierce2002types}. TAPL introduces several
-calculi from simple to complex, by gradually adding new features to
-syntax. We compared our implementation with a non-modular implementation
+implemented parsers of the first 18 calculi from book \textit{Types and Programming Languages} (TAPL) \cite{pierce2002types}. We compared our implementation with a non-modular implementation
 we found online, which is also written in Scala and uses the same Packrat parsing library.
 We counted source lines of code (SLOC) and measured execution time for both implementations.
-Our implementation saves almost 70\% code comparing with that non-modular one.
-
-\huang{done}\bruno{mention that you compare against an existing non-modular implementation.}
+The result suggests that our implementation saves 69\% code comparing with that non-modular one.
 
 \subsection{Implementation}\label{subsec:implementation}
 
-The calculi in the TAPL book are suitable for our case study for mainly two reasons.
-Firstly, the calculi are arguably capture many of the language features
-required in realistic programming languages. Secondly, the evolution of
+TAPL introduces several calculi from simple to complex, by gradually adding new features to syntax. These calculi are suitable for our case study for mainly two reasons. Firstly, they capture many of the language features
+required in realistic programming languages, such as lambdas, records and variants. Secondly, the evolution of
 calculi in the book reveals the advantages of modular representation
 of abstract syntax and modular parsing, which is the key functionality
 of our approach. By extracting common components from those calculi
-and reusing them, we obtain considerably code reuse with reasonable performance penalty, as shown later.
+and reusing them, we obtain considerably code reuse as shown later.
 
 \paragraph{Extracting Language Components}
-Using the modular parsing techniques discussed before, we extract
-reusable components from syntax of all the calculi. Each
+Using the pattern demonstrated in Section~\ref{subsec:language-component}, we extract
+reusable components from all the calculi. Each
 component, which may contain several syntactical structures,
 represents a certain feature of the language. For
 example, the \lstinline{VarApp} component below represents variables and
-function applications.
+function applications, shown in Figure~\ref{fig:casestudy-varapp}.
 
-\huang{todo: move the code, rename PackratParser}
-\begin{lstlisting}
-object VarApp {
-  trait Alg[E] {
-    def TmVar(x: String): E
-    def TmApp(e1: E, e2: E): E
-  }
-  trait Print extends Alg[String] {
-    def TmVar(x: String): String = x
-    def TmApp(e1: String, e2: String): String = "[" + e1 + " " + e2 + "]"
-  }
-  trait Parser[E] extends EParser[E] {
-    lexical.delimiters += ("(", ")")
-    val alg: Alg[E]
-    val pVarAppE: PackratParser[E] = {
-      lcid ^^ alg.TmVar |||
-        pE ~ pE ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) } |||
-        "(" ~> pE <~ ")"
-    }
-  }
-}
-\end{lstlisting}
+\begin{figure}[ht]
+\lstinputlisting[linerange=15-33]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_VARAPP
+\caption{The \inlinecode{VarApp} component in case study.}\label{fig:casestudy-varapp}
+\end{figure}
 
-In our case study, each component is represented by a Scala object which has three parts.
-\lstinline{Alg} is an object algebra interface for the abstract syntax.
-\lstinline{Print} is an object algebra implements that interface
-\lstinline{Alg}, for the pretty printing operation. They are standard object algebra operations.
-\lstinline{Parser} is the modular parser for this piece of syntax.
+Similar as before, each component is represented by a Scala object which includes \lstinline{Alg} for the abstract syntax, \lstinline{Print} for pretty-printing, and \lstinline{Parse} for parsing.
 
 We have some naming conventions in our code, \lstinline{E} represents
 expressions, \lstinline{T} represents types and \lstinline{K}
 represents kinds. They are the three sorts of syntax in our case study.
-In this particular component \lstinline{VarApp} we only have expressions.
+In the component \lstinline{VarApp} we only have expressions. We use some helper traits for eliminating duplicate definitions, such as \inlinecode{EParser} containing \inlinecode{pE} for parsing expressions.
 
-Similar as before, each parser carries lexical information, an object algebra field, and
-parsing functions. We have some helper traits for convenience, such as \inlinecode{EParser}
-containing \inlinecode{pE} for parsing expressions.
-
-\begin{lstlisting}
-trait EParser[E] {
-  val pE: PackratParser[E]
-}
-\end{lstlisting}
+\lstinputlisting[linerange=9-11]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_EPARSER
 
 \paragraph{Composing Language Components}
 Each calculus could be composed directly from components and other
@@ -80,58 +44,20 @@ calculi as needed. For example, the calculus \lstinline{Untyped} in our case stu
 representing the famous untyped lambda calculus, is constructed from components \lstinline{VarApp}
 and untyped lambda abstraction \lstinline{UntypedAbs}.
 
-\begin{lstlisting}
-object UntypedAbs {
-  trait Alg[E] {
-    def TmAbs(x: String, e: E): E
-  }
-  trait Print extends Alg[String] {
-    def TmAbs(x: String, e: String): String = "\\" + x + "." + e
-  }
-  trait Parser[E] extends EParser[E] {
-    lexical.delimiters += ("\\", ".", "(", ")")
-    val alg: Alg[E]
-    val pUntypedAbsE: PackratParser[E] =
-      ("\\" ~> lcid) ~ ("." ~> pE) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } |||
-      "(" ~> pE <~ ")"
-  }
-}
-
-object Untyped {
-  trait Alg[E] extends UntypedAbs.Alg[E] with VarApp.Alg[E]
-  trait Print extends Alg[String] with UntypedAbs.Print with VarApp.Print
-  trait Parser[E] extends UntypedAbs.Parser[E] with VarApp.Parser[E] {
-    override val alg: Alg[E]
-    val pUntypedE: PackratParser[E] = pUntypedAbsE ||| pVarAppE
-    override val pE: PackratParser[E] = pUntypedE
-  }
-}
-\end{lstlisting}
-
-When composing the calculus from components, all the traits can be
-easily combined by Scala's \inlinecode{extends...with} keywords.
-In \lstinline{Parser}, we need to override the object algebra interface and
+The code of building \lstinline{Untyped} is presented in Figure~\ref{fig:casestudy-untyped}. Note that in the parser \inlinecode{Parse}, we need to override the object algebra interface and
 parsing functions accordingly.
+
+\begin{figure}[ht]
+\lstinputlisting[linerange=37-64]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_UNTYPED
+\caption{Build the \inlinecode{Untyped} calculus by composing to language components.}\label{fig:casestudy-untyped}
+\end{figure}
 
 \paragraph{Demo code}
 We have demo code for every calculus in order to test and evaluate our implementation.
 We feed the pretty printing algebra to the parser and print out the result.
 The parsing result can be changed as long as the concrete algebra is available.
 
-\begin{lstlisting}
-object TestUntyped {
-  def work[E](inp: String)(a: Untyped.Alg[E]): E = {
-    val lang = new Untyped.Parser[E] {
-      override val alg: Untyped.Alg[E] = a
-    }
-    parse(lang.pE)(inp)
-  }
-  def parseAndPrint(inp: String): Unit = println(work(inp)(new Untyped.Print {}))
-  def main(args: Array[String]): Unit = {
-    parseAndPrint("(\\x.x) (\\y.y)")
-  }
-}
-\end{lstlisting}
+\lstinputlisting[linerange=68-78]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_DEMO
 
 \paragraph{Dependency Overview}
 Figure \ref{fig:dependency} shows the
@@ -142,7 +68,7 @@ from box A to box B denotes that B includes and thus reuses A.
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{resources/depGraph.pdf}
-    \caption{Dependency graph of all calculi and components}
+    \caption{Dependency graph of all calculi and components in case study.}
     \label{fig:dependency}
 \end{figure}
 
@@ -152,8 +78,7 @@ extended from existing components. Since calculi and components have the similar
 can also be extended and reused directly. For example, calculus \lstinline{FullRef} extends from
 calculus \lstinline{FullSimple}.
 
-Using our modular parsing approach, it is convenient to extract language
-features as components and reuse them. From the dependency graph, we know
+From the dependency graph, we know
 that common components such as \lstinline{VarApp} are reused in
 lots of calculi. Such reuse could shorten the code considerably. We
 will show this advantage and exam the possible performance penalty in
@@ -266,4 +191,3 @@ execution time may be the overall structure of the modular parsing approach, bec
 more intermediate function calls and method overriding. However, it is worth metioning that
 because of the memoization technique of Packrat parsers, we are only constant times
 slower, the algorithmic complexity is still the same.
-
