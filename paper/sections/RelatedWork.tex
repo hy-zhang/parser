@@ -43,7 +43,7 @@ generators focus on the \textit{syntactic extensibility} of grammars:
 they rely on whole compilation to generate a global parser, even if
 there is only a slight modification in the grammar. Some of those
 parser generators may statically check the correctness and unambiguity
-of grammars. In constrast, because our approach is based on parser
+of grammars. In contrast, because our approach is based on parser
 combinators, there is no support for ambiguity checking.  However, as
 far as we are aware, no extensible parser generators support separate
 compilation or modular type-checking.
@@ -62,13 +62,15 @@ extensibility~\cite{Tobin-Hochstadt2011}. This is quite powerful and it uses
 attributed ASTs for contextual
 information. Moreover extensions can be integrated in a modular
 way. However such modularity is not flexible enough for language
-unification, as the syntax is only built from extensions.  Moreover,
-existing macros cannot be further changed after
-definition. \haoyuan{correct?}  Extensible
+unification, as the syntax is only built from extensions.
+%Moreover,
+%existing macros cannot be further changed after
+%definition. \haoyuan{correct?}
+Extensible
 compilers like JastAdd~\cite{Ekman2007} and
 Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
 is mostly done using parser generators. They focus on the
-extensions to a host language. Our library is designed for type-safe
+extensions to a host language. Our technique is designed for type-safe
 modular language parsers (not just language
 extensions), with very flexible parser composition.
 
@@ -94,7 +96,7 @@ or NFAs, and later they can be composed by an algorithm, to provide
 separate compilation for parsing. The generation of parse tables can
 be quite expensive in terms of performance. The approach
 is quite different from ours, since it uses parse
- tables, wheres we use parser combinators.
+ tables, whereas we use parser combinators.
 Our approach supports both
 \emph{separate compilation} as well as \emph{modular
   type-checking}. Moreover, the extensibility of parsing is further
@@ -115,7 +117,7 @@ It is widely used in Haskell (with various ``clones'' in other languages)
 for context-sensitive grammars with infinite lookahead. Nevertheless,
 Parsec users suffer from manual left-recursion elimination,
 high cost for backtracking and longest match composition issues,
-as we discussed in Section~\ref{}. Those limitations make Parsec
+as we discussed in Section~\ref{subsec:challenges}. Those limitations make Parsec
 (and similar parsing techniques) inadequate for modular parsing.
 
 Some more recent work on parser
@@ -129,25 +131,24 @@ Object Algebras.
 %its support for direct left-recursion is already helpful for designing
 %real-world parsers practically, though~\cite{warth2008} further
 %demonstrated that general left-recursion is supported theoretically.
-Despite our choice of Packrat parsing, as argued in Section~\ref{},
+Despite our choice of Packrat parsing, as argued in Section~\ref{sec:packrat},
 any parser combinator approach which supports left-recursion, longest
 match composition, and makes the cost of backtracking reasonable,
 should be applicable to modular parsing.
 %Yet we have mentioned that the components used in our approach can
 %have alternatives to achieve better modular parsing.
 
-\paragraph{Extensibility} Various design patterns~\cite{}, in multiple
+\paragraph{Extensibility} Various design patterns~\cite{}\huang{???} in multiple
 languages, have been proposed over the years to address extensibility
-problems, such as the Expression Problem~\cite{}. However, to the best
+problems, such as the Expression Problem~\cite{wadler1998expression}. However, to the best
 of our knowledge, none of the existing extensibility techniques
 address the problem of \emph{modularly
 parsing extensible ASTs}.  There has been
 a lot of work on extensible ASTs, in both functional and
 object-oriented programming.  For instance, the famous ``Datatypes \`a
-la Carte'' (DTC)
-paper~\cite{swierstra2008data} represents modular ASTs using co-products
+la Carte'' (DTC)~\cite{swierstra2008data} approach represents modular ASTs using co-products
 of every two functors, which forms a binary tree structure.
-Several variants of DTC have been later proposed~\cite{Bahr2011,Bahr2014,Oliveira2015}
+Several variants of DTC have been later proposed~\cite{Bahr2011,Bahr2014,Oliveira2015}.
 All of that work essentially covers how to traverse and
 consume extensible ASTs.
 Only in Bahr's~\cite{Bahr2011} work a brief mention of \emph{unfolds}
@@ -155,8 +156,8 @@ Only in Bahr's~\cite{Bahr2011} work a brief mention of \emph{unfolds}
 However Bahr's work does not cover parsing.
 
 In OO languages, there are also many design patterns that achieve
-type-safe extensibility~\cite{torgerson,odersky,Oliveira09,Oliveira12,Wang16}.
-We chose Object Algebras~\cite{Oliveira2012} because the pattern is
+type-safe extensibility~\cite{torgerson,odersky,Oliveira09,Oliveira:2012,Wang16}.\huang{not in the bib file, pls fix}
+We chose Object Algebras~\cite{Oliveira:2012} because the pattern is
 relatively lightweight and makes good use of existing OO features,
 such as inheritance, generics and subtyping. As seen throughout the paper,
 the parsing code is concise and expressive using Object Algebras.
@@ -167,23 +168,21 @@ programming, the extensibility techniques in OOP have focused
 on traversing and processing ASTs. We are unware of any work on OOP
 that covers how to do modular parsing for extensible ASTs.
 
-It is worth mentioning that Scala case classes~\cite{} provide a near
+It is worth mentioning that Scala case classes~\cite{}\huang{???} provide a near
 solution to the Expression Problem. Case classes are similar to
 algebraic datatypes but, unlike algebraic datatypes, new cases can be
 modularly added. The reason why case classes are not a complete
 solution to the Expression Problem is that they do not enforce
 exhaustiveness of pattern matching for extensible operations. In other
-words run-time pattern matching errors can happen when writting
-extensible code with case classes.  So full static type-safety is not
-ensured. Nevertheless case classes are a pragmatic approach, which is
-widely used in practice. Therefore modular parsing techniques may be
+words run-time pattern matching errors can happen when writing extensible code with case classes. So that full static type-safety is not ensured. Nevertheless case classes are a pragmatic approach, which is
+widely used in practice. Therefore, modular parsing techniques may be
 of value for extensible code using case classes.  The approach we
-presented in Section 3~\ref{} can readily be adapted to case classes:
+presented in Section~\ref{sec:inheritance} can readily be adapted to case classes:
 all that the users need to do is to use case classes, instead of
 standard OO classes in their code.
 
 \begin{comment}
-Moreover, in~\cite{Oliveira2012} the authors have discussed the
+Moreover, in~\cite{Oliveira:2012} the authors have discussed the
 composition of algebras. In our parsing approach, a parser consumes an
 algebra, which is delegated to return the results, during its process
 of parsing. Having a set of algebras, it requires multiple parsing
@@ -199,11 +198,8 @@ discussed the composition of a cv-coalgebra and a term homomorphism,
 which differs from modular parsing.
 \end{comment}
 
-\bruno{There's a problem with the text in 4.2. We need to first
-fix the problem in S4.2 and then come back to the text below and
-adapt it accordingly.}
 Another interesting observation, as we have mentioned
-in~\ref{subsec:objectalgebras}, is that transformation algebras are
+in Section~\ref{subsec:more-oa}, is that transformation algebras are
 frequently used in parsing, as concrete syntax may not always coincide
 with its abstract syntax, for instance, the bruijn indices in lambda
 calculus, as well as other syntactic sugars. In the Shy
