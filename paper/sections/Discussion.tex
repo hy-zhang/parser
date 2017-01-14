@@ -1,15 +1,20 @@
 \section{More Features}
 
-The use of inheritance-based approach and Object Algebras enables us to build modular parsers, which are able to evolve with syntax together. This section explores more interesting features, including parsing multi-sorted syntax, overriding existing parsing rules, language components for abstracting language features, and alternative techniques under the whole framework.
+The use of inheritance-based approach and Object Algebras enables us
+to build modular parsers, which are able to evolve with together with
+syntax. This section explores more interesting features, including
+parsing multi-sorted syntax, overriding existing parsing rules,
+language components for abstracting language features, and alternative
+techniques under the whole framework.
 
-\subsection{Parsing Multi-sorted Syntax}\label{subsec:differentsyntax}
+\subsection{Parsing Multi-Sorted Syntax}\label{subsec:differentsyntax}
 
 \begin{comment}
 As illustrated above, using Object Algebras separates data structures from behaviors, thus enabling more modularity and reuse. New language constructs correspond to the new cases in the algebra. Different operations
  on structures, with both code reuse and separate compilation supported.
 \end{comment}
 
-Another advantage of using Object Algebras is that it is easy to
+Using Object Algebras is that it is easy to
 model multi-sorted languages. If the syntax contains multiple sorts, we can distinguish them by different type parameters. As an example, we extend the language of literals, additions and variables by introducing types as a new kind of type argument, and we add lambda abstractions to expressions. Now the language has two sorts in the syntax, types and expressions:\\
 
 \begin{tabular}{m{0.45\linewidth}m{0.45\linewidth}}
@@ -46,11 +51,22 @@ The code works as expected to parse and pretty-print the result.
 
 \subsection{Overriding Existing Rules}
 
-As many syntactically extensible parsers, our approach also supports changing part of existing parsers, but in a type-safe way. We can easily update existing parsing rules with new implementations, or eliminate them in extended parsers. As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
+As many syntactically extensible parsers, our approach also supports
+changing part of existing parsers, but in a type-safe way. We can
+easily update existing parsing rules with new implementations, or
+eliminate them in extended parsers. This can be useful in many
+situations, including when conflicts or ambiguities arize when
+composing languages.
+As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
 
 \lstinputlisting[linerange=76-81]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
 
-Then we want to replace the untyped lambda abstractions by typed lambdas. With inheritance and method overriding, it is easy to only change the implementation of \lstinline{pLam} in the extended parser. The new \inlinecode{pLam} parses a colon and a type in addition, between the identifier and the dot. Due to dynamic dispatch, our new explanation of lambdas will make a difference without affecting the other parts of the parser.
+Then we want to replace the untyped lambda abstractions by typed
+lambdas. With inheritance and method overriding, it is easy to only
+change the implementation of \lstinline{pLam} in the extended parser.
+The new \inlinecode{pLam} parses a colon and a type in addition,
+between the identifier and the dot. Due to dynamic dispatch, our new
+implementation of lambdas will be different without affecting the other parts of the parser.
 
 \lstinputlisting[linerange=85-90]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
 
@@ -65,11 +81,24 @@ It can be achieved by instantiating an instance of \lstinline{BaseParser} to obt
 \lstinputlisting[linerange=94-102]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
 \end{comment}
 
-\subsection{Language Component}\label{subsec:language-component}
+\subsection{Language Components}\label{subsec:language-component}
 
-Modular parsing not only enables us to build a corresponding parser which evolves with the language together, but also allows us to abstract language features as reusable, independent components. Generally, a language feature includes related abstract syntax, methods to \textit{build} the syntax (parsing), and methods to \textit{process} the syntax (evaluation, pretty-printing, etc.). From this perspective, not only one language, but many languages can be developed in a modular way, with common language features reused.
+Modular parsing not only enables us to build a corresponding parser
+which evolves with the language together, but also allows us to
+abstract language features as reusable, independent components.
+Generally, a language feature includes related abstract syntax,
+methods to \textit{build} the syntax (parsing), and methods to
+\textit{process} the syntax (evaluation, pretty-printing, etc.). From
+this perspective, not only one language, but many languages can be
+developed in a modular way, with common language features reused.
 
-Instead of design and build a language from scratch, we can easily add a new feature by reusing the corresponding language component. For example, if a language is composed with a component of boolean expressions, including if-then-else, it immediately knows how to parse, traverse, and pretty-print if-then-else structure! It could be very useful for rapid developing DSLs.
+Instead of designing and building a language from scratch, we can
+easily add a new feature by reusing the corresponding language
+component. For example, if a language is composed from a component of
+boolean expressions, including if-then-else, it immediately knows how
+to parse, traverse, and pretty-print the if-then-else structure.
+Grouping language features in this way can
+be very useful for rapid development of DSLs.
 
 For implementation, a language component is represented by a Scala object, and it consists of three parts: Object Algebra interface, parser, and Object Algebras.
 
@@ -100,28 +129,46 @@ component ready for future composition. In that case modularity is realized over
 \caption{Reuse two language components \lstinline{VarExpr} and \lstinline{TypedLam}.}\label{fig:compose-components}
 \end{figure}
 
-Such composition shows perfect modularity. The only
-drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty-printers of
-\lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}~\cite{ernst01FP} which is unfortunately not supported in Scala. Nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
+The only drawback is that the glue code of composition appears to be
+boilerplate. As shown above, we are combining ASTs, parsers and
+pretty-printers of \lstinline{VarExpr} and \lstinline{TypedLam}
+respectively. Such a pattern refers to \textit{family
+  polymorphism}~\cite{ernst01FP} which is unfortunately not fully supported
+in Scala, since nested classes/traits have to be manually composed. 
+%Nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
 
 \subsection{Alternative Techniques}
 
-Under our modular parsing framework, we use Packrat parsing as the underlying parsing technique, OO inheritance with method overriding for composing and extending parsers, and Object Algebras for parsing extensible ASTs. However, our framework is more general and thus more powerful, because those aspects are orthogonal to each other, and hence can have their alternatives.
+Under our modular parsing framework, we use Packrat parsing as the underlying parsing technique, OO inheritance with method overriding for composing and extending parsers, and Object Algebras for parsing extensible ASTs. However, our framework is more general and thus more powerful, because those aspects are orthogonal to each other, and hence can have alternatives.
 
 \begin{itemize}
 
 \item {\bf Parsing Technique}
 
-Our approach does not depend on a particular parser combinator library or parsing algorithm. We demonstrated that Packrat parsing has some advantages and is suitable in a modular setting. However, under certain circumstances or in other programming languages, it may not be the best choice. One can use other parser combinator libraries as long as it meets his requirements.
+Our approach does not depend on a particular parser combinator library
+or parsing algorithm. We demonstrated that Packrat parsing has some
+advantages and is suitable in a modular setting. However, under
+certain circumstances or in other programming languages, it may not be
+the best choice. One can use other parser combinator libraries as long
+as th guidelines proposed in Section~\ref{sec:packrat} are met.
 
 \item {\bf Composing and Extending Parsers}
 
-We use traits to model parsers, OO inheritance to compose them, and method overriding for their extensibility. These language features may not be supported in other programming languages, especially in functional languages such as Haskell. Nevertheless, \textit{open recursion} could be used as an alternative. An explicit ``self-reference'' parameter is able to explain the recursive calls dynamically, by the real argument passed at runtime.
+  We use traits to model parsers, OO inheritance to compose them, and
+  method overriding for their extensibility. These language features
+  may not be supported in other programming languages, especially in
+  functional languages such as Haskell. Nevertheless, \textit{open
+    recursion}~\cite{CookThesis} could be used as an alternative. An explicit
+  ``self-reference'' parameter is able to explain the recursive calls
+  dynamically, by the real argument passed at runtime.
 
 \item {\bf Extensible ASTs}
 
-Besides Object Algebras, many other techniques including \textit{Data types à la carte} (DTC)~\cite{swierstra2008data} and \textit{Modular reifiable matching} (MRM)~\cite{Oliveira2015} also support extensible data structures. These alternatives can also be adopted to build ASTs and corresponding parsers.
+Besides Object Algebras, many other techniques including \textit{Data
+  types à la carte} (DTC)~\cite{swierstra2008data} ot the Cake pattern~\cite{odersky2005independently} also support extensible data structures. These alternatives could also be adopted to build ASTs and corresponding parsers.
 
 \end{itemize}
 
-As we demonstrated, the whole modular parsing framework itself is modular, which means it can be customized easily. Actually, we conducted some previous experiments of modular paring in Haskell, based on open recursion, MRM and Parsec. However, we suffered from issues of Parsec, as illustrated in Section~\ref{subsec:challenges}.
+As we demonstrated, the whole modular parsing framework itself is
+modular, which means it can be customized easily. 
+%We conducted some previous experiments of modular parsing in Haskell, based on open recursion, MRM and Parsec. However, we suffered from issues of Parsec, as illustrated in Section~\ref{subsec:challenges}.
