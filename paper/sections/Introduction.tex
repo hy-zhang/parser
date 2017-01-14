@@ -74,9 +74,9 @@ approaches can be broadly divided into two categories:
 techniques. Syntactic modularization techniques are quite popular in
 practice, due to their simplicity of implementation and use.
 Examples include many tools for developing Feature-Oriented Software-Product
-Lines (SPLs)~\cite{Kastner11road}, some Language Workbenches~\cite{}, or extensible parser
-generators~\cite{}.  Most syntactic approaches employ textual
-composition techniques such as \emph{superimposition}~\cite{} to
+Lines (SPLs)~\cite{Kastner11road}, some Language Workbenches~\cite{Erdweg201524}, or extensible parser
+generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016}.  Most syntactic approaches employ textual
+composition techniques such as \emph{superimposition}~\cite{Wagelaar2010} to
 enable the development modular program features. Such
 composition techniques collect the code for multiple features and
 merge them together when a concrete combination of features is needed
@@ -179,7 +179,7 @@ typing/reuse challenges.
 
   To address such algorithmic challanges, we propose a methodology
   for implementing modular parsers built on top of an
-  existing Packrat~\cite{Ford2002} parsing library for Scala~\cite{}. The Packrat parsing library
+  existing Packrat~\cite{Ford2002} parsing library for Scala~\cite{odersky2004overview}. The Packrat parsing library
   directly supports left-recursion, and a \emph{longest-match
     composition} operator. The direct support for left-recursion
   avoids the need for left-recursion elimination, which is very
@@ -193,8 +193,7 @@ typing/reuse challenges.
   parser for an existing language or, more generally, how to compose
   parsing code for two languages. It turns out that OO mechanisms that
   provide some form of multiple inheritance,
-  such as traits/mixins~\cite{scalaoverview}\bruno{cite work on traits (Ducasse)
-  and mixins (Bracha)}, are very handy for this
+  such as traits/mixins~\cite{Bracha1990,Scharli2003}, are very handy for this
   purpose. Essentially, traits/mixins can act as modules for the parsing code
   of different languages. This enables an approach where ASTs can be
   modelled using standard OO techniques such as the {\sc Composite}
@@ -223,7 +222,7 @@ To evaluate our approach we conduct a case study based on the ``Types
 and Programming Languages'' (TAPL) interpreters. The case study shows
 that our approach is effective at reusing parsing code from existing
 interpreters, and the total parsing code is 69\% shorter than an
-existing code base using non-modular parsing code~\cite{}.
+existing code base using non-modular parsing code\footnote{https://github.com/ilya-klyuchnikov/tapl-scala/}.
 
 In summary our contributions are:
 
@@ -254,6 +253,6 @@ The technique relies on the combination of Packrat parsing, multiple inheritance
 
 All the code in the paper and the case study is written in Scala. But,
 other languages that support some form of multiple inheritance
-(including Java 8 with default methods~\cite{}) could in principle be
+(including Java 8 with default methods~\cite{Goetz2012}) could in principle be
 used. Our choice for Scala had to do with the concise and elegant syntax
 of the language which enables a clear presentation of our ideas.
