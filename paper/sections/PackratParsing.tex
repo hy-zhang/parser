@@ -4,7 +4,7 @@ This section discusses the algorithmic challenges introduced by
 modular parsing and argues that Packrat parser combinators~\cite{Ford2002}
 are suitable to address those challenges. The algorithmic challenges
 are important because they rule out various common techniques
-used by non-modular code using parsing combinators.
+used by non-modular code using parser combinators.
 To avoid pitfalls related to those algorithmic challenges,
 we propose the following methodology:
 
@@ -79,7 +79,7 @@ possible but unnecessarily complicated to analyse the grammar and
 rewrite it when doing extensions. Anticipating that every non-terminal
 has left-recursive rules is helpful for extensibility but overkill,
 since it is inconvenient and introduces extra complexity for
-representation of a grammar and implementation of a parser.
+representation of grammars and implementation of parsers.
 
 Another issue of left-recursion elimination is that it requires extra
 bookkeeping work to retain the original semantics. For example, the
