@@ -24,17 +24,17 @@ model multi-sorted languages. If the syntax contains multiple sorts, we can dist
 \end{grammar}
 \end{tabular}
 
-\begin{figure}
-\lstinputlisting[linerange=31-59]{../Scala/Parser/src/PaperCode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
-\caption{Code for parsing a language with multi-sorted syntax for types and expressions.}
-\label{fig:multi}
-\end{figure}
-
 Figure~\ref{fig:multi} illustrates the corresponding Scala code
 that extends the Object Algebra interface, pretty-printing operation and parser. We use two type parameters \inlinecode{E} and \inlinecode{T} for expressions and types. They guarantee that invalid terms such as \inlinecode{int + int} will be rejected by the parser.
 Besides lexing, the trait \inlinecode{TypedLamOAParser} also introduces parsers for types, and the new case for expressions.
 We use \inlinecode{pTypedLamT} and \inlinecode{pTypedLamE} as copies of current \inlinecode{pT} and \inlinecode{pE}, due to the issue
 with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are the parsers used for performing recursion.
+
+\begin{figure}[ht]
+\lstinputlisting[linerange=31-59]{../Scala/Parser/src/PaperCode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\caption{Code for parsing a language with multi-sorted syntax for types and expressions.}
+\label{fig:multi}
+\end{figure}
 
 From the code, we observe that the multi-sorts of Object Algebra interface
 express multiple syntax. The isolation for different syntax
@@ -57,13 +57,13 @@ Then we want to replace the untyped lambda abstractions by typed lambdas. With i
 
 One can even ``eliminate'' a production rule in the extension, by overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 
+\begin{comment}
 It is natural to keep overriding existing parsers, whereas another potential use of this pattern is to reuse old versions of a parser. For instance,
 we have a \lstinline{NewParser} that extends \lstinline{ExtParser}, with some more cases added, but for the lambda case we want to go back to the untyped one.
 It can be achieved by instantiating an instance of \lstinline{BaseParser} to obtain the old \lstinline{pLam}. However, we must have \inlinecode{lazy} modifier for all the \inlinecode{pLam} starting from \inlinecode{BaseParser}.
 
-\huang{i finally managed to make it work, with two overriding. i think this case may not be very common and the solution is kind of unly. not sure whether to keep this case or not}\haoyuan{I don't know if this works or makes sense.}
-
 \lstinputlisting[linerange=94-102]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=NEWPARSER_UNTYPEDLAM
+\end{comment}
 
 \subsection{Language Component}\label{subsec:language-component}
 
@@ -95,7 +95,11 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 As shown below, those two language components can be merged into one to obtain the language we want. Furthermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
+\begin{figure}[t]
 \lstinputlisting[linerange=160-170]{../Scala/Parser/src/PaperCode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+\caption{Reuse two language components \lstinline{VarExpr} and \lstinline{TypedLam}.}\label{fig:compose-components}
+\end{figure}
+
 Such composition shows perfect modularity. The only
 drawback is that the glue code of composition appears to be boilerplate. As shown above, we are combining ASTs, parsers and pretty-printers of
 \lstinline{VarExpr} and \lstinline{TypedLam} respectively. Such a pattern refers to \textit{family polymorphism}~\cite{ernst01FP} which is unfortunately not supported in Scala. Nonetheless, one can avoid such boilerplate by using metaprogramming techniques.

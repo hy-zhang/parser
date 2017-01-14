@@ -84,8 +84,7 @@ representation of grammar and implementation of parser.
 Another issue of left-recursion elimination is that it requires extra
 bookkeeping work to retain the original semantics. For example, the
 expression $1-2-3$ is parsed as $(1-2)-3$ in the left-recursive
-grammar, but after rewrite the result is $1((-2)-3))$\bruno{??This is
-  not a valid expression}. The parse tree
+grammar, but after rewrite the information of left associativity is lost. The parse tree
 must be transformed to recover the correct syntactic structure.
 
 \paragraph{Longest Match Composition} Another problematic issue

@@ -99,14 +99,15 @@ A solution to this problem is instead have a field with the Object Algebra
 in \lstinline{ExprOAParser}. This approach supports overriding as well.
 The parsing code is as follows:
 
-\lstinputlisting[linerange=23-33]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
+\lstinputlisting[linerange=23-30]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
 This is precisely the pattern that we advocate for modular parsing.
 One important remark is we introduce \inlinecode{pE} for recursive calls.
 The reason why we use an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use fields defined by keyword \inlinecode{def}, can not use those defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
 
 \paragraph{Extensions}
 Now let's try this pattern with the variables extension:
-\lstinputlisting[linerange=37-44]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
+
+\lstinputlisting[linerange=34-39]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
 
 \noindent The type of the object algebra field \lstinline{alg} is first refined
 to \lstinline{VarExpAlg[E]}, to allow calling the additional factory method
@@ -116,7 +117,7 @@ field is allowed. Now, the code for parsing variables (\lstinline{pVar}) can
 call \lstinline{alg.varE}. The following code illustrates how to use
 the parser from a client perspective:
 
-\lstinputlisting[linerange=48-51]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
+\lstinputlisting[linerange=43-46]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
 
 In the client code shown above, we first need to choose a concrete
 object algebra to initialize the \lstinline{alg} field in \lstinline{VarExprOAParser}. Here we pick the

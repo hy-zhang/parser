@@ -130,8 +130,9 @@ The average execution time of 5 runs excluding reading input file was calculated
       \hline
       \input{resources/CaseStudyTable.tex}
       \hline
+      \multicolumn{7}{c}{}
     \end{tabular}
-    \caption{Comparison of SLOC and execution time}
+    \caption{Comparison of SLOC and execution time.}
     \label{tab:comparison}
 \end{table}
 
@@ -176,13 +177,14 @@ The other is a modified version of \ilyaimpl{}, named \ilyalongest{}, using the 
       \hline
         Total & 21746 & 31024 & +42.7 & 23260 & +7.0 & 30795 & +41.6 \\
       \hline
+        \multicolumn{8}{c}{}
     \end{tabular}
-    \caption{Execution time of four versions}
+    \caption{Execution time of four implementations.}
     \label{tab:ext-comparison}
 \end{table}
 
 Table \ref{tab:ext-comparison} shows part of the comparison results of these four versions,
-full table is available online []. It suggests that the difference of running time between
+full table is available online. It suggests that the difference of running time between
 using object algebra and class is little, roughly 1\%.
 The usage of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
