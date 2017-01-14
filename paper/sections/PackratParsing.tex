@@ -45,7 +45,7 @@ parseExpr = parseInt
 \end{lstlisting}
 \end{tabular}
 
-Consider we extended the language by adding subtractions to the grammar. If we still write its parser by directly following the grammar structure, the new left-recursive case will get the parser into an infinite loop. Namely, \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
+Consider extending the language by adding subtractions to the grammar. If we still write its parser by directly following the grammar structure, the new left-recursive case will get the parser into an infinite loop. Namely, \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
 
 \begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
 \setlength{\grammarindent}{5em}

@@ -42,7 +42,8 @@ dimension of extensibility.
 
 Unfortunately, when parsing OO style ASTs, there are difficulties with
 the two dimensions of extensibility. On the one hand it is naturally hard to
-add new operations to the AST, as usual in the OO style~\cite{wadler1998expression}. On the hand
+add new operations to the AST, as usual in the OO
+style~\cite{wadler1998expression}. On the other hand
 grammars are not modularly extensible, thus the addition of new
 language constructs is problematic. Therefore,
 it is perhaps not a surprise that parser generators that also generate
@@ -56,7 +57,8 @@ defining \emph{extensible} parsing code. That is new
 language constructs can be modularly added without changing
 existing parsing code. The technique employs standard OO
 style mechanisms such as subtyping and inheritance, as well as,
-Packrat parsing combinators.
+Packrat parsing combinators, and enables a better integration bettwen 
+parsing and OO ASTs.
 
 
 \begin{comment}
@@ -126,7 +128,7 @@ actually refers to \inlinecode{this.pExpr} again due to dynamic dispatch, and it
 
 \subsection{Multiple Extensions and Independent Extensibility}
 A nice feature of Scala is its support for a form of multiple
-inheritance.  Scala has a linearized-style multiple inheritance for
+inheritance.  Scala has a linearized-style mixin inheritance for
 traits~\cite{odersky2004overview}. This can be very helpful when
 composing several languages, and to achieve independent
 extensibility~\cite{odersky2005independently}. 
@@ -156,7 +158,12 @@ be familiar with scala super calls, you have to explain what the
 syntax does.}
 \end{comment}
 
-Then the new parser, which contains both integer and boolean expressions, is able to parse hybrid expressions such as \inlinecode{"if true then 1 + 2 else 3 + 4"}.
+Then the new parser, which contains both integer and boolean
+expressions, is able to parse hybrid expressions such as
+\inlinecode{"if true then 1 + 2 else 3 + 4"}.
 
-As we demonstrated, inheritance with method overriding is the key technique to obtain semantic modularity.
-It enables type-safe code reuse and separate compilation for parsing OO style ASTs.
+\paragraph{Conflicts and/or ambiguity}
+
+As demonstrated, inheritance with method overriding is the key
+technique to obtain semantic modularity.  It enables type-safe code
+reuse and separate compilation for parsing OO style ASTs.
