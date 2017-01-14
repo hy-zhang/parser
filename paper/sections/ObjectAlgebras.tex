@@ -7,17 +7,44 @@ using Object Algebras~\cite{Oliveira:2012}.
 
 \subsection{Problem with Traditional OO ASTs}\label{subsec:problemwithoutoa}
 
-The Expression Problem~\cite{wadler1998expression} illustrates the difficulty of extending data structures or ASTs in two dimensions. For traditional OO ASTs, adding new language constructs is easy, but adding new operations is hard. In the last section, we have a simple language containing literals, additions and variables. The corresponding ASTs are built using classes with a pretty-printing operation. Now suppose we want to collect free variables over the ASTs. By traditional OO approach, one attempt would be extending \inlinecode{Expr} with the new operation to obtain a new abstract type for ASTs:
+The Expression Problem~\cite{wadler1998expression} illustrates the
+difficulty of extending data structures or ASTs in two dimensions. For
+traditional OO ASTs, adding new language constructs is easy, but
+adding new operations is hard. In the last section, we have a simple
+language containing literals, additions and variables. The
+corresponding ASTs are built using classes with a pretty-printing
+operation. Now suppose we want to collect free variables over the
+ASTs. Using a traditional OO approach, one attempt would be extending
+\inlinecode{Expr} with the new operation to obtain a new abstract type
+for ASTs:
 
 \lstinputlisting[linerange=23-23]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=FVARSEXPR
 
-But then programmers have to define a new class for each construct by extending the old class with \lstinline{FVarsExpr}, and implementing the corresponding \lstinline{fVars} method:
+\noindent Then all classes represented language constructs could be 
+extended to implement the operation. A first well-known problem is that such
+approach is problematic in terms of type-safety (but see recent work 
+by Wang and Oliveira~\cite{wang2016expression}, which show a technique that is type-safe
+in many cases). More importantly, a second problem is that
+\begin{comment}
+But then programmers have to define a new class for each construct by
+extending the old class with \lstinline{FVarsExpr}, and implementing
+the corresponding \lstinline{fVars} method:
 
 \lstinputlisting[linerange=27-37]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=FVAR_CLASSES
 
-Besides introducing boilerplate code, more classes have to be defined along with future extensions. They pollutes the namespace heavily. More importantly, the \lstinline{VarExprParser} we defined is no longer suitable for parsing the new ASTs! All the methods in the previous parser has type \inlinecode{Parser[Expr]}, which indicates the result has type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
+Besides introducing boilerplate code, more classes have to be defined
+along with future extensions. They pollutes the namespace heavily.
+More importantly, 
+\end{comment}
+is that even if that approach would work, the parsing code would not
+be reusable. \lstinline{VarExprParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser has type \inlinecode{Parser[Expr]}, which indicates the result have type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
 
-Therefore, in order to generate new AST structures, we have to substitute \lstinline{FVarsExpr}, \lstinline{FVarsLit}, \lstinline{FVarsAdd} and \lstinline{FVarsVar} for the old \lstinline{Expr}, \lstinline{Lit}, \lstinline{Add} and \lstinline{Var} correspondingly. Again, to avoid modifying existing code, we have to sacrifice code reuse. In fact, there is a trade-off between separate compilation and type-safe code reuse. For semantic modularity, we need a different approach for building ASTs.
+Therefore, in order to generate new AST structures, we have to
+substitute \lstinline{FVarsExpr}, \lstinline{FVarsLit},
+\lstinline{FVarsAdd} and \lstinline{FVarsVar} for the old
+\lstinline{Expr}, \lstinline{Lit}, \lstinline{Add} and \lstinline{Var}
+correspondingly. Thus we have to either modify existing code or 
+use casts. For semantic modularity, we need a different approach for building ASTs.
 
 %\bruno{The following text is not very good, needs to be revised. I think
 %we need to show the full code and where it breaks. Since I removed text
@@ -26,11 +53,20 @@ Therefore, in order to generate new AST structures, we have to substitute \lstin
 %by extending the old ones together with \inlinecode{FreeVarsExpr}. The %critical issue is that, the existing parsing code only generates objects of %the old
 %types, again it is a modularity issue, since it is a bad idea to modify %existing code again and again with extensions. Other solutions including %modelling constructors as functions introduce unnecessary complexity.
 
-Fortunately, Object Algebras~\cite{Oliveira:2012} enables us to solve this problem. As a nice solution, it separates data variants
-and operations, and offers high flexibility in the choice of operations to be performed over ASTs. Before adopting it for parsing, the next section introduces the background of Object Algebras.
+Fortunately, Object Algebras~\cite{Oliveira:2012} enable us to solve
+this problem. Object Algebras separate data variants and
+operations, and offer high flexibility in the choice of operations to
+be performed over ASTs. The next section provides a brief introduction 
+to Object Algebras.
 
 \subsection{Object Algebras}\label{subsec:objectalgebras}
-Object Algebras captures a design pattern to address the Expression Problem, achieving two dimensions of extensibility (language constructs and operations) in a modular and type-safe way. The definition of data structures is separated from their behaviours, and future extensions on both dimensions no longer require existing code to be modified, supporting separate compilation.
+
+Object Algebras captures a design pattern that address the Expression
+Problem, achieving two dimensions of extensibility (language
+constructs and operations) in a modular and type-safe way. The
+definition of data structures is separated from their behaviours, and
+future extensions on both dimensions no longer require existing code
+to be modified, supporting separate compilation.
 
 Using Object Algebras in Scala, ASTs as recursive data structures are defined by traits, where each constructor corresponds to an abstract method inside.
 Essentially, Object Algebras generalize the {\sc Abstract Factory} pattern~\cite{gamma1995design}, and promote the use of factory methods, instead of constructors, for instantiating objects. The example from Section~\ref{subsec:packratparsing} is used here again for illustration.
@@ -130,16 +166,28 @@ The result shows that such a pattern provides modular parsing.
 Note that, similarly to the approach in Section~\ref{sec:inheritance} independent extensibility is also supported via multiple trait inheritance.
 Since independent extensibility is achieved using essentially the same technique as in Section~\ref{sec:inheritance} we omit that code here.
 
-\subsection{Discussion of Object Algebras}\label{subsec:more-oa}
+\begin{comment}
+\subsection{ASTs and Object Algebras}\label{subsec:more-oa}
 
-In Section~\ref{subsec:objectalgebras}, \lstinline{makeExp} represents the AST of expression \inlinecode{1 + x} as a method. Parsers with Object Algebras generate such ``implicit objects'', which are actually functions of type \lstinline{Alg[E] => } \lstinline{E} for generic \lstinline{E}. Comparing with traditional objects, one may have concern that if a parser produces function structures, it could be hard to further process them. Especially, in the design of a compiler there will be a lot of desugarings (or AST transformations).
-
-However, we argue that this is not an issue, because functions can be used
-in a very clever way. Continuing with the previous example, suppose we want to transform an expression of \inlinecode{VarExprAlg} to an expression of \inlinecode{ExprAlg}, by
-replacing some variables with values based on a variable environment. A \textit{transformation} algebra can be implemented as follows:
+In Section~\ref{subsec:objectalgebras}, \lstinline{makeExp} represents
+the AST of expression \inlinecode{1 + x} as a method. Parsers with
+Object Algebras generate such ``implicit objects'', which are actually
+functions of type \lstinline{Alg[E] => } \lstinline{E} for generic
+\lstinline{E}. Comparing with traditional objects, one may have worry
+that if a parser produces function structures, it could be hard to
+further process them. Especially, in the design of a compiler there
+will be a lot of desugarings (or AST transformations). As previous
+work on Object Alegbras has shown~\cite{Gouseti2014,Zhang2015}, AST
+transformations can be implemented using \emph{transformation
+  algebras}. Continuing with the previous example, suppose we want to
+transform an expression of \inlinecode{VarExprAlg} to an expression of
+\inlinecode{ExprAlg}, by replacing some variables with values based on
+a variable environment. A \textit{transformation} algebra is
+implemented as follows:
 
 \lstinputlisting[linerange=45-56]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_REFACTOR
 Here the \inlinecode{VarExprAlg} expression \inlinecode{1 + x} is changed to \inlinecode{ExprAlg} expression \inlinecode{1 + 2}, before applying the pretty-printing algebra. The abstract field
 \inlinecode{alg} in \inlinecode{Refactor} could be any algebra simply for delegation. With an algebra instance of \inlinecode{alg}, \inlinecode{Refactor} is able to transform a \inlinecode{VarExprAlg} expression before producing the result. Furthermore, transformations can be composed in a linear pipeline-style beforehand~\cite{Zhang2015}.
 
 Another useful technique is the composition of \textit{query} algebras. A query traverses the abstract syntax tree, collects information and returns the result. The aforementioned \lstinline{Print} and \lstinline{Eval} algebras are traditional queries. But as we discussed before, an algebra is first fed to the parser, then \lstinline{parse} is invoked to do the parsing. It is tedious to fed \lstinline{Print} and \lstinline{Eval} separately, as the same input is parsed twice. Instead, we can firstly compose two queries into one~\cite{Oliveira:2012,oliveira2013feature}, before applying it for parsing.
+\end{comment}
