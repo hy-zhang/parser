@@ -26,7 +26,7 @@ section will try to lead a discussion on what difference we have made.
 \end{comment}
 
 \paragraph{Syntactically Extensible Parsing} Extensible parsing is
-used in many different areas. Extensible parser generators are a
+used in many different areas. Extensible parser generator is a
 mainstream area specially designed for modular syntax and
 parsing. Many parser
 generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016} support
@@ -36,9 +36,9 @@ override existing rules in the old grammar modules. For instance,
 \textit{Rats!}~\cite{Grimm2006} constructs its own module system for
 the collection of grammars.  NOA~\cite{Gouseti2014} uses Java
 annotation processing to gather information about grammars in Java
-code. After all information is collected NOA merges all grammar
+code. After all information is collected, NOA merges all grammar
 components, produce an ANTLR~\cite{antlr1995} grammar, and generates
-corresponding parsing code from the ANTLR grammar.  Those parser
+corresponding parsing code from the ANTLR grammar. Those parser
 generators focus on the \textit{syntactic extensibility} of grammars:
 they rely on whole compilation to generate a global parser, even if
 there is only a slight modification in the grammar. Some of those
@@ -56,7 +56,7 @@ Java using library imports. Composition of syntactic sugar is easy for
 users, but it requires many rounds of parsing and adaption. This
 significantly affects efficiency of compilation. Since the
 implementation was based on SDF~\cite{Heering1989} and
-Stratego~\cite{Visser2001}, the approach does not support separate
+Stratego~\cite{Visser2001}, it does not support separate
 compilation. Racket adopts a macro system for library-based language
 extensibility~\cite{Tobin-Hochstadt2011}. This is quite powerful and it uses
 attributed ASTs for contextual
@@ -86,8 +86,8 @@ extensions), with very flexible parser composition.
 %  mentioned. Shall we mention that thesis?} \haoyuan{attribute
 %  grammars?}
 
-\paragraph{Extensible Parsing Algorithms}
-Extensible parsing algorithms are another area that relates to
+\paragraph{Extensible Parsing Algorithm}
+Extensible parsing algorithm is another area that relates to
 separate compilation.
 \textit{Parse table composition}~\cite{bravenboer2008parse}
 is an approach where grammars are compiled to
