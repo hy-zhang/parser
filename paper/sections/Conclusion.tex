@@ -1,9 +1,12 @@
 \section{Conclusion}\label{sec:conclusion}
 
-\haoyuan{Huang: to write a couple of sentences for a summary.}
+This paper presents a solution for semantically modular parsing. It not only
+enables parsers to evolve with the syntax together, but also allows them to be modularly type-checked and separately compiled.
 
-For a better user experience, there are certainly some aspects in our pattern for modular parsing that needs
-improvements. Specifically, in Section~\ref{subsec:implementation} we have observed that the glue code in \lstinline{Untyped}
-appears to be boilerplate, as we need to compose the data structures, parsers and operations respectively from the same set of super types. Such an issue refers to \textit{family polymorphism} [], and we may rely it on a language feature or meta-programming techniques. Moreover, to make better use of Object Algebras, we can possibly adopt some patterns in Shy, together with the composition of algebras, to reduce boilerplate by using code generation.
+Based on parser combinators, we identify the the algorithmic challenges of building modular parsers, and show that Packrat parsing is suitable as the underlying parsing technique. Our solution does not require advanced language features. We show that with standard OO techniques including inheritance and overriding, it is practicable to build modular parsers for OO ASTs. However, the extensibility issue of traditional OO ASTs motivates us to adopt Object Algebras for full extensibility and more useful features.
 
-For future work, we will experiment more on how open recursion contributes to extensible parsing in functional languages, by making use of laziness. It is also interesting to see that parsing, to some extent, can be viewed as a special example of unfolds. So it is worthwhile considering to generalize the composition of unfolds under certain circumstances.
+Abstracting language features as reuseable components can be achieved based on our solution, which is useful for rapid language prototyping. Our solution does not rely on particular techniques. On the contrary, it is a general framework customizable by the user. The TAPL case study shows that we can obtain considerable code reuse (69\%) than a non-modular implementation, using our modular parsing approach and language feature abstraction.
+
+There are certainly some aspects can be improved. We observed that the glue code of composition appears to be boilerplate. Such an issue refers to family polymorphism, and we could solve it by language features or meta-programming techniques. Moreover, we can possibly adopt the Shy framework~\cite{Zhang2015} and algebra composition patterns~\cite{oliveira2013feature}, to improve the usage of Object Algebras.
+
+For future work, we will experiment more on how open recursion contributes to extensible parsing in functional languages, by making use of laziness. It is also interesting to see that parsing, to some extent, can be viewed as a special example of \textit{unfolds}. So it is worthwhile considering to generalize our approach under certain circumstances.

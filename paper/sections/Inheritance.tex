@@ -42,7 +42,7 @@ dimension of extensibility.
 
 Unfortunately, when parsing OO style ASTs, there are difficulties with
 the two dimensions of extensibility. On the one hand it is naturally hard to
-add new operations to the AST, as usual in the OO style. On the hand
+add new operations to the AST, as usual in the OO style~\cite{wadler1998expression}. On the hand
 grammars are not modularly extensible, thus the addition of new
 language constructs is problematic. Therefore,
 it is perhaps not a surprise that parser generators that also generate
@@ -110,7 +110,12 @@ However, modification on existing code sacrifices separate compilation, and henc
 
 \subsection{Overriding for Extensibility}\label{subsec:overriding}
 
-It is actually quite simple to let \inlinecode{pExpr} cover the newly extended case without modifying existing code. Method overriding is a standard feature which often comes with inheritance, and it allows us to explain inherited method again, such as \inlinecode{pExpr}. We can build the new parser which correctly parses \inlinecode{"1 + x"} as below.
+It is actually quite simple to let \inlinecode{pExpr} cover the newly
+extended case without modifying existing code. Method overriding is a
+standard feature which often comes with inheritance, and it allows us
+to redefined an inherited method, such as \inlinecode{pExpr}. We can
+build the new parser which correctly parses \inlinecode{"1 + x"} 
+through overriding:
 
 \lstinputlisting[linerange=42-47]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
 
@@ -120,13 +125,15 @@ the work to \inlinecode{super.pExpr}, which parses literals and additions. Howev
 actually refers to \inlinecode{this.pExpr} again due to dynamic dispatch, and it covers the variable case. Similarly, all recursive calls can be updated to include new extensions if needed.
 
 \subsection{Multiple Extensions and Independent Extensibility}
-A nice feature of Scala is its support for a form of multiple inheritance.
-Scala has a linearized-style multiple inheritance for traits~\cite{odersky2004overview}. This can be very helpful when composing several languages, which
-may have been independently developed. Suppose now
-we want to compose the parsers for expressions from pre-defined
-languages \inlinecode{LanguageA} and \inlinecode{LanguageB} using
-alternative. The new parser can be built by inheriting both parsers
-at the same time:
+A nice feature of Scala is its support for a form of multiple
+inheritance.  Scala has a linearized-style multiple inheritance for
+traits~\cite{odersky2004overview}. This can be very helpful when
+composing several languages, and to achieve independent
+extensibility~\cite{odersky2005independently}. 
+Suppose now we want to compose the parsers for expressions
+from pre-defined languages \inlinecode{LanguageA} and
+\inlinecode{LanguageB} using alternative. The new parser can be built
+by inheriting both parsers at the same time:
 
 \lstinputlisting[linerange=67-73]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
 
