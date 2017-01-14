@@ -23,14 +23,14 @@ and support), any other parsing formalism that provides similar
 features should be adequate for modular parsing.
 
 \subsection{Algorithmic Challenges of Modularity}\label{subsec:challenges}
-At a first look, parser combinators are very suitable for modular parsing, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to composed them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, also are the parsers it takes. Thus in a statically typed programming language they can be statically type-checked.
+At a first look, parser combinators are very suitable for modular parsing, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to compose them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and so are the parsers it takes. Thus in a statically typed programming language they can be statically type-checked.
 Unfortunately many parser combinators have important limitations.
 In particular, several parser combinators including the famous Parsec~\cite{Leijen2001} library, require
 programmers to manually do \textit{left-recursion elimination}, \textit{longest match composition}, and
 require significant amounts of \textit{backtracking}. All of those are
 problematic in a modular setting.
 
-\paragraph{Left-Recursion Elimination} The top-down, recursive descent parsing strategy adopted by those parser combinator libraries cannot support left-recursive grammars directly. The common solution is to rewrite the grammar into an equivalent but not left-recursive one, so called left-recursion elimination.
+\paragraph{Left-Recursion Elimination} The top-down, recursive descent parsing strategy adopted by those parser combinator libraries cannot support left-recursive grammars directly. The common solution is to rewrite the grammar into an equivalent but non-left-recursive one, called left-recursion elimination.
 
 The grammar below represents a simple arithmetic language containing only integers. Its corresponding parser is shown on the right side, written in Parsec.
 
@@ -84,7 +84,7 @@ representation of grammar and implementation of parser.
 Another issue of left-recursion elimination is that it requires extra
 bookkeeping work to retain the original semantics. For example, the
 expression $1-2-3$ is parsed as $(1-2)-3$ in the left-recursive
-grammar, but after rewrite the information of left associativity is lost. The parse tree
+grammar, but after rewrite the information of left-associativity is lost. The parse tree
 must be transformed to recover the correct syntactic structure.
 
 \paragraph{Longest Match Composition} Another problematic issue
@@ -146,7 +146,7 @@ parsing~\cite{Ford2002} have been developed to address limitations of
 simple parser combinators. Packrat parsers use memoization to record
 the result of applying each parser at each position of the input, so
 that repeated computation is eliminated. Moreover, Packrat parsing, in
-theory, supports both direct and indirect left-recursion~\cite{warth2008}. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique in for modular parsing.
+theory, supports both direct and indirect left-recursion~\cite{warth2008}. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique for modular parsing.
 \begin{comment}
 It is worth mentioning that the choice of parser combinators will not
 affect the other parts of our library. One can choose other parser

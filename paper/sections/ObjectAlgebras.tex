@@ -1,7 +1,7 @@
 \section{Full Extensibility with Object Algebras}\label{sec:algebrasandparsing}
 
 The inheritance-based approach allows building extensible parsers, based on an OO class hierarchy.  Nevertheless, the addition of new operations over ASTs is problematic using traditional OO ASTs. In this section, we
-show how to support both the forms of extensibility for ASTs (easy
+show how to support both forms of extensibility on ASTs (easy
 addition of language constructs, and easy addition of operations)
 using Object Algebras~\cite{Oliveira:2012}.
 
@@ -20,10 +20,10 @@ for ASTs:
 
 \lstinputlisting[linerange=23-23]{../Scala/Parser/src/PaperCode/Sec4OA/Code1.scala}% APPLY:linerange=FVARSEXPR
 
-\noindent Then all classes represented language constructs could be 
+\noindent Then all classes representing language constructs could be 
 extended to implement the operation. A first well-known problem is that such
 approach is problematic in terms of type-safety (but see recent work 
-by Wang and Oliveira~\cite{wang2016expression}, which show a technique that is type-safe
+by Wang and Oliveira~\cite{wang2016expression}, which shows a technique that is type-safe
 in many cases). More importantly, a second problem is that
 \begin{comment}
 But then programmers have to define a new class for each construct by
@@ -37,7 +37,7 @@ along with future extensions. They pollutes the namespace heavily.
 More importantly, 
 \end{comment}
 is that even if that approach would work, the parsing code would not
-be reusable. \lstinline{VarExprParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser has type \inlinecode{Parser[Expr]}, which indicates the result have type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
+be reusable. \lstinline{VarExprParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser has type \inlinecode{Parser[Expr]}, which indicates the result has type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
 
 Therefore, in order to generate new AST structures, we have to
 substitute \lstinline{FVarsExpr}, \lstinline{FVarsLit},
@@ -61,7 +61,7 @@ to Object Algebras.
 
 \subsection{Object Algebras}\label{subsec:objectalgebras}
 
-Object Algebras captures a design pattern that address the Expression
+Object Algebras capture a design pattern that addresses the Expression
 Problem, achieving two dimensions of extensibility (language
 constructs and operations) in a modular and type-safe way. The
 definition of data structures is separated from their behaviours, and
@@ -103,7 +103,7 @@ To create an expression representing \inlinecode{1 + x}, a generic method is def
 
 Note how the construction of the abstract syntax happens through
 the use of factory methods, instead of constructors.
-To pretty print the expression,
+To pretty-print the expression,
 we pass an instance of \inlinecode{VarExprPrint} to \inlinecode{makeExp}:
 
 \begin{lstlisting}
@@ -123,7 +123,7 @@ at defining the parser for the small arithmetic language is:
 \end{comment}
 
 \lstinputlisting[linerange=8-16]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
-Such a parser works fine, but it is not extensible! For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method override for \inlinecode{pExpr} would require a type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}, where the type of the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This difference prohibits method/field overriding. Scala supports type-refinement of fields if the overriding
+Such a parser works fine, but it is not extensible! For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}, where the type of the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This difference prohibits method/field overriding. Scala supports type-refinement of fields if the overriding
 field has a type which is a \emph{subtype} of the original field.
 Unfortunately, in this case, although \inlinecode{VarExprAlg} is a subtype
 of \inlinecode{ExprAlg}, the function type \inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]} is a supertype of \inlinecode{ExprAlg[E] =>} \inlinecode{Parser[E]}. Thus it is not possible to have overriding.
@@ -138,32 +138,32 @@ The parsing code is as follows:
 \lstinputlisting[linerange=23-30]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
 This is precisely the pattern that we advocate for modular parsing.
 One important remark is we introduce \inlinecode{pE} for recursive calls.
-The reason why we use an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use fields defined by keyword \inlinecode{def}, can not use those defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
+The reason why we use an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use methods defined by keyword \inlinecode{def}, but cannot access fields defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
 
 \paragraph{Extensions}
 Now let's try this pattern with the variables extension:
 
 \lstinputlisting[linerange=34-39]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
 
-\noindent The type of the object algebra field \lstinline{alg} is first refined
+\noindent The type of the Object Algebra field \lstinline{alg} is first refined
 to \lstinline{VarExpAlg[E]}, to allow calling the additional factory method
 for variables. Note that, unlike the previous attempt, \lstinline{VarExpAlg[E]}
 is a subtype of \lstinline{ExpAlg[E]}, thus the type-refinement of the
 field is allowed. Now, the code for parsing variables (\lstinline{pVar}) can
 call \lstinline{alg.varE}. The following code illustrates how to use
-the parser from a client perspective:
+the parser from a client's perspective:
 
 \lstinputlisting[linerange=43-46]{../Scala/Parser/src/PaperCode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
 
 In the client code shown above, we first need to choose a concrete
-object algebra to initialize the \lstinline{alg} field in \lstinline{VarExprOAParser}. Here we pick the
-pretty-printing algebra \lstinline{VarExprPrint}, but any other object
-algebra that implements \lstinline{VarExprAlg} would work.
+Object Algebra to initialize the \lstinline{alg} field in \lstinline{VarExprOAParser}. Here we pick the
+pretty-printing algebra \lstinline{VarExprPrint}, but any other Object
+Algebra that implements \lstinline{VarExprAlg} would work.
 With an instance of \lstinline{VarExprOAParser} in hand, we can call
 \lstinline{pE} to obtain the parser to feed to the \lstinline{parse} method.
 The result shows that such a pattern provides modular parsing.
 
-Note that, similarly to the approach in Section~\ref{sec:inheritance} independent extensibility is also supported via multiple trait inheritance.
+Note that, similar to the approach in Section~\ref{sec:inheritance} independent extensibility is also supported via multiple trait inheritance.
 Since independent extensibility is achieved using essentially the same technique as in Section~\ref{sec:inheritance} we omit that code here.
 
 \begin{comment}

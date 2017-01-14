@@ -46,8 +46,8 @@ add new operations to the AST, as usual in the OO
 style~\cite{wadler1998expression}. On the other hand
 grammars are not modularly extensible, thus the addition of new
 language constructs is problematic. Therefore,
-it is perhaps not a surprise that parser generators that also generate
-AST code (such as ANTLR~\cite{antlr1995}), normally generate code based on
+it is perhaps not a surprise that parser generators also generate
+AST code (such as ANTLR~\cite{antlr1995}), normally the generated code is based on
 visitors. Clearly this seems a better choice since generating code
 based on the {\sc Interpreter} or {\sc Composite} pattern would
 simply be too inflexible, due to the dual limitation on extensibility.
@@ -115,7 +115,7 @@ However, modification on existing code sacrifices separate compilation, and henc
 It is actually quite simple to let \inlinecode{pExpr} cover the newly
 extended case without modifying existing code. Method overriding is a
 standard feature which often comes with inheritance, and it allows us
-to redefined an inherited method, such as \inlinecode{pExpr}. We can
+to redefine an inherited method, such as \inlinecode{pExpr}. We can
 build the new parser which correctly parses \inlinecode{"1 + x"}
 through overriding:
 
@@ -139,7 +139,7 @@ by inheriting both parsers at the same time:
 
 \lstinputlisting[linerange=67-73]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
 
-The \inlinecode{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method \inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish the method of the same name. Therefore in the new parser, we use \inlinecode{super} to specify which \inlinecode{pExpr} we are referring to.
+The \inlinecode{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method \inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish the methods of the same name. Therefore in the new parser, we use \inlinecode{super} to specify which \inlinecode{pExpr} we are referring to.
 
 As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
 
@@ -162,7 +162,7 @@ Then the new parser, which contains both integer and boolean
 expressions, is able to parse hybrid expressions such as
 \inlinecode{"if true then 1 + 2 else 3 + 4"}.
 
-\paragraph{Conflicts and/or ambiguity} As we demonstrated before, the longest match alternative combinator is useful when composing parsers. However, ambiguous grammars still cause subtle issues in modular parsing. For example, if \inlinecode{parserA} and \inlinecode{parserB} accept a same string but generate different results, then the result of \inlinecode{parserA ||| parserB} is really depends on the implementation of the alternative combinator, because the results can not be prioritized by length. Since the composition is handled explicitly by user, conflicts could be resolved by overriding ambiguous parsing code, using the pattern discussed in Section~\ref{subsec:overriding-rules}.
+\paragraph{Conflicts and/or ambiguity} As we demonstrated before, the longest match alternative combinator is useful when composing parsers. However, ambiguous grammars still cause subtle issues in modular parsing. For example, if \inlinecode{parserA} and \inlinecode{parserB} accept a same string but generate different results, then the result of \inlinecode{parserA ||| parserB} really depends on the implementation of the alternative combinator, because the results can not be prioritized by length. Since the composition is handled explicitly by user, conflicts could be resolved by overriding ambiguous parsing code, using the pattern discussed in Section~\ref{subsec:overriding-rules}.
 
 As demonstrated, inheritance with method overriding is the key
 technique to obtain semantic modularity.  It enables type-safe code
