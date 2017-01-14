@@ -73,16 +73,17 @@ approaches can be broadly divided into two categories:
 \emph{syntactic} or \emph{semantic} modularization
 techniques. Syntactic modularization techniques are quite popular in
 practice, due to their simplicity of implementation and use. 
-Examples include many tools for developing Software-Product
-Lines~\cite{}, some Language Workbenches~\cite{}, or extensible parser
+Examples include many tools for developing Feature-Oriented Software-Product
+Lines (SPLs)~\cite{Kastner11road}, some Language Workbenches~\cite{}, or extensible parser
 generators~\cite{}.  Most syntactic approaches employ textual
 composition techniques such as \emph{superimposition}~\cite{} to
-enable the development modular program features. Such textual
+enable the development modular program features. Such 
 composition techniques collect the code for multiple features and
-merge it together when a concrete combination of features is needed
-for a particular program. As Kastner et. al~\cite{Kastner11road} note, the typical
-drawback of such techniques is that
-``\emph{most feature-oriented implementation mechanisms lack proper
+merge them together when a concrete combination of features is needed
+for a particular program. As Kastner et. al~\cite{Kastner11road} note, 
+a typical drawback of feature-oriented SPL implementations, which 
+more generally applies to syntactic modularity approaches, is that
+such ``\emph{implementation mechanisms lack proper
   interfaces and support neither modular type checking nor separate
   compilation}''. 
 
@@ -98,9 +99,9 @@ Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
 is mostly done ultimately resorting to standard (non-modular) parser
 generators. Various techniques supporting languages that can extend
 their own syntax, such as SugarJ~\cite{Erdweg2011}, also offer a form
-of extensible parsing. However these syntactic approaches do not
-support separate compilation and/or modular type-checking of parsing
-code either.
+of extensible parsing. However since those approaches are syntactic
+they do not support separate compilation and/or modular type-checking
+of parsing code either.
 
 Semantic modularization techniques go one step further in terms of modularity,
 and also enable components or features to be modularly type-checked
@@ -114,58 +115,102 @@ enables the composition of compiled binaries as well as ensuring the
 type-safety of the code composed of multiple components. Examples of semantic modularization techniques 
 include various approaches to \emph{family polymorphism}~\cite{ernst01FP},
 \emph{virtual classes}~\cite{Ernst:2006}, as 
-well as several other techniques for solving the Expression
+well as various techniques for solving the Expression
 Problem~\cite{Oliveira:2012}\bruno{more here; yanlin; Torgersen; Odersky...}. 
 
 Semantic modularization techniques are less widely used in practice
-than syntactic techniques. This is partly due to the need for more
+than syntactic techniques. This is partly due to the perceived need for more
 sophisticated type systems, which are not available in mainstream
-languages and may require more knowledge from users. However, recently
+languages and may require more knowledge from users. However, recently,
 several lightweight modularization techniques have been shown to work
 in mainstream programming languages like Java or Scala. Object
 Algebras~\cite{Oliveira:2012} are one such technique, which works in
-Java-like languages and uses simple generics only. So far research on
-semantic modularization techniques have focused on operations that
-\emph{traverse} or or \emph{process} extensible datastructures, such
-as ASTs. Indeed many documented applications of semantic
-modularization techniques focus on modularizing various aspects of PL
-implementations.  However, as far as we know there is little work on
-operations that build/produce ASTs.  In particular the problem of how
-to modularize parsing has not been studied in semantic modularization
-approaches. This is a shame because parsing is a fundamental part of
-PL implementations, and it ought to be modularized as well.
+Java-like languages and uses simple generics only. 
+
+So far research on semantic modularization techniques have focused on
+operations that \emph{traverse} or \emph{process} extensible
+datastructures, such as ASTs. Indeed many documented applications of
+semantic modularization techniques focus on modularizing various
+aspects of PL implementations.  However, as far as we know, there is
+little work on operations that build/produce ASTs.  In particular the
+problem of how to modularize parsing has not been studied in semantic
+modularization approaches. At best, techniques such as NOA~\cite{Gouseti2014}
+employ a syntactic modularity approach for parsing in combination with 
+a semantic modularity approach for defining other language components 
+that traverse or process ASTs. This is a shame because parsing is a
+fundamental part of PL implementations, and it ought to made
+semantically modular as well, so that the full benefits of semantic 
+modularity apply.
 
 %\paragraph{Modular and Extensible Parsing}
 
-This paper investigates presents a technique for doing semantically
+This paper presents a technique for doing semantically
 modular parsing.  That is, our approach not only allows complete
 parsers to be built out of modular parsing components, but also enables
 those parsing components to be \emph{modularly type-checked} and
-\emph{separately compiled}. In developing our techniques we encontered 
-two different classes of challenges:
+\emph{separately compiled}. Developing techniques for modular parsing 
+is not without challenges. In developing our techniques we encontered 
+two different classes of challenges: algorithmic challenges; and
+typing/reuse challenges.
 
-\begin{itemize}
-
-\item {\bf Algorithmic challenges:} A first challenge was todo with
+\paragraph{Algorithmic Challenges} A first challenge was todo with
   the parsing algorithms themselves. Since many parsing formalisms
-  were not designed with extensibility in mind, some of the employed 
-  techniques were non-modular, or performed poorly in a modular setting. 
+  were not designed with extensibility in mind, some of the employed
+  techniques were non-modular, or performed poorly in a modular
+  setting.  The most widely use tools for parsing are parser
+  generators, but most algorithms employed by parser generators
+  require full information about the grammar to generate parsing
+  code. Moreover, actions associated to grammar productions are
+  typically only type-checked after the parser has been
+  generated. Both problems go against our goals of semantic
+  modularity. 
 
-\item {\bf Typing and Reusability Challenges:} The second class of
+  An alternative to parser generators are \emph{parser
+    combinators}~\cite{burge1975,Wadler1985}.  At a first look, parser
+  combinators seem very suitable for our purpose. Each parser
+  combinator is represented by a piece of code directly in the
+  programming language. Thus, in a statically typed programming
+  language, such code is statically type-checked.  However many
+  techniques regularly employed by parser combinators cause difficulties in a
+  modular setting. In particular, many parser combinator approaches
+  (including Parsec~\cite{}) routinely use \emph{left-recursion
+    elimination}, \emph{priority-based matching}, and \emph{avoid
+    backtracking} as much as possible. All of these are problematic in
+  a modular setting as illustrated in Section~\ref{}.
+
+  To address such algorithmic challanges, we propose a methodology 
+  for implementing modular parsers built on top of an
+  existing Packrat~\cite{} parsing library for Scala~\cite{}. The Packrat parsing library
+  directly supports left-recursion, and a \emph{longest-match
+    composition} operator. The direct support for left-recursion
+  avoids the need for left-recursion elimination, which is very
+  cumbersome is a modular setting. The longest-match composition 
+  operator avoids the use of priorities, and it provides reasonably
+  efficient optimizations for backtracking.
+
+  \paragraph{Typing and Reusability Challenges} The second class of
   challenges were problems related to modularity, reusability and
-  typing.
+  typing of parsing code. An immediate concern is how to extend a
+  parser for an existing language or, more generally, how to compose
+  parsing code for two languages. It turns out that OO mechanisms that
+  provide some form of multiple inheritance,
+  such as traits/mixins~\cite{scalaoverview}\bruno{cite work on traits (Ducasse)
+  and mixins (Bracha)}, are very handy for this
+  purpose. Essentially, traits/mixins can act as modules for the parsing code
+  of different languages. This enables an approach where ASTs can be
+  modelled using standard OO techniques such as the {\sc Composite} 
+  pattern, while retaining the possibility of adding new language
+  constructs. Section~\ref{} gives the details of this approach. 
 
-\end{itemize}
+  Our ultimate goal is to allow for full extensibility: it should be
+  possible to not only modularly add both new language constructs, but
+  also new operations. To accomplish this goal one final tweak on our
+  technique is to employ Object Algebras to allow fully extensible
+  ASTs. Thus a combination of Packrat parsing, multiple inheritance 
+  and Object Algebras enables a solution for semantically modular 
+  parsing. Section~\ref{} gives the details of the complete approach.
 
-\name is built on top of a Packrat parsing
-library, but adds new parsing combinators to enable modular
-parsing. The new parsing combinators employ \emph{delegation-based}
-techniques and \emph{Object Algebras} to support extensibility. The
-choice of Packrat parsing over other parsing techniques turns out to
-be important for achieving performance in a modular
-setting. \bruno{left recursion, and backtracking removal.}
-
-
+\begin{comment}
   By analising the \emph{full} grammar it is possible to remove
   backtracking, which would otherwise increase parsing times. Many
   parsing combinator libraries routinely use backtracting elimination
@@ -173,75 +218,42 @@ setting. \bruno{left recursion, and backtracking removal.}
   cannot be used, because the full grammar is not known. Thus we have
   to be very conservative at eliminating backtracting. Unfortunatelly,
   this has a severe impact on performance.
+\end{comment}
 
-  To evaluate \name we conduct a case study based on the ``Types and
-  Programming Languages'' (TAPL) interpreters.  The case study shows
-  that \name is effective at reusing parsing code from existing
-  interpreters, and the total parsing code is 60\% shorter than the
-  non-modular parsing code.\bruno{comment on the efficiency}
+To evaluate our approach we conduct a case study based on the ``Types
+and Programming Languages'' (TAPL) interpreters. The case study shows
+that our approach is effective at reusing parsing code from existing
+interpreters, and the total parsing code is 69\% shorter than an
+existing code base using non-modular parsing code~\cite{}.
 
 In summary our contributions are:
 
 \begin{itemize}
 
-\item {\name:} A parser combinator library that allows the development 
-of modular parser. The library uses \emph{delegation} and
-\emph{Object-Algebras} to achieve modularity and extensibility.
+\item {A technique for Modular Parsing} We present a technique 
+that allows the development semantically modular parsers.
+The technique relies on the combination of Packrat parsing, multiple inheritance 
+  and Object Algebras.
 
 \item {{\bf A Parsing Technique for OO ASTs:}} A simplified version of
   our technique also enables parsing OO-style ASTs, where new language
-  constructs can be easily added.
+  constructs can be easily added. 
 
-\item {{\bf Limitations of existing Parser Combinator Techniques:}}
-\bruno{Improve and write something here.}
+\item {{\bf A Methodology for Writing Modular Parsing Code:}} We
+  identify possible pitfalls using parser combinators. To avoid such
+  pitfalls, we propose guidelines for writing parsing code using 
+  \emph{left-recursion} and \emph{longest-match composition}.
 
 \item {{\bf TAPL case study:}} We conduct a case study with 18 interpreters
   from the TAPL book. The case study show the effectiveness of modular 
-  parsing in terms of reuse.
+  parsing in terms of reuse. The TAPL case study is available online
+  at:
+  \url{http://}
 
 \end{itemize}
 
-
-\haoyuan{I suggest this part to be moved to Introduction, and only discuss why Packrat is selected among
-different parser combinators in Overview.}
-
-\begin{comment}
-Although there are many parsing techniques, not all of them are
-suitable for type-safe modular parsing. In particular there are many
-techniques which fail to provide modular type-checking and separate
-compilation. Moreover, even if modular type-checking and separate
-compilation are supported, efficiency is another
-concern. A parsing technique should have low overhead when applied
-in a modular setting. In the remaider of this section, we eliminate
-various techniques that fail to satisfy our requirements, and argue
-that that Packrat parsing~\cite{Ford2002} is a suitable candidate for
-type-safe modular parsing.
-
-\paragraph{Parser Generators} The most widely use tools for parsing
-are parser generators. Parser generators help users generate parsers automatically or
-semi-automatically from a given grammar. There is no restriction on
-the algorithm, while most of them adopts table-based LL~\cite{lewis1968syntax} and LR~\cite{knuth1965translation} parsing
-algorithms.
-Although efficient, the main drawback of parser generators is that they do not support
-modular type-checking and separate compilation.
-
-Modular parsing based on parser generators is supported by many libraries~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016}. Users can separate the syntax definition and related parsing code into reusable components. Then the corresponding parsers are built by their library utilities. For example, NOA~\cite{Gouseti2014} uses Java annotation processing to collect grammar information, and then generates ANTLR4 parsers. However, such generation procedure requires a whole compilation after the collection of all grammar pieces. Once the grammar changed, even slightly, grammar information must be re-collected and the parser must be re-generated. Hence those libraries only have syntactic modularity.
-
-Generating parsers often requires full information of grammars, thus semantic modularity is difficult to achieve in this way.
-
-\paragraph{Parser Combinators}
-Comparing with the parser generators, a \textit{parser combinator}~\cite{burge1975,Wadler1985}
-takes several parsers and produce a new parser as its output. Parser combinators are
-popular in functional programming, where the parsers are represented
-by functions and parser combinators are higher-order functions accepts
-them.
-
-At a first look, parser combinators are very suitable for our purpose, because of two
-reasons. Firstly, they are naturally modular. The manner of using them
-is to write small parsers and use combinators to composed them
-together. The construction procedure is explicit and fully controlled
-by the programmer. Secondly, each parser combinator is represented by
-a piece of code, and also are the parsers it takes. Thus in a
-statically typed programming language they can be statically
-type-checked.
-\end{comment}
+All the code in the paper and the case study is written in Scala. But,
+other languages that support some form of multiple inheritance
+(including Java 8 with default methods~\cite{}) could in principle be
+used. Our choice for Scala had todo with the concise and elegant syntax  
+of the language which enable a clear presentation of our ideas.
