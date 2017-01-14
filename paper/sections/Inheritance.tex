@@ -47,7 +47,7 @@ style~\cite{wadler1998expression}. On the other hand
 grammars are not modularly extensible, thus the addition of new
 language constructs is problematic. Therefore,
 it is perhaps not a surprise that parser generators that also generate
-AST code (such as ANTLR~\cite{parr2013definitive}), normally generate code based on
+AST code (such as ANTLR~\cite{antlr1995}), normally generate code based on
 visitors. Clearly this seems a better choice since generating code
 based on the {\sc Interpreter} or {\sc Composite} pattern would
 simply be too inflexible, due to the dual limitation on extensibility.
@@ -57,7 +57,7 @@ defining \emph{extensible} parsing code. That is new
 language constructs can be modularly added without changing
 existing parsing code. The technique employs standard OO
 style mechanisms such as subtyping and inheritance, as well as,
-Packrat parsing combinators, and enables a better integration bettwen 
+Packrat parsing combinators, and enables a better integration between
 parsing and OO ASTs.
 
 
@@ -116,7 +116,7 @@ It is actually quite simple to let \inlinecode{pExpr} cover the newly
 extended case without modifying existing code. Method overriding is a
 standard feature which often comes with inheritance, and it allows us
 to redefined an inherited method, such as \inlinecode{pExpr}. We can
-build the new parser which correctly parses \inlinecode{"1 + x"} 
+build the new parser which correctly parses \inlinecode{"1 + x"}
 through overriding:
 
 \lstinputlisting[linerange=42-47]{../Scala/Parser/src/PaperCode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
@@ -131,7 +131,7 @@ A nice feature of Scala is its support for a form of multiple
 inheritance.  Scala has a linearized-style mixin inheritance for
 traits~\cite{odersky2004overview}. This can be very helpful when
 composing several languages, and to achieve independent
-extensibility~\cite{odersky2005independently}. 
+extensibility~\cite{odersky2005independently}.
 Suppose now we want to compose the parsers for expressions
 from pre-defined languages \inlinecode{LanguageA} and
 \inlinecode{LanguageB} using alternative. The new parser can be built
