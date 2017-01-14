@@ -138,7 +138,7 @@ parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImp
 \end{lstlisting}
 
 \noindent However, this results in the worst case exponential time
-complexity in Parsec, because it does not have proive optimizations
+complexity in Parsec, because it does not provide optimizations
 for backtracking.
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}

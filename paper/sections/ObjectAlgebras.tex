@@ -129,16 +129,16 @@ The result shows that such a pattern provides modular parsing.
 Note that, similarly to the approach in Section~\ref{sec:inheritance} independent extensibility is also supported via multiple trait inheritance.
 Since independent extensibility is achieved using essentially the same technique as in Section~\ref{sec:inheritance} we omit that code here.
 
-\subsection{Composition of Algebras}\label{subsec:more-oa}
-\huang{to revise}
-By adopting Object Algebras, we also inherit some advanced features from the pattern. Specifically, in the original paper~\cite{Oliveira:2012}, there are two kinds of Object Algebras: \textit{queries} and \textit{transformations}. A query traverses the abstract syntax tree, collects information and returns the result. The aforementioned \lstinline{Print} and \lstinline{Eval} are traditional queries. But as we discussed before, an algebra is first fed to the parser, then \lstinline{parse} is invoked to do the parsing. It is tedious to fed \lstinline{Print} and \lstinline{Eval} separately, as the same input is parsed twice. Instead, we can firstly compose two queries into one, then feed it to the parser. For space reasons we omit the code here.
+\subsection{Discussion of Object Algebras}\label{subsec:more-oa}
 
-Another interesting observation, if we look back at the end of Section~\ref{subsec:objectalgebras}, is that \lstinline{makeExp} represents an ``object'' of the expression AST. Or rather, what OA parsers generate are ``implicit objects'', which are actually functions of type \lstinline{Alg[E]} \lstinline{=>} \lstinline{E} for generic \lstinline{E}. Comparing with traditional objects, one may have concern that if a parser produces function structures, it could be hard to further process them. Especially, in the design of a compiler
-there will be a lot of desugarings (or transformations). However, we argue that this is not an issue, because functions can be used
-in a very clever way. Continuing from the old example, if one wants to transform a \inlinecode{VarExprAlg} expression to an \inlinecode{ExprAlg} expression by
-replacing some variables with values based on a variable environment, a transformation algebra can be implemented as follows:\haoyuan{mention in discussion that shy deals with boilerplate.}
+In Section~\ref{subsec:objectalgebras}, \lstinline{makeExp} represents the AST of expression \inlinecode{1 + x} as a method. Parsers with Object Algebras generate such ``implicit objects'', which are actually functions of type \lstinline{Alg[E] => } \lstinline{E} for generic \lstinline{E}. Comparing with traditional objects, one may have concern that if a parser produces function structures, it could be hard to further process them. Especially, in the design of a compiler there will be a lot of desugarings (or AST transformations).
+
+However, we argue that this is not an issue, because functions can be used
+in a very clever way. Continuing with the previous example, suppose we want to transform an expression of \inlinecode{VarExprAlg} to an expression of \inlinecode{ExprAlg}, by
+replacing some variables with values based on a variable environment. A \textit{transformation} algebra can be implemented as follows:
 
 \lstinputlisting[linerange=45-56]{../Scala/Parser/src/PaperCode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_REFACTOR
-Here the \inlinecode{VarExprAlg} expression \inlinecode{"1 + x"} is changed to \inlinecode{ExprAlg} expression \inlinecode{"1 + 2"}, before the pretty-printing algebra is applied. The abstract method
-\inlinecode{alg} in \inlinecode{Refactor} can actually be any algebra simply for delegation. By passing a concrete implementation
-to \inlinecode{alg}, \inlinecode{Refactor} will be able to transform a \inlinecode{VarExprAlg} expression before we obtain the result. Furthermore, transformations can be composed in a linear pipeline-style, before a query algebra is fed ~\cite{Zhang2015}.
+Here the \inlinecode{VarExprAlg} expression \inlinecode{1 + x} is changed to \inlinecode{ExprAlg} expression \inlinecode{1 + 2}, before applying the pretty-printing algebra. The abstract field
+\inlinecode{alg} in \inlinecode{Refactor} could be any algebra simply for delegation. With an algebra instance of \inlinecode{alg}, \inlinecode{Refactor} is able to transform a \inlinecode{VarExprAlg} expression before producing the result. Furthermore, transformations can be composed in a linear pipeline-style beforehand~\cite{Zhang2015}.
+
+Another useful technique is the composition of \textit{query} algebras. A query traverses the abstract syntax tree, collects information and returns the result. The aforementioned \lstinline{Print} and \lstinline{Eval} algebras are traditional queries. But as we discussed before, an algebra is first fed to the parser, then \lstinline{parse} is invoked to do the parsing. It is tedious to fed \lstinline{Print} and \lstinline{Eval} separately, as the same input is parsed twice. Instead, we can firstly compose two queries into one~\cite{Oliveira:2012,oliveira2013feature}, before applying it for parsing.
