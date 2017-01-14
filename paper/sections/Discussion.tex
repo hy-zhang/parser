@@ -49,7 +49,7 @@ for the new parser:
 \lstinputlisting[linerange=63-66]{../Scala/Parser/src/PaperCode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
 The code works as expected to parse and pretty-print the result.
 
-\subsection{Overriding Existing Rules}
+\subsection{Overriding Existing Rules}\label{subsec:overriding-rules}
 
 As many syntactically extensible parsers, our approach also supports
 changing part of existing parsers, but in a type-safe way. We can
@@ -134,7 +134,7 @@ boilerplate. As shown above, we are combining ASTs, parsers and
 pretty-printers of \lstinline{VarExpr} and \lstinline{TypedLam}
 respectively. Such a pattern refers to \textit{family
   polymorphism}~\cite{ernst01FP} which is unfortunately not fully supported
-in Scala, since nested classes/traits have to be manually composed. 
+in Scala, since nested classes/traits have to be manually composed.
 %Nonetheless, one can avoid such boilerplate by using metaprogramming techniques.
 
 \subsection{Alternative Techniques}
@@ -170,5 +170,5 @@ Besides Object Algebras, many other techniques including \textit{Data
 \end{itemize}
 
 As we demonstrated, the whole modular parsing framework itself is
-modular, which means it can be customized easily. 
+modular, which means it can be customized easily.
 %We conducted some previous experiments of modular parsing in Haskell, based on open recursion, MRM and Parsec. However, we suffered from issues of Parsec, as illustrated in Section~\ref{subsec:challenges}.

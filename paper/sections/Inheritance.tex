@@ -162,7 +162,7 @@ Then the new parser, which contains both integer and boolean
 expressions, is able to parse hybrid expressions such as
 \inlinecode{"if true then 1 + 2 else 3 + 4"}.
 
-\paragraph{Conflicts and/or ambiguity}
+\paragraph{Conflicts and/or ambiguity} As we demonstrated before, the longest match alternative combinator is useful when composing parsers. However, ambiguity grammars still cause subtle issues in modular parsing. For example, if \inlinecode{parserA} and \inlinecode{parserB} accept a same string but generate different results, then the result of \inlinecode{parserA ||| parserB} is really depends on the implementation of the alternative combinator, because the results can not be prioritized by length. Since the composition is handled explicitly by user, conflicts could be resolved by overriding ambiguous parsing code, using the pattern discussed in Section~\ref{subsec:overriding-rules}.
 
 As demonstrated, inheritance with method overriding is the key
 technique to obtain semantic modularity.  It enables type-safe code

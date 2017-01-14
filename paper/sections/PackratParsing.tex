@@ -191,7 +191,7 @@ Note that a parser has type \lstinline{Parser[E]} for some
 In the trait \lstinline{ExprParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
 \lstinline{pAdd} handles the addition case and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
 recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the longest match alternative combinator \inlinecode{|||}.
-Table~\ref{tab:packrat} gives a closer look at the parser combinators used in our work.
+Table~\ref{tab:packrat} shows common parser combinators from the library.
 
 \begin{table}[t]
 \begin{tabular}{l}
@@ -247,7 +247,7 @@ def |||[U >: T](q0: => Parser[U]): Parser[U]
 \hspace{.2in}- A parser combinator for alternative with longest match composition. \\
 \hline \\
 \end{tabular}
-\caption{Combinators used in our work, from the Scala standard parser combinator library.}\label{tab:packrat}
+\caption{Common combinators from the Scala standard parser combinator library.}\label{tab:packrat}
 \end{table}
 
 It is worth mentioning that the grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
