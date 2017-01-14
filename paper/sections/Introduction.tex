@@ -1,5 +1,5 @@
 \section{Introduction}\label{sec:introduction}
- 
+
 The quest for improved modularity, variability and extensibility of
 programs has been going on since the early days of Software
 Engineering~\cite{McIlroy68}. Modern Programming Languages (PLs) enable a certain
@@ -27,15 +27,15 @@ independently and separately. For example, evaluation components could be define
 independently for binding and arithmetic constructs. If the language
 to be implemented is the pure lambda calculus, only evaluation of
 binding constructs is necessary. However, more realistic programming
-languages will include arithmetic constructs, and will require 
-evaluation for such constructs as well. In this case 
-both the component for evaluation of binders and arithmetic 
+languages will include arithmetic constructs, and will require
+evaluation for such constructs as well. In this case
+both the component for evaluation of binders and arithmetic
 expressions can be combined to implement the desired functionality.
 \end{comment}
 
 \begin{comment}
 Most programming languages share alot of features in
-common. 
+common.
 
 For example, most languages have language constructs for:
 binding (such as variables, functions, and function applications);
@@ -44,14 +44,14 @@ loops; as well as various other features. For each language construct,
 various operations (such as evaluation, compilation, or parsing) need
 to be implemented. It is reasonable to wonder whether we can simply
 implement those features independently of a particular implementation
-of a programming language. Evaluation could be defined independently 
+of a programming language. Evaluation could be defined independently
 for binding and arithmetic constructs. If the language to be
-implemented is the pure lambda calculus, only evaluation of binding 
-constructs is necessary. Thus only the component that implements 
+implemented is the pure lambda calculus, only evaluation of binding
+constructs is necessary. Thus only the component that implements
 evaluation for binding needs to be used in such an implementation.
-However, more realistic programming languages 
+However, more realistic programming languages
 will include arithmetic constructs, and will require an evaluation
-function for those. 
+function for those.
 
 
 Then it would be possible to \emph{reuse}
@@ -63,29 +63,29 @@ A solution to the Expression Problem could ena
 
 
 
-A concrete 
-example that illustrates this issue is 
+A concrete
+example that illustrates this issue is
 \end{comment}
 
-To address the modularity limitations of Programming Languages several
+To address the modularity limitations of Programming Languages, several
 different approaches have been proposed in the past. Existing
 approaches can be broadly divided into two categories:
 \emph{syntactic} or \emph{semantic} modularization
 techniques. Syntactic modularization techniques are quite popular in
-practice, due to their simplicity of implementation and use. 
+practice, due to their simplicity of implementation and use.
 Examples include many tools for developing Feature-Oriented Software-Product
 Lines (SPLs)~\cite{Kastner11road}, some Language Workbenches~\cite{}, or extensible parser
 generators~\cite{}.  Most syntactic approaches employ textual
 composition techniques such as \emph{superimposition}~\cite{} to
-enable the development modular program features. Such 
+enable the development modular program features. Such
 composition techniques collect the code for multiple features and
 merge them together when a concrete combination of features is needed
-for a particular program. As Kastner et. al~\cite{Kastner11road} note, 
-a typical drawback of feature-oriented SPL implementations, which 
+for a particular program. As Kastner et. al~\cite{Kastner11road} note,
+a typical drawback of feature-oriented SPL implementations, which
 more generally applies to syntactic modularity approaches, is that
 such ``\emph{implementation mechanisms lack proper
   interfaces and support neither modular type checking nor separate
-  compilation}''. 
+  compilation}''.
 
 Syntactic modularization techniques have also been applied to the
 problem of \emph{extensible parsing}. There are several approaches
@@ -107,17 +107,16 @@ Semantic modularization techniques go one step further in terms of modularity,
 and also enable components or features to be modularly type-checked
 and separately compiled. Modular type-checking and separate
 compilation are desirable properties to have from a software
-engineering point-of-view. Modular type-checking can report errors 
-earlier and in terms of the modular code programmers have written 
+engineering point-of-view. Modular type-checking can report errors
+earlier and in terms of the modular code programmers have written
 in the first place. Separate compilation avoids global compilation
-steps, which can be very costly. Furthermore semantic modularization 
-enables the composition of compiled binaries as well as ensuring the 
-type-safety of the code composed of multiple components. Examples of semantic modularization techniques 
+steps, which can be very costly. Furthermore semantic modularization
+enables the composition of compiled binaries as well as ensuring the
+type-safety of the code composed of multiple components. Examples of semantic modularization techniques
 include various approaches to \emph{family polymorphism}~\cite{ernst01FP},
-\emph{virtual classes}~\cite{Ernst:2006}, as 
+\emph{virtual classes}~\cite{Ernst:2006}, as
 well as various techniques for solving the Expression
-Problem~\cite{Oliveira:2012}\bruno{more here; yanlin; Torgersen; Odersky...}. 
-
+Problem~\cite{Oliveira:2012,wang2016expression,torgersen2004expression,odersky2005independently}.
 Semantic modularization techniques are less widely used in practice
 than syntactic techniques. This is partly due to the perceived need for more
 sophisticated type systems, which are not available in mainstream
@@ -125,21 +124,21 @@ languages and may require more knowledge from users. However, recently,
 several lightweight modularization techniques have been shown to work
 in mainstream programming languages like Java or Scala. Object
 Algebras~\cite{Oliveira:2012} are one such technique, which works in
-Java-like languages and uses simple generics only. 
+Java-like languages and uses simple generics only.
 
-So far research on semantic modularization techniques have focused on
+So far research on semantic modularization techniques has focused on
 operations that \emph{traverse} or \emph{process} extensible
-datastructures, such as ASTs. Indeed many documented applications of
+data structures, such as ASTs. Indeed many documented applications of
 semantic modularization techniques focus on modularizing various
 aspects of PL implementations.  However, as far as we know, there is
 little work on operations that build/produce ASTs.  In particular the
 problem of how to modularize parsing has not been studied in semantic
 modularization approaches. At best, techniques such as NOA~\cite{Gouseti2014}
-employ a syntactic modularity approach for parsing in combination with 
-a semantic modularity approach for defining other language components 
+employ a syntactic modularity approach for parsing in combination with
+a semantic modularity approach for defining other language components
 that traverse or process ASTs. This is a shame because parsing is a
-fundamental part of PL implementations, and it ought to made
-semantically modular as well, so that the full benefits of semantic 
+fundamental part of PL implementations, and it ought to be made
+semantically modular as well, so that the full benefits of semantic
 modularity apply.
 
 %\paragraph{Modular and Extensible Parsing}
@@ -148,12 +147,12 @@ This paper presents a technique for doing semantically
 modular parsing.  That is, our approach not only allows complete
 parsers to be built out of modular parsing components, but also enables
 those parsing components to be \emph{modularly type-checked} and
-\emph{separately compiled}. Developing techniques for modular parsing 
-is not without challenges. In developing our techniques we encontered 
+\emph{separately compiled}. Developing techniques for modular parsing
+is not without challenges. In developing our techniques we encountered
 two different classes of challenges: algorithmic challenges; and
 typing/reuse challenges.
 
-\paragraph{Algorithmic Challenges} A first challenge was todo with
+\paragraph{Algorithmic Challenges} A first challenge was to do with
   the parsing algorithms themselves. Since many parsing formalisms
   were not designed with extensibility in mind, some of the employed
   techniques were non-modular, or performed poorly in a modular
@@ -163,7 +162,7 @@ typing/reuse challenges.
   code. Moreover, actions associated to grammar productions are
   typically only type-checked after the parser has been
   generated. Both problems go against our goals of semantic
-  modularity. 
+  modularity.
 
   An alternative to parser generators are \emph{parser
     combinators}~\cite{burge1975,Wadler1985}.  At a first look, parser
@@ -173,23 +172,23 @@ typing/reuse challenges.
   language, such code is statically type-checked.  However many
   techniques regularly employed by parser combinators cause difficulties in a
   modular setting. In particular, many parser combinator approaches
-  (including Parsec~\cite{}) routinely use \emph{left-recursion
+  (including Parsec~\cite{Leijen2001}) routinely use \emph{left-recursion
     elimination}, \emph{priority-based matching}, and \emph{avoid
     backtracking} as much as possible. All of these are problematic in
-  a modular setting as illustrated in Section~\ref{}.
+  a modular setting as illustrated in Section~\ref{subsec:challenges}.
 
-  To address such algorithmic challanges, we propose a methodology 
+  To address such algorithmic challanges, we propose a methodology
   for implementing modular parsers built on top of an
-  existing Packrat~\cite{} parsing library for Scala~\cite{}. The Packrat parsing library
+  existing Packrat~\cite{Ford2002} parsing library for Scala~\cite{}. The Packrat parsing library
   directly supports left-recursion, and a \emph{longest-match
     composition} operator. The direct support for left-recursion
   avoids the need for left-recursion elimination, which is very
-  cumbersome is a modular setting. The longest-match composition 
+  cumbersome is a modular setting. The longest-match composition
   operator avoids the use of priorities, and it provides reasonably
   efficient optimizations for backtracking.
 
   \paragraph{Typing and Reusability Challenges} The second class of
-  challenges were problems related to modularity, reusability and
+  challenges was problems related to modularity, reusability and
   typing of parsing code. An immediate concern is how to extend a
   parser for an existing language or, more generally, how to compose
   parsing code for two languages. It turns out that OO mechanisms that
@@ -198,17 +197,17 @@ typing/reuse challenges.
   and mixins (Bracha)}, are very handy for this
   purpose. Essentially, traits/mixins can act as modules for the parsing code
   of different languages. This enables an approach where ASTs can be
-  modelled using standard OO techniques such as the {\sc Composite} 
+  modelled using standard OO techniques such as the {\sc Composite}
   pattern, while retaining the possibility of adding new language
-  constructs. Section~\ref{} gives the details of this approach. 
+  constructs. Section~\ref{sec:inheritance} gives the details of this approach.
 
   Our ultimate goal is to allow for full extensibility: it should be
-  possible to not only modularly add both new language constructs, but
+  possible to modularly add not only new language constructs, but
   also new operations. To accomplish this goal one final tweak on our
   technique is to employ Object Algebras to allow fully extensible
-  ASTs. Thus a combination of Packrat parsing, multiple inheritance 
-  and Object Algebras enables a solution for semantically modular 
-  parsing. Section~\ref{} gives the details of the complete approach.
+  ASTs. Thus a combination of Packrat parsing, multiple inheritance
+  and Object Algebras enables a solution for semantically modular
+  parsing. Section~\ref{sec:algebrasandparsing} gives the details of the complete approach.
 
 \begin{comment}
   By analising the \emph{full} grammar it is possible to remove
@@ -230,22 +229,22 @@ In summary our contributions are:
 
 \begin{itemize}
 
-\item {A technique for Modular Parsing} We present a technique 
-that allows the development semantically modular parsers.
-The technique relies on the combination of Packrat parsing, multiple inheritance 
+\item {{\bf A technique for Modular Parsing:}} We present a technique
+that allows the development of semantically modular parsers.
+The technique relies on the combination of Packrat parsing, multiple inheritance
   and Object Algebras.
 
 \item {{\bf A Parsing Technique for OO ASTs:}} A simplified version of
   our technique also enables parsing OO-style ASTs, where new language
-  constructs can be easily added. 
+  constructs can be easily added.
 
 \item {{\bf A Methodology for Writing Modular Parsing Code:}} We
   identify possible pitfalls using parser combinators. To avoid such
-  pitfalls, we propose guidelines for writing parsing code using 
+  pitfalls, we propose guidelines for writing parsing code using
   \emph{left-recursion} and \emph{longest-match composition}.
 
 \item {{\bf TAPL case study:}} We conduct a case study with 18 interpreters
-  from the TAPL book. The case study show the effectiveness of modular 
+  from the TAPL book. The case study show the effectiveness of modular
   parsing in terms of reuse. The TAPL case study is available online
   at:
   \url{http://}
@@ -255,5 +254,5 @@ The technique relies on the combination of Packrat parsing, multiple inheritance
 All the code in the paper and the case study is written in Scala. But,
 other languages that support some form of multiple inheritance
 (including Java 8 with default methods~\cite{}) could in principle be
-used. Our choice for Scala had todo with the concise and elegant syntax  
-of the language which enable a clear presentation of our ideas.
+used. Our choice for Scala had to do with the concise and elegant syntax
+of the language which enables a clear presentation of our ideas.
