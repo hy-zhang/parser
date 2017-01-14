@@ -37,7 +37,7 @@ along with future extensions. They pollutes the namespace heavily.
 More importantly, 
 \end{comment}
 is that even if that approach would work, the parsing code would not
-be reusable. \lstinline{VarExprParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser has type \inlinecode{Parser[Expr]}, which indicates the result has type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
+be reusable. \lstinline{VarExprParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser have type \inlinecode{Parser[Expr]}, which indicates the result has type \inlinecode{Expr}, whereas the type should be \inlinecode{FVarsExpr} now.
 
 Therefore, in order to generate new AST structures, we have to
 substitute \lstinline{FVarsExpr}, \lstinline{FVarsLit},
@@ -131,7 +131,7 @@ of \inlinecode{ExprAlg}, the function type \inlinecode{VarExprAlg[E] =>} \inline
 % because Object Algebra interfaces extended from \inlinecode{VarExprAlg} %are subtypes of it, but the types of their parsers are supertypes of %\inlinecode{VarExprAlg[E] =>} \inlinecode{Parser[E]}.
 
 \paragraph{A Solution}
-A solution to this problem is instead have a field with the Object Algebra
+A solution to this problem is instead having a field with the Object Algebra
 in \lstinline{ExprOAParser}. This approach supports overriding as well.
 The parsing code is as follows:
 

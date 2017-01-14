@@ -76,10 +76,10 @@ To solve this issue, we have to rewrite the grammar as below to eliminate left-r
 After left-recursion elimination, the structure of grammar is changed,
 as well as its corresponding parser. In a modular setting, it is
 possible but unnecessarily complicated to analyse the grammar and
-rewrite it when doing extension. Anticipating that every non-terminal
+rewrite it when doing extensions. Anticipating that every non-terminal
 has left-recursive rules is helpful for extensibility but overkill,
 since it is inconvenient and introduces extra complexity for
-representation of grammar and implementation of parser.
+representation of a grammar and implementation of a parser.
 
 Another issue of left-recursion elimination is that it requires extra
 bookkeeping work to retain the original semantics. For example, the
@@ -88,7 +88,7 @@ grammar, but after rewrite the information of left-associativity is lost. The pa
 must be transformed to recover the correct syntactic structure.
 
 \paragraph{Longest Match Composition} Another problematic issue
-in parser combinator libraries is the need for manually prioratizing/ordering
+in parser combinator libraries is the need for manually prioritizing/ordering
 alternatives in a grammar.
 Consider the grammar:
 \setlength{\grammarindent}{5em}
@@ -136,7 +136,7 @@ Given the full grammar, we can decide where to put \inlinecode{try} for backtrac
 parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImpAs
 \end{lstlisting}
 
-\noindent However, this results in the worst case exponential time
+\noindent However, this results in the worst-case exponential time
 complexity in Parsec, because it does not provide optimizations
 for backtracking.
 
