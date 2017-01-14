@@ -197,15 +197,10 @@ discussed the composition of a cv-coalgebra and a term homomorphism,
 which differs from modular parsing.
 \end{comment}
 
-Another interesting observation, as we have mentioned
-in Section~\ref{subsec:more-oa}, is that transformation algebras are
-frequently used in parsing, as concrete syntax may not always coincide
-with its abstract syntax, for instance, the bruijn indices in lambda
-calculus, as well as other syntactic sugars. In the Shy
-framework~\cite{Zhang2015}, the pattern of transformations is captured
-into a template for Java annotation processing, and most of
-boilerplate code is automatically generated, hence users only need to
-override a few interesting cases, conveniently. It is potentially
-useful in our case. The idea of overriding existing cases was also
-proposed in MRM. Our approach allows existing parsing code to be
-overridden during inheritance.
+Another interesting observation from Section~\ref{4}, is that parsers with
+Object Algebras generate ``implicit objects'', which are actually functions of
+type \lstinline{Alg[E]} \lstinline{=>} \lstinline{E} for generic \lstinline{E}.
+Patterns of operations on such functions are captured by the original paper~\cite{Oliveira:2012}, called
+\textit{queries} and \textit{transformations}, together with the composition of algebras.
+They are quite useful, for instance, we have two operations (like the aforementioned \lstinline{Print} and \lstinline{Eval}) to be fed to the parser. If we feed them separately, it is tedious to parse the same input twice. Instead we can compose them in advance before the feeding. On the other hand, one would think this pattern is too limited to use against objects that traditional parsers generate. For example, there are a lot of transformations (or desugarings) on intermediate ASTs in the design of a compiler. Transformation algebras are helpful in that case. They can even be composed in a linear pipeline-style before a query algebra is delegated. The Shy framework~\cite{Zhang2015} has captured those patterns, and it generates templates for them, so that users only need to override a few interesting cases, conveniently. The idea of overriding existing cases was also
+proposed in MRM~\cite{Oliveira2015}. They are potentially useful to our approach. Regarding overriding, our approach allows existing parsing code to be overridden during inheritance.
