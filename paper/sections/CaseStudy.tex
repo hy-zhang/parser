@@ -168,9 +168,22 @@ The other is a modified version of \ilyaimpl{}, named \ilyalongest{}, using the 
       \hline
         Arith & 741 & 913 & +23.2 & 793 & +7.0 & 932 & +25.8 \\
         Untyped & 770 & 1018 & +32.2 & 821 & +6.6 & 1007 & +30.8 \\
-      \hline
-        \multicolumn{1}{|c|}{\dots} & \multicolumn{7}{c|}{\dots} \\
-      \hline
+        FullUntyped & 1297 & 1854 & +42.9 & 1343 & +3.5 & 1767 & +36.2 \\
+        TyArith & 746 & 888 & +19.0 & 772 & +3.5 & 918 & +23.1 \\
+        SimpleBool & 1376 & 1782 & +29.5 & 1494 & +8.6 & 1824 & +32.6 \\
+        FullSimple & 1441 & 2270 & +57.5 & 1574 & +9.2 & 2226 & +54.5 \\
+        Bot & 1080 & 1287 & +19.2 & 1078 & -0.2 & 1306 & +20.9 \\
+      %\hline
+        %\multicolumn{1}{|c|}{\dots} & \multicolumn{7}{c|}{\dots} \\
+      %\hline
+        FullRef & 1438 & 2291 & +59.3 & 1544 & +7.4 & 2142 & +49.0 \\
+        FullError & 1410 & 1946 & +38.0 & 1524 & +8.1 & 1981 & +40.5 \\
+        RcdSubBot & 1247 & 1524 & +22.2 & 1285 & +3.0 & 1612 & +29.3 \\
+        FullSub & 1320 & 1979 & +49.9 & 1393 & +5.5 & 1899 & +43.9 \\
+        FullEquiRec & 1407 & 2200 & +56.4 & 1561 & +10.9 & 2156 & +53.2 \\
+        FullIsoRec & 1492 & 2253 & +51.0 & 1648 & +10.5 & 2236 & +49.9 \\
+        EquiRec & 994 & 1254 & +26.2 & 1048 & +5.4 & 1304 & +31.2 \\
+        Recon & 1044 & 1482 & +42.0 & 1128 & +8.0 & 1506 & +44.3 \\
         FullRecon & 1094 & 1645 & +50.4 & 1161 & +6.1 & 1652 & +51.0 \\
         FullPoly & 1398 & 2086 & +49.2 & 1511 & +8.1 & 2019 & +44.4 \\
         FullOmega & 1451 & 2352 & +62.1 & 1582 & +9.0 & 2308 & +59.1 \\
@@ -183,8 +196,7 @@ The other is a modified version of \ilyaimpl{}, named \ilyalongest{}, using the 
     \label{tab:ext-comparison}
 \end{table}
 
-Table \ref{tab:ext-comparison} shows part of the comparison results of these four versions,
-full table is available online. It suggests that the difference of running time between
+Table \ref{tab:ext-comparison} shows comparison results of these four versions. It suggests that the difference of running time between
 using object algebra and class is little, roughly 1\%.
 The usage of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
