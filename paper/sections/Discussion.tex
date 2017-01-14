@@ -1,8 +1,8 @@
 \section{More Features}
 
 The use of inheritance-based approach and Object Algebras enables us
-to build modular parsers, which are able to evolve with together with
-syntax. This section explores more interesting features, including
+to build modular parsers, which are able to evolve with
+syntax together. This section explores more interesting features, including
 parsing multi-sorted syntax, overriding existing parsing rules,
 language components for abstracting language features, and alternative
 techniques under the whole framework.
@@ -14,8 +14,8 @@ As illustrated above, using Object Algebras separates data structures from behav
  on structures, with both code reuse and separate compilation supported.
 \end{comment}
 
-Using Object Algebras is that it is easy to
-model multi-sorted languages. If the syntax contains multiple sorts, we can distinguish them by different type parameters. As an example, we extend the language of literals, additions and variables by introducing types as a new kind of type argument, and we add lambda abstractions to expressions. Now the language has two sorts in the syntax, types and expressions:\\
+Using Object Algebras, it is easy to
+model multi-sorted languages. If the syntax contains multiple sorts, we can distinguish them by different type parameters. As an example, we extend the language of literals, additions and variables by introducing types, including primitive type \inlinecode{int} and function (arrow) type, and we add lambda abstractions to expressions. Now the language has two sorts in the syntax, types and expressions:\\
 
 \begin{tabular}{m{0.45\linewidth}m{0.45\linewidth}}
 \setlength{\grammarindent}{5em}
@@ -52,7 +52,7 @@ The code works as expected to parse and pretty-print the result.
 \subsection{Overriding Existing Rules}\label{subsec:overriding-rules}
 
 As many syntactically extensible parsers, our approach also supports
-changing part of existing parsers, but in a type-safe way. We can
+modifying part of existing parsers, but in a type-safe way. We can
 easily update existing parsing rules with new implementations, or
 eliminate them in extended parsers. This can be useful in many
 situations, including when conflicts or ambiguities arize when
@@ -121,7 +121,7 @@ Then for the extension of types and lambda abstractions in Section~\ref{subsec:d
 \caption{Language components \lstinline{VarExpr} (left) and \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
 
-As shown below, those two language components can be merged into one to obtain the language we want. Furthermore, the new language is still a modular
+As shown in Figure~\ref{fig:compose-components}, those two language components can be merged into one to obtain the language we want. Furthermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
 \begin{figure}[t]
@@ -165,7 +165,7 @@ as th guidelines proposed in Section~\ref{sec:packrat} are met.
 \item {\bf Extensible ASTs}
 
 Besides Object Algebras, many other techniques including \textit{Data
-  types à la carte} (DTC)~\cite{swierstra2008data} ot the Cake pattern~\cite{odersky2005independently} also support extensible data structures. These alternatives could also be adopted to build ASTs and corresponding parsers.
+  types à la carte} (DTC)~\cite{swierstra2008data} and the Cake pattern~\cite{odersky2005independently} also support extensible data structures. These alternatives could also be adopted to build ASTs and corresponding parsers.
 
 \end{itemize}
 
