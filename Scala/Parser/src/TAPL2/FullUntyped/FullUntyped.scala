@@ -1,9 +1,8 @@
 package TAPL2.FullUntyped
 
+import TAPL2.Lib._
 import TAPL2.Arith.Arith
 import TAPL2.Untyped.Untyped
-import TAPL2.Util._
-import TAPL2.Term
 
 
 case object TmTrue extends Term
@@ -36,79 +35,58 @@ case class TmLet(l: String, t1: Term, t2: Term) extends Term
 
 case class TmTimesFloat(a: Term, b: Term) extends Term
 
-/* <3> */
+
 object Record {
 
-  trait Parser[F <: {val pE : PackratParser[Term]}] {
+  trait Parser extends EParser {
     lexical.delimiters += ("{", "}", ",", ".", "(", ")", "=")
 
-    val pRecordE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
-      List(
-        "{" ~> repsep(lcid ~ ("=" ~> e) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ TmRecord,
-        e ~ ("." ~> lcid) ^^ { case e ~ x => TmProj(e, x) },
-        "(" ~> e <~ ")"
-      ).reduce((a, b) => a ||| b)
-    }
+    val pRecordE: PackratParser[Term] =
+      "{" ~> repsep(lcid ~ ("=" ~> pE) ^^ { case x ~ e => (x, e) }, ",") <~ "}" ^^ TmRecord |||
+        pE ~ ("." ~> lcid) ^^ { case e ~ x => TmProj(e, x) }
   }
 
 }
 
 object Let {
 
-  trait Parser[F <: {val pE : PackratParser[Term]}] {
+  trait Parser extends EParser {
     lexical.reserved += ("let", "in")
     lexical.delimiters += "="
 
-    val pLetE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
-      ("let" ~> lcid) ~ ("=" ~> e) ~ ("in" ~> e) ^^ { case x ~ e1 ~ e2 => TmLet(x, e1, e2) }
-    }
+    val pLetE: PackratParser[Term] =
+      ("let" ~> lcid) ~ ("=" ~> pE) ~ ("in" ~> pE) ^^ { case x ~ e1 ~ e2 => TmLet(x, e1, e2) }
   }
 
 }
 
 object FloatString {
 
-  trait Parser[F <: {val pE : PackratParser[Term]}] {
+  trait Parser extends EParser {
     lexical.delimiters += "*"
 
-    val pFloatStringE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
-      //chainl1(e, "*" ^^^ { (e1, e2) => TmTimesfloat(e1, e2) }) |||
-      stringLit ^^ TmString
-    }
+    val pFloatStringE: PackratParser[Term] =
+      //chainl1(pE, "*" ^^^ { (e1: Term, e2: Term) => TmTimesfloat(e1, e2) }) |||
+        stringLit ^^ TmString
   }
 
 }
 
 object FullUntyped {
 
-  trait Parser[L <: {val pE : PackratParser[Term]}]
-    extends Arith.Parser[L] with Untyped.Parser[L] with Record.Parser[L]
-      with FloatString.Parser[L] with Let.Parser[L] {
-    val pFullUntypedE: (=> L) => PackratParser[Term] =
-      l => pArithE(l) ||| pUntypedE(l) ||| pRecordE(l) ||| pFloatStringE(l) ||| pLetE(l)
+  trait Parser extends Arith.Parser with Untyped.Parser with Record.Parser
+    with FloatString.Parser with Let.Parser {
+
+    val pFullUntypedE: PackratParser[Term] = pArithE ||| pUntypedE ||| pRecordE ||| pFloatStringE ||| pLetE
+
+    override val pE: PackratParser[Term] = pFullUntypedE
   }
 
 }
 
 object TestFullUntyped {
-
-  class List[E](pe: PackratParser[E]) {
-    val pE = pe
+  def parseAndPrint(inp: String): Unit = {
+    val p = new FullUntyped.Parser {}
+    println(parse(p.pE)(inp))
   }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term]): List[Term] = {
-      val lang = new FullUntyped.Parser[List[Term]] {}
-      new List[Term](lang.pFullUntypedE(l))
-    }
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
-  }
-
 }

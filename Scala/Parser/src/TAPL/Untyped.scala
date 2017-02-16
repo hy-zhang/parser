@@ -1,8 +1,8 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
 
-/* <2> */
+
 object UntypedAbs {
 
   trait Alg[E] {
@@ -10,17 +10,16 @@ object UntypedAbs {
   }
 
   trait Print extends Alg[String] {
-    def TmAbs(x: String, e: String) = "\\" + x + "." + e
+    def TmAbs(x: String, e: String): String = "\\" + x + "." + e
   }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
-    lexical.delimiters += ("\\", ".", "(", ")")
+  trait Parse[E] extends EParser[E] {
+    lexical.delimiters += ("\\", ".")
 
-    val pUntypedAbsE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val alg: Alg[E]
 
-      ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => alg.TmAbs(x, e0) } ||| "(" ~> e <~ ")"
-    }
+    val pUntypedAbsE: Parser[E] =
+      ("\\" ~> lcid) ~ ("." ~> pE) ^^ { case x ~ e0 => alg.TmAbs(x, e0) }
   }
 
 }
@@ -34,22 +33,20 @@ object VarApp {
   }
 
   trait Print extends Alg[String] {
-    def TmVar(x: String) = x
+    def TmVar(x: String): String = x
 
-    def TmApp(e1: String, e2: String) = "[" + e1 + " " + e2 + "]"
+    def TmApp(e1: String, e2: String): String = "[" + e1 + " " + e2 + "]"
   }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+  trait Parse[E] extends EParser[E] {
     lexical.delimiters += ("(", ")")
 
-    val pVarAppE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val alg: Alg[E]
 
-      List(
-        lcid ^^ alg.TmVar,
-        e ~ e ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) },
-        "(" ~> e <~ ")"
-      ).reduce((a, b) => a ||| b)
+    val pVarAppE: Parser[E] = {
+      lcid ^^ alg.TmVar |||
+        pE ~ pE ^^ { case e1 ~ e2 => alg.TmApp(e1, e2) } |||
+        "(" ~> pE <~ ")"
     }
   }
 
@@ -61,27 +58,24 @@ object Untyped {
 
   trait Print extends Alg[String] with UntypedAbs.Print with VarApp.Print
 
-  trait Parser[E, L <: {val pE : Util.PackratParser[E]}]
-    extends UntypedAbs.Parser[E, L] with VarApp.Parser[E, L] {
-    val pUntypedE = pUntypedAbsE | pVarAppE
+  trait Parse[E] extends UntypedAbs.Parse[E] with VarApp.Parse[E] {
+    override val alg: Alg[E]
+
+    val pUntypedE: Parser[E] = pUntypedAbsE ||| pVarAppE
+
+    override val pE: Parser[E] = pUntypedE
   }
 
 }
 
 object TestUntyped {
 
-  class List[E](pe: PackratParser[E]) {
-    val pE = pe
-  }
-
-  def parse[E](inp: String)(alg: Untyped.Alg[E]) = {
-    def parser(l: => List[E]): List[E] = {
-      val lang = new Untyped.Parser[E, List[E]] {}
-      new List[E](lang.pUntypedE(alg)(l))
+  def parseWithAlg[E](inp: String)(a: Untyped.Alg[E]): E = {
+    val p = new Untyped.Parse[E] {
+      override val alg: Untyped.Alg[E] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new Untyped.Print {})
-
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new Untyped.Print {}))
 }

@@ -1,0 +1,60 @@
+package TAPL
+
+import TAPL.Util._
+
+/* <12> */
+object RecType {
+
+  trait Alg[T] {
+    def TyRec(x: String, t: T): T
+  }
+
+  trait Print extends Alg[String] {
+    def TyRec(x: String, t: String) = "Rec " + x + "." + t
+  }
+
+  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+    lexical.reserved += "Rec"
+    lexical.delimiters += "."
+
+    val pRecTypeT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
+      lazy val t = l.pT
+
+      "Rec" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => alg.TyRec(x, ty) }
+    }
+  }
+
+}
+
+object FullEquiRec {
+
+  trait Alg[E, T] extends FullSimple.Alg[E, T] with RecType.Alg[T]
+
+  trait Print extends Alg[String, String] with FullSimple.Print with RecType.Print
+
+  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
+    extends FullSimple.Parser[E, T, L] with RecType.Parser[T, L] {
+    val pFullEquiRecE = pFullSimpleE
+    val pFullEquiRecT = pFullSimpleT | pRecTypeT
+  }
+
+}
+
+object TestFullEquiRec {
+
+  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
+    val pE = pe
+    val pT = pt
+  }
+
+  def parse[E, T](inp: String)(alg: FullEquiRec.Alg[E, T]) = {
+    def parser(l: => List[E, T]): List[E, T] = {
+      val lang = new FullEquiRec.Parser[E, T, List[E, T]] {}
+      new List[E, T](lang.pFullEquiRecE(alg)(l), lang.pFullEquiRecT(alg)(l))
+    }
+    runParser(fix(parser).pE)(inp)
+  }
+
+  def parseAndPrint(inp: String) = parse(inp)(new FullEquiRec.Print {})
+
+}

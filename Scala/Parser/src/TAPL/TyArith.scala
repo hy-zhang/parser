@@ -1,8 +1,8 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
 
-/* <4> */
+
 object TypedNat {
 
   trait Alg[E, T] extends Nat.Alg[E] {
@@ -13,13 +13,13 @@ object TypedNat {
     def TyNat() = "Nat"
   }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Nat.Parser[E, F] {
+  trait Parse[E, T] extends Nat.Parse[E] {
     lexical.reserved += "Nat"
 
-    val pTypedNatE: Alg[E, T] => (=> F) => PackratParser[E] = pNatE
-    val pTypedNatT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      "Nat" ^^ { _ => alg.TyNat() }
-    }
+    override val alg: Alg[E, T]
+
+    val pTypedNatE: Parser[E] = pNatE
+    val pTypedNatT: Parser[T] = "Nat" ^^ { _ => alg.TyNat() }
   }
 
 }
@@ -34,16 +34,23 @@ object TypedBool {
     def TyBool() = "Bool"
   }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] extends Bool.Parser[E, F] {
+  trait Parse[E, T] extends Bool.Parse[E] {
     lexical.reserved += "Bool"
 
-    val pTypedBoolE: Alg[E, T] => (=> F) => PackratParser[E] = pBoolE
-    val pTypedBoolT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      "Bool" ^^ { _ => alg.TyBool() }
-    }
+    override val alg: Alg[E, T]
+
+    val pTypedBoolE: Parser[E] = pBoolE
+    val pTypedBoolT: Parser[T] = "Bool" ^^ { _ => alg.TyBool() }
   }
 
 }
+
+trait TParser[T] {
+  val pT: Parser[T]
+}
+
+trait ETParser[E, T] extends EParser[E] with TParser[T]
+
 
 object TyArith {
 
@@ -51,29 +58,28 @@ object TyArith {
 
   trait Print extends Alg[String, String] with TypedBool.Print with TypedNat.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends TypedBool.Parser[E, T, L] with TypedNat.Parser[E, T, L] {
-    val pTyArithE = pTypedBoolE | pTypedNatE
-    val pTyArithT = pTypedBoolT | pTypedNatT
+  trait Parse[E, T] extends ETParser[E, T] with TypedBool.Parse[E, T] with TypedNat.Parse[E, T] {
+    override val alg: Alg[E, T]
+
+    val pTyArithE: Parser[E] = pTypedBoolE ||| pTypedNatE
+    val pTyArithT: Parser[T] = pTypedBoolT ||| pTypedNatT
+
+    override val pE: Parser[E] = pTyArithE
+
+    override val pT: Parser[T] = pTyArithT
   }
 
 }
 
 object TestTyArith {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: TyArith.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new TyArith.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pTyArithE(alg)(l), lang.pTyArithT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: TyArith.Alg[E, T]): E = {
+    val p = new TyArith.Parse[E, T] {
+      override val alg: TyArith.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new TyArith.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new TyArith.Print {}))
 
 }

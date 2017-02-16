@@ -1,6 +1,7 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
+
 
 object FullRecon {
 
@@ -8,29 +9,27 @@ object FullRecon {
 
   trait Print extends Alg[String, String] with Recon.Print with Let.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends Recon.Parser[E, T, L] with Let.Parser[E, L] {
-    val pFullReconE = pReconE | pLetE
-    val pFullReconT = pReconT
+  trait Parse[E, T] extends Recon.Parse[E, T] with Let.Parse[E] {
+    override val alg: Alg[E, T]
+
+    val pFullReconE: Parser[E] = pReconE ||| pLetE
+    val pFullReconT: Parser[T] = pReconT
+
+    override val pE: Parser[E] = pFullReconE
+    override val pT: Parser[T] = pFullReconT
   }
 
 }
 
 object TestFullRecon {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: FullRecon.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullRecon.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullReconE(alg)(l), lang.pFullReconT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: FullRecon.Alg[E, T]): E = {
+    val p = new FullRecon.Parse[E, T] {
+      override val alg: FullRecon.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullRecon.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new FullRecon.Print {}))
 
 }

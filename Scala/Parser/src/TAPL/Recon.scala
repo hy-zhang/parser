@@ -1,6 +1,7 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
+
 
 object Recon {
 
@@ -8,29 +9,27 @@ object Recon {
 
   trait Print extends Alg[String, String] with Typed.Print with TyArith.Print with TypeVar.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends TyArith.Parser[E, T, L] with Typed.Parser[E, T, L] with TypeVar.Parser[T, L] {
-    val pReconE = pTypedE | pTyArithE
-    val pReconT = pTypedT | pTyArithT | pTypeVarT
+  trait Parse[E, T] extends TyArith.Parse[E, T] with Typed.Parse[E, T] with TypeVar.Parse[T] {
+    override val alg: Alg[E, T]
+
+    val pReconE: Parser[E] = pTypedE ||| pTyArithE
+    val pReconT: Parser[T] = pTypedT ||| pTyArithT ||| pTypeVarT
+
+    override val pE: Parser[E] = pReconE
+    override val pT: Parser[T] = pReconT
   }
 
 }
 
 object TestRecon {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: Recon.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new Recon.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pReconE(alg)(l), lang.pReconT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: Recon.Alg[E, T]): E = {
+    val p = new Recon.Parse[E, T] {
+      override val alg: Recon.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new Recon.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new Recon.Print {}))
 
 }

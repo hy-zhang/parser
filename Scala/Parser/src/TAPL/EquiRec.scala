@@ -1,6 +1,7 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
+
 
 object EquiRec {
 
@@ -8,29 +9,27 @@ object EquiRec {
 
   trait Print extends Alg[String, String] with Typed.Print with RecType.Print with TypeVar.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends Typed.Parser[E, T, L] with RecType.Parser[T, L] with TypeVar.Parser[T, L] {
-    val pEquiRecE = pTypedE
-    val pEquiRecT = pTypedT | pRecTypeT | pTypeVarT
+  trait Parse[E, T] extends Typed.Parse[E, T] with RecType.Parse[T] with TypeVar.Parse[T] {
+    override val alg: Alg[E, T]
+
+    val pEquiRecE: Parser[E] = pTypedE
+    val pEquiRecT: Parser[T] = pTypedT ||| pRecTypeT ||| pTypeVarT
+
+    override val pE: Parser[E] = pEquiRecE
+    override val pT: Parser[T] = pEquiRecT
   }
 
 }
 
 object TestEquiRec {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: EquiRec.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new EquiRec.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pEquiRecE(alg)(l), lang.pEquiRecT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: EquiRec.Alg[E, T]): E = {
+    val p = new EquiRec.Parse[E, T] {
+      override val alg: EquiRec.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new EquiRec.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new EquiRec.Print {}))
 
 }

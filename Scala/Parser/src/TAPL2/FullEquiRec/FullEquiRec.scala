@@ -1,8 +1,8 @@
 package TAPL2.FullEquiRec
 
+import TAPL2.Lib._
 import TAPL2.FullSimple.FullSimple
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
+
 
 case class TyVar(i: String) extends Ty
 
@@ -64,48 +64,36 @@ case object TmUnit extends Term
 
 case class TmFix(t: Term) extends Term
 
-/* <12> */
+
 object RecType {
 
-  trait Parser[F <: {val pT : PackratParser[Ty]}] {
+  trait Parser extends TParser {
     lexical.reserved += "Rec"
     lexical.delimiters += "."
 
-    val pRecTypeT: (=> F) => PackratParser[Ty] = l => {
-      lazy val t = l.pT
-
-      "Rec" ~> ucid ~ ("." ~> t) ^^ { case x ~ ty => TyRec(x, ty) }
-    }
+    val pRecTypeT: PackratParser[Ty] = "Rec" ~> ucid ~ ("." ~> pT) ^^ { case x ~ ty => TyRec(x, ty) }
   }
 
 }
 
 object FullEquiRec {
+  
+  trait Parser extends FullSimple.Parser with RecType.Parser {
 
-  trait Parser[L <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}]
-    extends FullSimple.Parser[L] with RecType.Parser[L] {
-    val pFullEquiRecE: (=> L) => PackratParser[Term] = pFullSimpleE
-    val pFullEquiRecT: (=> L) => PackratParser[Ty] =
-      l => pFullSimpleT(l) ||| pRecTypeT(l)
+    val pFullEquiRecE: PackratParser[Term] = pFullSimpleE
+    val pFullEquiRecT: PackratParser[Ty] = pFullSimpleT ||| pRecTypeT
+
+    override val pE: PackratParser[Term] = pFullEquiRecE
+    override val pT: PackratParser[Ty] = pFullEquiRecT
   }
 
 }
 
 object TestFullEquiRec {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term, Ty]): List[Term, Ty] = {
-      val lang = new FullEquiRec.Parser[List[Term, Ty]] {}
-      new List[Term, Ty](lang.pFullEquiRecE(l), lang.pFullEquiRecT(l))
-    }
-
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
+  def parseAndPrint(inp: String): Unit = {
+    val p = new FullEquiRec.Parser {}
+    println(parse(p.pE)(inp))
   }
 
 }

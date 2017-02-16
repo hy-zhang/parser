@@ -12,6 +12,12 @@ import TAPL2.SimpleBool.TestSimpleBool
 import TAPL2.FullError.TestFullError
 import TAPL2.FullSub.TestFullSub
 import TAPL2.RcdSubBot.TestRcdSubBot
+import TAPL2.FullIsoRec.TestFullIsoRec
+import TAPL2.EquiRec.TestEquiRec
+import TAPL2.FullOmega.TestFullOmega
+import TAPL2.FullPoly.TestFullPoly
+import TAPL2.Recon.TestRecon
+import TAPL2.FullRecon.TestFullRecon
 
 import scala.io.Source
 
@@ -44,13 +50,12 @@ object Test {
         case "rcdsubbot" => TestRcdSubBot.parseAndPrint
         case "fullsub" => TestFullSub.parseAndPrint
         case "fullequirec" => TestFullEquiRec.parseAndPrint
-        /*
         case "fullisorec" => TestFullIsoRec.parseAndPrint
         case "equirec" => TestEquiRec.parseAndPrint
         case "recon" => TestRecon.parseAndPrint
         case "fullrecon" => TestFullRecon.parseAndPrint
         case "fullpoly" => TestFullPoly.parseAndPrint
-        case "fullomega" => TestFullOmega.parseAndPrint*/
+        case "fullomega" => TestFullOmega.parseAndPrint
         case _ => sys.error("Incorrect name")
       }
       runTest(name, fn)

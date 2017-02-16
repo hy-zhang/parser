@@ -1,8 +1,8 @@
 package TAPL2.FullIsoRec
 
 import TAPL2.FullEquiRec.FullEquiRec
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
+import TAPL2.Lib._
+
 
 case class TyVar(i: String) extends Ty
 
@@ -64,57 +64,42 @@ case object TmUnit extends Term
 
 case class TmFix(t: Term) extends Term
 
-case class TmFold(ty: Ty) extends Term
+case class TmFold(tm: Term, ty: Ty) extends Term
 
-case class TmUnfold(ty: Ty) extends Term
-/*
-/* <13> */
+case class TmUnfold(tm: Term, ty: Ty) extends Term
+
+
 object Fold {
-  
-  trait Parser[F <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}] {
+
+  trait Parser extends ETParser {
     lexical.reserved += ("fold", "unfold")
     lexical.delimiters += ("[", "]")
 
-    val pFoldE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
-
-      List(
-        "fold" ~> ("[" ~> t <~ "]") ~ e ^^ { case ty ~ ex => TmFold(ex, ty) },
-        "unfold" ~> ("[" ~> t <~ "]") ~ e ^^ { case ty ~ ex => TmUnfold(ex, ty) }
-      ).reduce((a, b) => a ||| b)
-    }
+    val pFoldE: PackratParser[Term] =
+      "fold" ~> ("[" ~> pT <~ "]") ~ pE ^^ { case ty ~ ex => TmFold(ex, ty) } |||
+        "unfold" ~> ("[" ~> pT <~ "]") ~ pE ^^ { case ty ~ ex => TmUnfold(ex, ty) }
   }
 
 }
 
 object FullIsoRec {
 
-  trait Parser[L <: {val pE : PackratParser[E]; val pT : PackratParser[T]}]
-    extends FullEquiRec.Parser[L] with Fold.Parser[L] {
-    val pFullIsoRecE = pFullEquiRecE | pFoldE
-    val pFullIsoRecT = pFullEquiRecT
+  trait Parser extends FullEquiRec.Parser with Fold.Parser {
+
+    val pFullIsoRecE: PackratParser[Term] = pFullEquiRecE ||| pFoldE
+    val pFullIsoRecT: PackratParser[Ty] = pFullEquiRecT
+
+    override val pE: PackratParser[Term] = pFullIsoRecE
+    override val pT: PackratParser[Ty] = pFullIsoRecT
   }
 
 }
 
 object TestFullIsoRec {
 
-  import _
-
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
+  def parseAndPrint(inp: String): Unit = {
+    val p = new FullIsoRec.Parser {}
+    println(parse(p.pE)(inp))
   }
 
-  def parse[E, T](inp: String)(alg: FullIsoRec.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullIsoRec.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullIsoRecE(alg)(l), lang.pFullIsoRecT(alg)(l))
-    }
-    runParser(fix(parser).pE)(inp)
-  }
-
-  def parseAndPrint(inp: String) = parse(inp)(new FullIsoRec.Print {})
-
-}*/
+}

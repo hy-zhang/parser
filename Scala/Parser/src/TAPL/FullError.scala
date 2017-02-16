@@ -1,8 +1,8 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
 
-/* <8> */
+
 object Error {
 
   trait Alg[E] {
@@ -14,18 +14,17 @@ object Error {
   trait Print extends Alg[String] {
     def TmError() = "error"
 
-    def TmTry(e1: String, e2: String) = "try " + e1 + " with " + e2
+    def TmTry(e1: String, e2: String): String = "try " + e1 + " with " + e2
   }
 
-  trait Parser[E, F <: {val pE : PackratParser[E]}] {
+  trait Parse[E] extends EParser[E] {
     lexical.reserved += ("error", "try", "with")
 
-    val pErrorE: Alg[E] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val alg: Alg[E]
 
+    val pErrorE: Parser[E] =
       "error" ^^ { _ => alg.TmError() } |||
-        "try" ~> e ~ ("with" ~> e) ^^ { case e1 ~ e2 => alg.TmTry(e1, e2) }
-    }
+        "try" ~> pE ~ ("with" ~> pE) ^^ { case e1 ~ e2 => alg.TmTry(e1, e2) }
   }
 
 }
@@ -37,29 +36,29 @@ object FullError {
   trait Print extends Alg[String, String]
     with Bot.Print with TypedBool.Print with Error.Print with TypeVar.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends Bot.Parser[E, T, L] with TypedBool.Parser[E, T, L] with Error.Parser[E, L] with TypeVar.Parser[T, L] {
-    val pFullErrorE = pBotE | pTypedBoolE | pErrorE
-    val pFullErrorT = pBotT | pTypedBoolT | pTypeVarT
+  trait Parse[E, T] extends Bot.Parse[E, T] with TypedBool.Parse[E, T]
+    with Error.Parse[E] with TypeVar.Parse[T] {
+
+    override val alg: Alg[E, T]
+
+    val pFullErrorE: Parser[E] = pBotE ||| pTypedBoolE ||| pErrorE
+    val pFullErrorT: Parser[T] = pBotT ||| pTypedBoolT ||| pTypeVarT
+
+    override val pE: Parser[E] = pFullErrorE
+    override val pT: Parser[T] = pFullErrorT
   }
 
 }
 
 object TestFullError {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: FullError.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullError.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullErrorE(alg)(l), lang.pFullErrorT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: FullError.Alg[E, T]): E = {
+    val p = new FullError.Parse[E, T] {
+      override val alg: FullError.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullError.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new FullError.Print {}))
 
 }

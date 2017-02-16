@@ -1,6 +1,13 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
+
+
+trait KParser[K] {
+  val pK: Parser[K]
+}
+
+trait ETKParser[E, T, K] extends ETParser[E, T] with KParser[K]
 
 object Omega {
 
@@ -35,43 +42,31 @@ object Omega {
 
     def TmTApp(e: String, t: String): String = e + " [" + t + "]"
 
-    def TyAbs(x: String, k: String, t: String) = "\\(" + x + ":" + k + ")." + t
+    def TyAbs(x: String, k: String, t: String): String = "\\(" + x + ":" + k + ")." + t
 
-    def TyApp(t1: String, t2: String) = "[" + t1 + " " + t2 + "]"
+    def TyApp(t1: String, t2: String): String = "[" + t1 + " " + t2 + "]"
   }
 
-  trait Parser[E, T, K, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]; val pK : PackratParser[K]}] {
+  trait Parse[E, T, K] extends ETKParser[E, T, K] {
     lexical.reserved += ("Star", "All", "Some")
     lexical.delimiters += ("=>", ":", ".", ",", "{", "}")
 
-    val pOmegaE: Alg[E, T, K] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
-      lazy val k = l.pK
+    val alg: Alg[E, T, K]
 
-      "\\" ~> ucid ~ (":" ~> k) ~ ("." ~> e) ^^ { case x ~ kn ~ ex => alg.TmTAbs(x, kn, ex) } |||
-        e ~ ("[" ~> t <~ "]") ^^ { case ex ~ ty => alg.TmTApp(ex, ty) }
-    }
+    val pOmegaE: Parser[E] =
+      "\\" ~> ucid ~ (":" ~> pK) ~ ("." ~> pE) ^^ { case x ~ kn ~ ex => alg.TmTAbs(x, kn, ex) } |||
+        pE ~ ("[" ~> pT <~ "]") ^^ { case ex ~ ty => alg.TmTApp(ex, ty) }
 
-    val pOmegaT: Alg[E, T, K] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
-      lazy val k = l.pK
+    val pOmegaT: Parser[T] =
+      "All" ~> ucid ~ (":" ~> pK) ~ ("." ~> pT) ^^ { case x ~ kn ~ ty => alg.TyAll(x, kn, ty) } |||
+        ("{" ~> "Some" ~> ucid ~ (":" ~> pK) ~ ("," ~> pT) <~ "}") ^^ { case x ~ kn ~ ty => alg.TySome(x, kn, ty) } |||
+        "\\" ~> ucid ~ (":" ~> pK) ~ ("." ~> pT) ^^ { case x ~ kn ~ ty => alg.TyAbs(x, kn, ty) } |||
+        pT ~ pT ^^ { case t1 ~ t2 => alg.TyApp(t1, t2) }
 
-      List(
-        "All" ~> ucid ~ (":" ~> k) ~ ("." ~> t) ^^ { case x ~ kn ~ ty => alg.TyAll(x, kn, ty) },
-        ("{" ~> "Some" ~> ucid ~ (":" ~> k) ~ ("," ~> t) <~ "}") ^^ { case x ~ kn ~ ty => alg.TySome(x, kn, ty) },
-        "\\" ~> ucid ~ (":" ~> k) ~ ("." ~> t) ^^ { case x ~ kn ~ ty => alg.TyAbs(x, kn, ty) },
-        t ~ t ^^ { case t1 ~ t2 => alg.TyApp(t1, t2) }
-      ).reduce((a, b) => a ||| b)
-    }
-
-    val pOmegaK: Alg[E, T, K] => (=> F) => PackratParser[K] = alg => l => {
-      lazy val k = l.pK
-
+    val pOmegaK: Parser[K] =
       "Star" ^^ { _ => alg.KnStar() } |||
-        k ~ ("=>" ~> k) ^^ { case k1 ~ k2 => alg.KnArr(k1, k2) } |||
-        "(" ~> k <~ ")"
-    }
+        pK ~ ("=>" ~> pK) ^^ { case k1 ~ k2 => alg.KnArr(k1, k2) } |||
+        "(" ~> pK <~ ")"
   }
 
 }
@@ -82,31 +77,31 @@ object FullOmega {
 
   trait Print extends Alg[String, String, String] with Simple.Print with Pack.Print with Ref.Print with Omega.Print
 
-  trait Parser[E, T, K, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]; val pK : PackratParser[K]}]
-    extends Simple.Parser[E, T, L] with Pack.Parser[E, T, L] with Ref.Parser[E, T, L] with Omega.Parser[E, T, K, L] {
-    val pFullOmegaE = pSimpleE | pPackE | pRefE | pOmegaE
-    val pFullOmegaT = pSimpleT | pRefT | pOmegaT
-    val pFullOmegaK = pOmegaK
+  trait Parse[E, T, K] extends Simple.Parse[E, T] with Pack.Parse[E, T]
+    with Ref.Parse[E, T] with Omega.Parse[E, T, K] {
+
+    override val alg: Alg[E, T, K]
+
+    val pFullOmegaE: Parser[E] = pSimpleE ||| pPackE ||| pRefE ||| pOmegaE
+    val pFullOmegaT: Parser[T] = pSimpleT ||| pRefT ||| pOmegaT
+    val pFullOmegaK: Parser[K] = pOmegaK
+
+    override val pE: Parser[E] = pFullOmegaE
+    override val pT: Parser[T] = pFullOmegaT
+    override val pK: Parser[K] = pFullOmegaK
   }
 
 }
 
 object TestFullOmega {
 
-  class List[E, T, K](pe: PackratParser[E], pt: PackratParser[T], pk: PackratParser[K]) {
-    val pE = pe
-    val pT = pt
-    val pK = pk
-  }
-
-  def parse[E, T, K](inp: String)(alg: FullOmega.Alg[E, T, K]) = {
-    def parser(l: => List[E, T, K]): List[E, T, K] = {
-      val lang = new FullOmega.Parser[E, T, K, List[E, T, K]] {}
-      new List[E, T, K](lang.pFullOmegaE(alg)(l), lang.pFullOmegaT(alg)(l), lang.pFullOmegaK(alg)(l))
+  def parseWithAlg[E, T, K](inp: String)(a: FullOmega.Alg[E, T, K]): E = {
+    val p = new FullOmega.Parse[E, T, K] {
+      override val alg: FullOmega.Alg[E, T, K] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullOmega.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new FullOmega.Print {}))
 
 }

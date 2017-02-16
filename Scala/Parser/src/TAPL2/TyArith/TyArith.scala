@@ -1,8 +1,7 @@
 package TAPL2.TyArith
 
+import TAPL2.Lib._
 import TAPL2.Arith.{Nat, Bool}
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
 
 
 case object TyBool extends Ty
@@ -24,59 +23,47 @@ case class TmPred(t: Term) extends Term
 
 case class TmIsZero(t: Term) extends Term
 
-/* <4> */
+
 object TypedNat {
 
-  trait Parser[F <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}] extends Nat.Parser[F] {
+  trait Parser extends Nat.Parser {
     lexical.reserved += "Nat"
 
-    val pTypedNatE: (=> F) => PackratParser[Term] = pNatE
-    val pTypedNatT: (=> F) => PackratParser[Ty] = l => {
-      "Nat" ^^ { _ => TyNat }
-    }
+    val pTypedNatE: PackratParser[Term] = pNatE
+    val pTypedNatT: PackratParser[Ty] = "Nat" ^^ { _ => TyNat }
   }
 
 }
 
 object TypedBool {
 
-  trait Parser[F <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}] extends Bool.Parser[F] {
+  trait Parser extends Bool.Parser {
     lexical.reserved += "Bool"
 
-    val pTypedBoolE: (=> F) => PackratParser[Term] = pBoolE
-    val pTypedBoolT: (=> F) => PackratParser[Ty] = l => {
-      "Bool" ^^ { _ => TyBool }
-    }
+    val pTypedBoolE: PackratParser[Term] = pBoolE
+    val pTypedBoolT: PackratParser[Ty] = "Bool" ^^ { _ => TyBool }
   }
 
 }
 
+
 object TyArith {
 
-  trait Parser[L <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}]
-    extends TypedBool.Parser[L] with TypedNat.Parser[L] {
-    val pTyArithE: (=> L) => PackratParser[Term] =
-      l => pTypedBoolE(l) ||| pTypedNatE(l)
-    val pTyArithT: (=> L) => PackratParser[Ty] =
-      l => pTypedBoolT(l) ||| pTypedNatT(l)
+  trait Parser extends ETParser with TypedBool.Parser with TypedNat.Parser {
+
+    val pTyArithE: PackratParser[Term] = pTypedBoolE ||| pTypedNatE
+    val pTyArithT: PackratParser[Ty] = pTypedBoolT ||| pTypedNatT
+
+    override val pE: PackratParser[Term] = pTyArithE
+
+    override val pT: PackratParser[Ty] = pTyArithT
   }
 
 }
 
 object TestTyArith {
-
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
+  def parseAndPrint(inp: String): Unit = {
+    val p = new TyArith.Parser {}
+    println(parse(p.pE)(inp))
   }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term, Ty]): List[Term, Ty] = {
-      val lang = new TyArith.Parser[List[Term, Ty]] {}
-      new List[Term, Ty](lang.pTyArithE(l), lang.pTyArithT(l))
-    }
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
-  }
-
 }

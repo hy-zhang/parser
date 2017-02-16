@@ -1,8 +1,8 @@
 package TAPL2.Bot
 
+import TAPL2.Lib._
 import TAPL2.SimpleBool.Typed
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
+
 
 case object TyTop extends Ty
 
@@ -19,51 +19,42 @@ case class TmApp(t1: Term, t2: Term) extends Term
 
 object Top {
 
-  trait Parser[F <: {val pT : PackratParser[Ty]}] {
+  trait Parser {
     lexical.reserved += "Top"
 
-    val pTopT: (=> F) => PackratParser[Ty] = l => {
-      "Top" ^^ { _ => TyTop }
-    }
+    val pTopT: PackratParser[Ty] = "Top" ^^ { _ => TyTop }
   }
 
 }
 
 object TopBot {
 
-  trait Parser[F <: {val pT : PackratParser[Ty]}] extends Top.Parser[F] {
+  trait Parser extends Top.Parser {
     lexical.reserved += "Bot"
 
-    private val pBotT: (=> F) => PackratParser[Ty] = l => "Bot" ^^ { _ => TyBot }
-    val pTopBotT: (=> F) => PackratParser[Ty] = l => pTopT(l) ||| pBotT(l)
+    val pTopBotT: PackratParser[Ty] = pTopT ||| "Bot" ^^ { _ => TyBot }
   }
 
 }
 
 object Bot {
-  
-  trait Parser[L <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}]
-    extends Typed.Parser[L] with TopBot.Parser[L] {
-    val pBotE: (=> L) => PackratParser[Term] = l => pTypedE(l)
-    val pBotT: (=> L) => PackratParser[Ty] = l => pTypedT(l) ||| pTopBotT(l)
+
+  trait Parser extends Typed.Parser with TopBot.Parser {
+
+    val pBotE: PackratParser[Term] = pTypedE
+    val pBotT: PackratParser[Ty] = pTypedT ||| pTopBotT
+
+    override val pE: PackratParser[Term] = pBotE
+
+    override val pT: PackratParser[Ty] = pBotT
   }
 
 }
 
 object TestBot {
-
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
+  def parseAndPrint(inp: String): Unit = {
+    val p = new Bot.Parser {}
+    println(parse(p.pE)(inp))
   }
 
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term, Ty]): List[Term, Ty] = {
-      val lang = new Bot.Parser[List[Term, Ty]] {}
-      new List[Term, Ty](lang.pBotE(l), lang.pBotT(l))
-    }
-
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
-  }
 }

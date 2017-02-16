@@ -1,9 +1,9 @@
 package TAPL2.SimpleBool
 
+import TAPL2.Lib._
 import TAPL2.TyArith.TypedBool
 import TAPL2.Untyped.VarApp
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
+
 
 case class TmVar(i: String) extends Term
 
@@ -21,56 +21,40 @@ case class TyArr(t1: Ty, t2: Ty) extends Ty
 
 case object TyBool extends Ty
 
-/* <5> */
+
 object Typed {
 
-  trait Parser[F <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}] extends VarApp.Parser[F] {
+  trait Parser extends ETParser with VarApp.Parser {
     lexical.delimiters += ("\\", ".", "(", ")", ":", "->")
+    
+    private val pAbsE: PackratParser[Term] =
+      ("\\" ~> lcid) ~ (":" ~> pT) ~ ("." ~> pE) ^^ { case x ~ t0 ~ e0 => TmAbs(x, t0, e0) }
 
-    private val pAbsE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-      lazy val t = l.pT
+    val pTypedE: PackratParser[Term] = pVarAppE ||| pAbsE
 
-      ("\\" ~> lcid) ~ (":" ~> t) ~ ("." ~> e) ^^ { case x ~ t0 ~ e0 => TmAbs(x, t0, e0) } |||
-        "(" ~> e <~ ")"
-    }
-
-    val pTypedE: (=> F) => PackratParser[Term] = l => pVarAppE(l) ||| pAbsE(l)
-
-    val pTypedT: (=> F) => PackratParser[Ty] = l => {
-      lazy val t = l.pT
-
-      t ~ ("->" ~> t) ^^ { case t1 ~ t2 => TyArr(t1, t2) } ||| "(" ~> t <~ ")"
-    }
+    val pTypedT: PackratParser[Ty] =
+      pT ~ ("->" ~> pT) ^^ { case t1 ~ t2 => TyArr(t1, t2) } |||
+        "(" ~> pT <~ ")"
   }
 
 }
 
 object SimpleBool {
 
-  trait Parser[L <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}]
-    extends Typed.Parser[L] with TypedBool.Parser[L] {
-    val pSimpleBoolE: (=> L) => PackratParser[Term] = l => pTypedE(l) ||| pTypedBoolE(l)
-    val pSimpleBoolT: (=> L) => PackratParser[Ty] = l => pTypedT(l) ||| pTypedBoolT(l)
+  trait Parser extends Typed.Parser with TypedBool.Parser {
+
+    val pSimpleBoolE: PackratParser[Term] = pTypedE ||| pTypedBoolE
+    val pSimpleBoolT: PackratParser[Ty] = pTypedT ||| pTypedBoolT
+
+    override val pE: PackratParser[Term] = pSimpleBoolE
+    override val pT: PackratParser[Ty] = pSimpleBoolT
   }
 
 }
 
 object TestSimpleBool {
-
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
+  def parseAndPrint(inp: String): Unit = {
+    val p = new SimpleBool.Parser {}
+    println(parse(p.pE)(inp))
   }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term, Ty]): List[Term, Ty] = {
-      val lang = new SimpleBool.Parser[List[Term, Ty]] {}
-      new List[Term, Ty](lang.pSimpleBoolE(l), lang.pSimpleBoolT(l))
-    }
-
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
-  }
-
 }

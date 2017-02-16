@@ -1,6 +1,7 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
+
 
 object Top {
 
@@ -12,12 +13,12 @@ object Top {
     def TyTop() = "Top"
   }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+  trait Parse[T] {
     lexical.reserved += "Top"
 
-    val pTopT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      "Top" ^^ { _ => alg.TyTop() }
-    }
+    val alg: Alg[T]
+
+    val pTopT: Parser[T] = "Top" ^^ { _ => alg.TyTop() }
   }
 
 }
@@ -32,11 +33,12 @@ object TopBot {
     def TyBot() = "Bot"
   }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] extends Top.Parser[T, F] {
+  trait Parse[T] extends Top.Parse[T] {
     lexical.reserved += "Bot"
 
-    private val pBotT: Alg[T] => (=> F) => PackratParser[T] = alg => l => "Bot" ^^ { _ => alg.TyBot() }
-    val pTopBotT: Alg[T] => (=> F) => PackratParser[T] = pTopT | pBotT
+    override val alg: Alg[T]
+
+    val pTopBotT: Parser[T] = pTopT ||| "Bot" ^^ { _ => alg.TyBot() }
   }
 
 }
@@ -47,29 +49,28 @@ object Bot {
 
   trait Print extends Alg[String, String] with Typed.Print with TopBot.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends Typed.Parser[E, T, L] with TopBot.Parser[T, L] {
-    val pBotE = pTypedE
-    val pBotT = pTypedT | pTopBotT
+  trait Parse[E, T] extends Typed.Parse[E, T] with TopBot.Parse[T] {
+    override val alg: Alg[E, T]
+
+    val pBotE: Parser[E] = pTypedE
+    val pBotT: Parser[T] = pTypedT ||| pTopBotT
+
+    override val pE: Parser[E] = pBotE
+
+    override val pT: Parser[T] = pBotT
   }
 
 }
 
 object TestBot {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: Bot.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new Bot.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pBotE(alg)(l), lang.pBotT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: Bot.Alg[E, T]): E = {
+    val p = new Bot.Parse[E, T] {
+      override val alg: Bot.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new Bot.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new Bot.Print {}))
 
 }

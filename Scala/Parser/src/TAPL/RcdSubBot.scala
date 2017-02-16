@@ -1,37 +1,35 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
 
-/* <9> */
+
 object RcdSubBot {
 
   trait Alg[E, T] extends Bot.Alg[E, T] with TypedRecord.Alg[E, T]
 
   trait Print extends Alg[String, String] with Bot.Print with TypedRecord.Print
 
-  trait Parser[E, T, L <: {val pE : Util.PackratParser[E]; val pT : Util.PackratParser[T]}]
-    extends Bot.Parser[E, T, L] with TypedRecord.Parser[E, T, L] {
-    val pRcdSubBotE = pBotE | pTypedRecordE
-    val pRcdSubBotT = pBotT | pTypedRecordT
+  trait Parse[E, T] extends Bot.Parse[E, T] with TypedRecord.Parse[E, T] {
+    override val alg: Alg[E, T]
+
+    val pRcdSubBotE: Parser[E] = pBotE ||| pTypedRecordE
+    val pRcdSubBotT: Parser[T] = pBotT ||| pTypedRecordT
+
+    override val pE: Parser[E] = pRcdSubBotE
+    override val pT: Parser[T] = pRcdSubBotT
   }
 
 }
 
 object TestRcdSubBot {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: RcdSubBot.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new RcdSubBot.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pRcdSubBotE(alg)(l), lang.pRcdSubBotT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: RcdSubBot.Alg[E, T]): E = {
+    val p = new RcdSubBot.Parse[E, T] {
+      override val alg: RcdSubBot.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new RcdSubBot.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new RcdSubBot.Print {}))
 
 }

@@ -1,9 +1,9 @@
 package TAPL2.FullRef
 
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
-import TAPL2.FullSimple.FullSimple
+import TAPL2.Lib._
 import TAPL2.Bot.TopBot
+import TAPL2.FullSimple.FullSimple
+
 
 case class TyVar(i: String) extends Ty
 
@@ -81,71 +81,55 @@ case class TmDeRef(t: Term) extends Term
 
 case class TmAssign(t1: Term, t2: Term) extends Term
 
-/* <7> */
+
 object Ref {
 
-  trait Parser[F <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}] {
+  trait Parser extends ETParser {
     lexical.reserved += ("ref", "Ref")
     lexical.delimiters += ("!", ":=")
 
-    val pRefE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
-      "ref" ~> e ^^ { e => TmRef(e) } |||
-        "!" ~> e ^^ { e => TmDeRef(e) } |||
-        e ~ (":=" ~> e) ^^ { case lhs ~ rhs => TmAssign(lhs, rhs) }
+    val pRefE: PackratParser[Term] = {
+      "ref" ~> pE ^^ { e => TmRef(e) } |||
+        "!" ~> pE ^^ { e => TmDeRef(e) } |||
+        pE ~ (":=" ~> pE) ^^ { case lhs ~ rhs => TmAssign(lhs, rhs) }
     }
 
-    val pRefT: (=> F) => PackratParser[Ty] = l => {
-      lazy val t = l.pT
-
-      "Ref" ~> t ^^ TyRef
-    }
+    val pRefT: PackratParser[Ty] = "Ref" ~> pT ^^ TyRef
   }
 
 }
 
 object SourceSink {
 
-  trait Parser[F <: {val pT : PackratParser[Ty]}] {
+  trait Parser extends TParser {
     lexical.reserved += ("Source", "Sink")
 
-    val pSourceSinkT: (=> F) => PackratParser[Ty] = l => {
-      lazy val t = l.pT
-
-      "Source" ~> t ^^ TySource ||| "Sink" ~> t ^^ TySink
-    }
+    val pSourceSinkT: PackratParser[Ty] =
+      "Source" ~> pT ^^ TySource |||
+        "Sink" ~> pT ^^ TySink
   }
 
 }
 
 object FullRef {
-  
-  trait Parser[L <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}]
-    extends FullSimple.Parser[L] with TopBot.Parser[L] with Ref.Parser[L] with SourceSink.Parser[L] {
-    val pFullRefE: (=> L) => PackratParser[Term] =
-      l => pFullSimpleE(l) ||| pRefE(l)
-    val pFullRefT: (=> L) => PackratParser[Ty] =
-      l => pFullSimpleT(l) ||| pRefT(l) ||| pTopBotT(l) ||| pSourceSinkT(l)
+
+  trait Parser extends FullSimple.Parser with TopBot.Parser
+    with Ref.Parser with SourceSink.Parser {
+
+    val pFullRefE: PackratParser[Term] = pFullSimpleE ||| pRefE
+    val pFullRefT: PackratParser[Ty] = pFullSimpleT ||| pRefT ||| pTopBotT ||| pSourceSinkT
+
+    override val pE: PackratParser[Term] = pFullRefE
+    override val pT: PackratParser[Ty] = pFullRefT
   }
 
 }
 
 object TestFullRef {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term, Ty]): List[Term, Ty] = {
-      val lang = new FullRef.Parser[List[Term, Ty]] {}
-      new List[Term, Ty](lang.pFullRefE(l), lang.pFullRefT(l))
-    }
-
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
+  def parseAndPrint(inp: String): Unit = {
+    val p = new FullRef.Parser {}
+    println(parse(p.pE)(inp))
   }
 
 }

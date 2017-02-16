@@ -1,8 +1,8 @@
 package TAPL
 
-import TAPL.Util._
+import TAPL.Lib._
 
-/* <7> */
+
 object Ref {
 
   trait Alg[E, T] {
@@ -16,32 +16,28 @@ object Ref {
   }
 
   trait Print extends Alg[String, String] {
-    def TyRef(t: String) = "Ref " + t
+    def TyRef(t: String): String = "Ref " + t
 
-    def TmRef(e: String) = "ref " + e
+    def TmRef(e: String): String = "ref " + e
 
-    def TmDeRef(e: String) = "!" + e
+    def TmDeRef(e: String): String = "!" + e
 
-    def TmAssign(l: String, r: String) = l + " := " + r
+    def TmAssign(l: String, r: String): String = l + " := " + r
   }
 
-  trait Parser[E, T, F <: {val pE : PackratParser[E]; val pT : PackratParser[T]}] {
+  trait Parse[E, T] extends ETParser[E, T] {
     lexical.reserved += ("ref", "Ref")
     lexical.delimiters += ("!", ":=")
 
-    val pRefE: Alg[E, T] => (=> F) => PackratParser[E] = alg => l => {
-      lazy val e = l.pE
+    val alg: Alg[E, T]
 
-      "ref" ~> e ^^ { e => alg.TmRef(e) } |||
-        "!" ~> e ^^ { e => alg.TmDeRef(e) } |||
-        e ~ (":=" ~> e) ^^ { case lhs ~ rhs => alg.TmAssign(lhs, rhs) }
+    val pRefE: Parser[E] = {
+      "ref" ~> pE ^^ { e => alg.TmRef(e) } |||
+        "!" ~> pE ^^ { e => alg.TmDeRef(e) } |||
+        pE ~ (":=" ~> pE) ^^ { case lhs ~ rhs => alg.TmAssign(lhs, rhs) }
     }
 
-    val pRefT: Alg[E, T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
-
-      "Ref" ~> t ^^ alg.TyRef
-    }
+    val pRefT: Parser[T] = "Ref" ~> pT ^^ alg.TyRef
   }
 
 }
@@ -55,19 +51,19 @@ object SourceSink {
   }
 
   trait Print extends Alg[String] {
-    def TySource(t: String) = "Source " + t
+    def TySource(t: String): String = "Source " + t
 
-    def TySink(t: String) = "Sink " + t
+    def TySink(t: String): String = "Sink " + t
   }
 
-  trait Parser[T, F <: {val pT : PackratParser[T]}] {
+  trait Parse[T] extends TParser[T] {
     lexical.reserved += ("Source", "Sink")
 
-    val pSourceSinkT: Alg[T] => (=> F) => PackratParser[T] = alg => l => {
-      lazy val t = l.pT
+    val alg: Alg[T]
 
-      "Source" ~> t ^^ alg.TySource ||| "Sink" ~> t ^^ alg.TySink
-    }
+    val pSourceSinkT: Parser[T] =
+      "Source" ~> pT ^^ alg.TySource |||
+        "Sink" ~> pT ^^ alg.TySink
   }
 
 }
@@ -78,29 +74,29 @@ object FullRef {
 
   trait Print extends Alg[String, String] with FullSimple.Print with TopBot.Print with Ref.Print with SourceSink.Print
 
-  trait Parser[E, T, L <: {val pE : PackratParser[E]; val pT : PackratParser[T]}]
-    extends FullSimple.Parser[E, T, L] with TopBot.Parser[T, L] with Ref.Parser[E, T, L] with SourceSink.Parser[T, L] {
-    val pFullRefE = pFullSimpleE | pRefE
-    val pFullRefT = pFullSimpleT | pRefT | pTopBotT | pSourceSinkT
+  trait Parse[E, T] extends FullSimple.Parse[E, T] with TopBot.Parse[T]
+    with Ref.Parse[E, T] with SourceSink.Parse[T] {
+
+    override val alg: Alg[E, T]
+
+    val pFullRefE: Parser[E] = pFullSimpleE ||| pRefE
+    val pFullRefT: Parser[T] = pFullSimpleT ||| pRefT ||| pTopBotT ||| pSourceSinkT
+
+    override val pE: Parser[E] = pFullRefE
+    override val pT: Parser[T] = pFullRefT
   }
 
 }
 
 object TestFullRef {
 
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parse[E, T](inp: String)(alg: FullRef.Alg[E, T]) = {
-    def parser(l: => List[E, T]): List[E, T] = {
-      val lang = new FullRef.Parser[E, T, List[E, T]] {}
-      new List[E, T](lang.pFullRefE(alg)(l), lang.pFullRefT(alg)(l))
+  def parseWithAlg[E, T](inp: String)(a: FullRef.Alg[E, T]): E = {
+    val p = new FullRef.Parse[E, T] {
+      override val alg: FullRef.Alg[E, T] = a
     }
-    runParser(fix(parser).pE)(inp)
+    parse(p.pE)(inp)
   }
 
-  def parseAndPrint(inp: String) = parse(inp)(new FullRef.Print {})
+  def parseAndPrint(inp: String): Unit = println(parseWithAlg(inp)(new FullRef.Print {}))
 
 }

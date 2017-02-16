@@ -1,7 +1,6 @@
 package TAPL2.Untyped
 
-import TAPL2.Util._
-import TAPL2.Term
+import TAPL2.Lib._
 
 
 case class TmVar(i: String) extends Term
@@ -10,33 +9,27 @@ case class TmAbs(v: String, t: Term) extends Term
 
 case class TmApp(t1: Term, t2: Term) extends Term
 
+
 object UntypedAbs {
 
-  trait Parser[F <: {val pE : PackratParser[Term]}] {
-    lexical.delimiters += ("\\", ".", "(", ")")
+  trait Parser extends EParser {
+    lexical.delimiters += ("\\", ".")
 
-    val pUntypedAbsE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
-      ("\\" ~> lcid) ~ ("." ~> e) ^^ { case x ~ e0 => TmAbs(x, e0) } ||| "(" ~> e <~ ")"
-    }
+    val pUntypedAbsE: PackratParser[Term] =
+      ("\\" ~> lcid) ~ ("." ~> pE) ^^ { case x ~ e0 => TmAbs(x, e0) }
   }
 
 }
 
 object VarApp {
 
-  trait Parser[F <: {val pE : PackratParser[Term]}] {
+  trait Parser extends EParser {
     lexical.delimiters += ("(", ")")
 
-    val pVarAppE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
-      List(
-        lcid ^^ TmVar,
-        e ~ e ^^ { case e1 ~ e2 => TmApp(e1, e2) },
-        "(" ~> e <~ ")"
-      ).reduce((a, b) => a ||| b)
+    val pVarAppE: PackratParser[Term] = {
+      lcid ^^ TmVar |||
+        pE ~ pE ^^ { case e1 ~ e2 => TmApp(e1, e2) } |||
+        "(" ~> pE <~ ")"
     }
   }
 
@@ -44,26 +37,17 @@ object VarApp {
 
 object Untyped {
 
-  trait Parser[L <: {val pE : PackratParser[Term]}]
-    extends UntypedAbs.Parser[L] with VarApp.Parser[L] {
-    val pUntypedE: (=> L) => PackratParser[Term] = l => pUntypedAbsE(l) ||| pVarAppE(l)
+  trait Parser extends UntypedAbs.Parser with VarApp.Parser {
+    val pUntypedE: PackratParser[Term] = pUntypedAbsE ||| pVarAppE
+
+    override val pE: PackratParser[Term] = pUntypedE
   }
 
 }
 
 object TestUntyped {
-
-  class List[E](pe: PackratParser[E]) {
-    val pE = pe
+  def parseAndPrint(inp: String): Unit = {
+    val p = new Untyped.Parser {}
+    println(parse(p.pE)(inp))
   }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term]): List[Term] = {
-      val lang = new Untyped.Parser[List[Term]] {}
-      new List[Term](lang.pUntypedE(l))
-    }
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
-  }
-
 }

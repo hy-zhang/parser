@@ -1,9 +1,8 @@
 package TAPL2.FullError
 
-import TAPL2.Util._
-import TAPL2.{Term, Ty}
-import TAPL2.Bot.Bot
+import TAPL2.Lib._
 import TAPL2.FullSimple.TypeVar
+import TAPL2.Bot.Bot
 import TAPL2.TyArith.TypedBool
 
 
@@ -33,49 +32,36 @@ case object TmError extends Term
 
 case class TmTry(t1: Term, t2: Term) extends Term
 
-/* <8> */
+
 object Error {
 
-  trait Parser[F <: {val pE : PackratParser[Term]}] {
+  trait Parser extends EParser {
     lexical.reserved += ("error", "try", "with")
-
-    val pErrorE: (=> F) => PackratParser[Term] = l => {
-      lazy val e = l.pE
-
+    
+    val pErrorE: PackratParser[Term] =
       "error" ^^ { _ => TmError } |||
-        "try" ~> e ~ ("with" ~> e) ^^ { case e1 ~ e2 => TmTry(e1, e2) }
-    }
+        "try" ~> pE ~ ("with" ~> pE) ^^ { case e1 ~ e2 => TmTry(e1, e2) }
   }
 
 }
 
 object FullError {
-  
-  trait Parser[L <: {val pE : PackratParser[Term]; val pT : PackratParser[Ty]}]
-    extends Bot.Parser[L] with TypedBool.Parser[L] with Error.Parser[L] with TypeVar.Parser[L] {
-    val pFullErrorE: (=> L) => PackratParser[Term] =
-      l => pBotE(l) ||| pTypedBoolE(l) ||| pErrorE(l)
-    val pFullErrorT: (=> L) => PackratParser[Ty] =
-      l => pBotT(l) ||| pTypedBoolT(l) ||| pTypeVarT(l)
+
+  trait Parser extends Bot.Parser with TypedBool.Parser with Error.Parser with TypeVar.Parser {
+
+    val pFullErrorE: PackratParser[Term] = pBotE ||| pTypedBoolE ||| pErrorE
+    val pFullErrorT: PackratParser[Ty] = pBotT ||| pTypedBoolT ||| pTypeVarT
+
+    override val pE: PackratParser[Term] = pFullErrorE
+    override val pT: PackratParser[Ty] = pFullErrorT
   }
 
 }
 
 object TestFullError {
-
-  class List[E, T](pe: PackratParser[E], pt: PackratParser[T]) {
-    val pE = pe
-    val pT = pt
-  }
-
-  def parseAndPrint(inp: String) = {
-    def parser(l: => List[Term, Ty]): List[Term, Ty] = {
-      val lang = new FullError.Parser[List[Term, Ty]] {}
-      new List[Term, Ty](lang.pFullErrorE(l), lang.pFullErrorT(l))
-    }
-
-    val t = phrase(fix(parser).pE)(new lexical.Scanner(inp))
-    if (t.successful) println(t.get) else scala.sys.error(t.toString)
+  def parseAndPrint(inp: String): Unit = {
+    val p = new FullError.Parser {}
+    println(parse(p.pE)(inp))
   }
 
 }
