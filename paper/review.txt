@@ -1,0 +1,578 @@
+﻿===========================================================================
+                          ECOOP 2017 Review #108A
+---------------------------------------------------------------------------
+                   Paper #108: Type-Safe Modular Parsing
+---------------------------------------------------------------------------
+
+                      Overall merit: C. Weak reject
+                 Reviewer expertise: Y. I am knowledgeable in this area,
+                                        but not an expert
+
+                         ===== Paper summary =====
+
+> This paper presents approach to contructing parsers out of components
+> based on applying two pre-existing concepts: PEG parsing (in
+> particular with support for the longest match composition operator)
+> and object algebras, which are roughly the dual of the visitor
+> pattern. To evaluate the approach, the authors build parsers for the
+> family of languages in TAPL, which naturally evolve over time, and
+> hence exhibit numerous opportunities for sharing and re-use. The resulting
+> parsers did save quite a lot of code compared to "from scratch" parsers,
+> but also exhibited poor parsing performance.
+
+                    ===== Points For and Against =====
+
+> Pro:
+> 
+> - Interesting, (mostly) practical technique.
+> 
+> Con:
+> 
+> - Doesn't add much to the state of the art.
+> - Use of PEG parsers cannot help identify "surprising" parser results,
+>   such as ambiguities or unexpected interactions.
+> - Poor performance of resulting parsers.
+
+                      ===== Comments for author =====
+
+> This paper seems to hit upon a key question: to what extent can the
+> whole be more than the sum of its parts? In particular, I enjoyed
+> reading the paper, and I think the described technique could be quite
+> useful. However, the paper itself doesn't bring anything new to the
+> table; it relies on composing existing technologies in a useful
+> way. It seems to me that this does not rule it out from consideration
+> by any means, but it does "raise the bar" on the resulting
+> composition.
+
+H: one main complaint from reviewers
+
+> I do have some concerns about the parsers that result from the
+> composition techniques promoted in this paper. In particular, they
+> inherit some of the weaknesses of parser-combinator-based parsing in
+> general; in my experience, parser combinators are easy to construct,
+> but painful to debug. If you are not careful they can quickly lead to
+> surprising parse results. The use of the longest-match-composition
+> operator (not introduced by this paper) does mitigate some of those
+> concerns, but it still seems quite likely that adding one grammar to
+> another could result in surprising interactions, and that these
+> interactions will not make themselves known until people happen to try
+> to parse a particular input and get a surprising result.
+
+H: I think at least in recursive descent parsers, using longest match
+can save a lot of time for debugging.
+
+> It does seem that, because they are libraries, something like PEG or
+> parser generators are an obvious choice for building "compositional"
+> parsers, but I don't think they are the only choice. One can readily
+> imagine a system that also includes metadata that permits "ambiguous"
+> parses to be detected, for example. It is true that traditional
+> parse-table-style generation techniques don't seem to apply here.
+
+H: ???
+
+> The evaluation across the TAPL inputs is a nice touch. It was nice to
+> see that the approach was effective in creating re-use, although the
+> TAPL inputs do seem like a sort of "best case" in that they were
+> designed precisely to be extensible in this way.
+> 
+> The poor performance results are disappointing, but I appreciated that
+> you made some effort to make alternative measurements that might help
+> us identify the cause (e.g., by ruling out the pervasive use of
+> longest-match composition, which I had originally considered as a
+> possible culprit). It would have been nice if we could "pin the blame"
+> on the virtual dispatch in a more concrete way: rewriting the system
+> in some language/compiler that supports monomorphization and
+> aggressive optimization (e.g., C++, Rust, MLton) might help there.
+
+H: the other main complaint
+
+===========================================================================
+                          ECOOP 2017 Review #108B
+---------------------------------------------------------------------------
+                   Paper #108: Type-Safe Modular Parsing
+---------------------------------------------------------------------------
+
+                      Overall merit: D. Reject
+                 Reviewer expertise: X. I am an expert in this area
+
+                         ===== Paper summary =====
+
+> The paper presents an approach for constructing compilers in a modular
+> fashion in Scala. The distinguishing feature of this approach is that
+> it is semantic (as opposed to purely syntactic) in the following
+> sense: Individual parser modules are type-checked and compiled
+> separately (as opposed to being first composed and then type-checked
+> and compiled).
+
+                    ===== Points For and Against =====
+
+> The paper lacks substance to merit publication. There aren't any
+> substantial novelties in this paper. The two main ingredients
+> necessary to devise a method for building parsers in a modular way
+> are: (1) a modular parsing algorithm, and (2) a type system or design
+> pattern to compose parsing modules. For the first ingredient the
+> authors use an off-the-shelf solution: a Packrat parser combinator
+> library that is available in Scala's standard library. The second
+> ingredient is easy to obtain in an OO language, and should be obvious
+> to any programmer: Use inheritance and virtual dispatch to extend a
+> parser, and use subtyping to allow the parser to construct
+> extensible/modular ASTs.
+
+> The paper's abstract claims that object algebras are used to achieve
+> extensibility and the paper has a section on that topic. However,
+> object algebras solve a problem that is orthogonal to parsing. Object
+> algebras solve the problem of adding new operations to modular ASTs
+> (adding new constructs to ASTs is typically easy in an OO language),
+> for example adding an operation to compute the free variables of an
+> AST. The authors show that modular parsers can produce ASTs based on
+> object algebras, but that is trivial because all that is needed is
+> subtyping on the modular AST type.
+
+H: how shall we argue for this
+
+> One genuine contribution of this paper is a case study of the proposed
+> modular parsing approach, which shows substantial reduction in lines
+> of code necessary to parse a family of languages with lots of overlap.
+
+===========================================================================
+                          ECOOP 2017 Review #108C
+---------------------------------------------------------------------------
+                   Paper #108: Type-Safe Modular Parsing
+---------------------------------------------------------------------------
+
+                      Overall merit: B. Weak accept
+                 Reviewer expertise: Y. I am knowledgeable in this area,
+                                        but not an expert
+
+                         ===== Paper summary =====
+
+> This paper shows a technique for obtaining modular parsing components that can
+> be type checked, separately compiled, and combined. The approach is based on
+> PackRat parsing and multiple inheritance and is implemented in Scala. The PackRat
+> parser library used can handle left recursion, and it supports a longest match
+> alternative combinator.
+
+> The paper shows how to integrate the parser components with ordinary classes and
+> with object algebras.
+
+> An evaluation is done on the examples from the book Types and Programming
+> Language (TAPL). A modularized version of these examples is compared with an
+> existing non-modularized version, reducing the code size to around 30%, while
+> increasing the parsing time with around 40%.
+
+                    ===== Points For and Against =====
+
+> + Important area: Supporting modular development of languages.
+> + Nice result: Claims to be the first technique to support separately compiled
+> and combinable parser components.
+> + Interesting discussion and identification of the modularity problems that need
+> to be solved when combining packrat parsing components.
+> + Nice and clear presentation overall. Some discussions are unnecessarily long
+> though, and there is some repetition.
+
+> - Unclear to me if indirect left recursion is supported, which would be needed
+> for practical grammars.
+> - Does not provide a sufficiently complete solution to language componentization,
+> since object algebras are too restricted (only support bottom up computations).
+
+H: lack of substantial novelty is one main problem. One direction that I think could be
+possible to do is presenting this more as a library, rather than as a simple coding
+pattern for programmers; one possible work is supporting indirect left recursion using
+the same technique as in Haskell, by building a new parser DSL on top of Packrat; the other
+one is moving code to Java if there is some powerful parsing library, and using annotation
+processing to generate a lot of boilerplate code.
+
+                      ===== Comments for author =====
+
+> Too long introduction before getting to the essence of the paper.
+
+H: todo
+
+> What type of left-recursion does the Scala Packrat library support? Only direct,
+> or also indirect left-recursion? If it only supports direct left-recursion, there
+> could be severe problems with more complex grammars.
+
+H: our idea is independent from the features that a parsing library supports; however
+this does not help for practical use; I think we do need indirect left recursion.
+
+> If the Scala Packrat library only supports direct left-recursion, would adding
+> support for indirect left-recursion lead to any problems concerning efficiency or
+> for the modularization?
+
+H： I guess not
+
+> The idea to use the TAPL examples is very nice since it provides a good small
+> showcase of the techniques. However, it does not convince me completely. I would
+> have liked to see it used for more realistic programming language grammars.
+
+H: something like what polyglot does? (Java + extensions)
+
+> Were there parts of the TAPL examples that were difficult to modularize, or where
+> the parsing was not straight-forward?
+
+H: huang?
+
+> Section 3.1 on "The mismatch between OO ASTs and Grammars". There is a very direct
+> correspondence between OO ASTs and grammars, and I don't think it is appropriate
+> to name it a mismatch. This section is very repetitive and I suggest you rewrite
+> or eliminate it. The discussion is furthermore repeated in section 4.1.
+
+H: todo
+ 
+> Some typographic comments:
+>
+> Provide better captions so that each table and figure can be understood without
+> finding the description in the text. (In particular section 6)
+>
+> page 6-7: The code example for Expr, Lit and Add is broken by Figure 1, making
+> it difficult to read.
+> 
+> page 11: "is that is that"
+>
+> page 19:
+>  "have the similar signature"
+>  "and exame the possible performance"
+
+H: todo
+  
+===========================================================================
+                          ECOOP 2017 Review #108D
+---------------------------------------------------------------------------
+                   Paper #108: Type-Safe Modular Parsing
+---------------------------------------------------------------------------
+
+                      Overall merit: C. Weak reject
+                 Reviewer expertise: X. I am an expert in this area
+
+                         ===== Paper summary =====
+
+> The paper shows that Packrat parsing, Object Algebras, Open Recursion and Mixin
+> Composition are a good fit as a modular implementation technique for compilers.
+> All of the techniques have been recently shown to support modularity and the
+> present paper illustrates that the combination yields no significant problems.
+> The claim that the techniques are a good fit is backed up by the modular
+> implementation of the several interpreters in the TAPL book, yielding a reduced
+> number of LOC compared to an existing implementation on Github.
+
+                    ===== Points For and Against =====
+
+> For:
+> - easy to read
+> - useful combination of known techniques
+> - nice case study
+> 
+> Against:
+> - not much new, mostly an unsurprising combination of known techniques
+> - paper is in parts more like a tutorial than like a research paper
+
+H: like a functional pearl...
+
+                      ===== Comments for author =====
+
+> All the material presented in the paper is already well-known. Object algebras
+> can be used to modularize tree traversals. Parser combinators combined with a
+> Packrat algorithm and open recursion allow modular parser definitions. To people
+> that know both techniques, object algebras and Packrat parsing, it also appears
+> obvious to combine the two. The paper is an interesting experience report.
+> For instance, it is surprising to see that the modular implementation is
+> actually slower. While modularization incurs some overhead, the construction and
+> destruction of the AST nodes is not necessary using the Church encoded variant.
+
+H: ???
+
+> Overall, the paper is interesting and easy to read, but lacks a deep technical
+> contribution.
+> 
+> The title says: "type-safe modular parsing", but this is not very difficult with
+> a packrat based parser implementation in a OO language (like the one used by
+> the authors). However, from the text it becomes clear that the authors also
+> require that it should be possible to specify the semantics in a modular way.
+> Overall, the text could be improved if this point would be made more clear
+> throughout the text (and in the title). Just to reiterate:
+> 
+> **Syntax (Parsing)**
+> 
+> Building on packrat parsing in OO languages makes it easy to write modular
+> parser components by the use of inheritance and open recursion. The result of
+> parsing typically is the AST. The AST can technically be represented in at least
+> three different ways: Using the composite pattern, by algebraic datatypes, as
+> Church encoded tree. Composite pattern and Church encoding (in the sense of
+> object algebras) allow to modularly add new variants (nonterminals).
+> 
+> **Semantics (Interpretation)**
+> 
+> Given some AST we often want to implement several semantic operations like
+> evaluation or pretty printing. Depending on the chosen representation of the
+> AST this is possible in a modular way or not. It is only here, in the
+> combination of syntax and semantics, where the expression problem appears first.
+> 
+> Object algebras, as a solution to the expression problem, depend on a certain
+> representation of the AST (namely Church encoding). This rules out some of
+> the options for modular parsing. However, combinator based Packrat parsing can
+> also be used with Church encoded trees as AST representation.
+> 
+> By choosing Packrat parsing and object algebras for their individual modularity
+> benefits it appears that there is no big design choice for the AST
+> representation. (Of course one could as an alternative (non-)solution parse the
+> input to some AST and then fold the object algebra over that tree.)
+> 
+> It thus appears to me that the main contribution of the paper is to report that
+> there are no unexpected problems in the combination of the two modularity
+> techniques, which is good to know.
+
+> The remainder of the review gives some more detailed feedback.
+
+> ## Packrat Parsing and Modularity
+> "Modular parsers should be left-recursive", probably you mean "... support left
+> recursion...", right? Same with the second requirement. Sometimes right-
+> recursion might be appropriate for some grammars, so I need to rightfactor the
+> grammar to your methodology?
+> 
+> Also, you say that it would be possible to apply leftfactoring in a modular
+> setting. However, this is only possible in the case of white-box extensibility.
+
+H: ???
+
+> ## On Parser Combinators and OO Programming
+> 
+> Using object oriented programming to structure modular parsers is not new. For
+> instance Alessandro Warth developed his language OMeta around this idea. Also,
+> it appears a standard technique for users of parser combinator languages in an
+> OO setting to use open recursion and overriding to refine non-terminals. 
+> 
+> I also have seen an encoding of open recursion being used for modular and
+> extensible parsers in the context of Parsec (as you hint at in the discussion),
+> though frankly can't remember where.
+> 
+> ## On Object Algebras and Modular Parsers
+> 
+> The work by Rendel et al. [1] describes a modular implementation of a compiler
+> using object algebras, **including a modular parser**. In the material
+> accompanying the paper, modular parsers are described along the lines of
+> 
+>     trait ExprParser[E] { self: ExprAlg[E] =>
+>       val pLit  = numericLit ^^ { x => lit(x.toInt) }
+>       val pAdd  = pExpr ~ ("+" ~> p) { case e1 ~ e2 => add(e1, e2) }
+>       val pExpr = pLit(alg) ||| pAdd(alg)
+>     }
+> 
+> (translating the first example of Section 4.3 of the submitted paper at hand,
+> modulo laziness and non-termination issues.)
+> 
+> A difference is that Rendel et al. don't use parser combinators since they
+> strive for a fair comparison (in code size) with the original handwritten parser
+> implementation.
+
+H: this seems to be a big problem.
+
+> ## Accessing super vals
+> Just a remark: In Section 4.3 your solution to access super-vars is to introduce
+> a new name. When defining modular parsers I also often encountered this problem
+> and came to a similar solution which is introducing a def and a corresponding
+> lazy val.
+> 
+>     trait A { def _foo = "foo"; lazy val foo = _foo }
+>     trait B extends A { override def _foo = super[A].foo + "bar" }
+> 
+> Technical sidenote: Shouldn't the `val`s be `lazy val`s? in case of left
+> recursive grammars?
+
+> ## Performance Evaluation
+> As mentioned above the Scala Packrat library recommends to use lazy vals and
+> not vals. Could it be that the NonMod variants are faster because they use
+> lazy vals and in some cases it is not necessary to construct the full parser?
+
+H: ???
+
+> Besides modularization and delegation overhead, are there major technical
+> reasons why you could not very closely mirror the implementation of the NonMod
+> parsers? For instance, I was surprised to see that you use longest match and
+> NonMod appearently does not. I would expect that the parser implementation could
+> be almost identical, modulo reuse and semantic actions being calls into the
+> algebra.
+
+H: ???
+
+> ### Typos and minor corrections
+> Sec 1. [..] to enable the development >>of<< modular [...]
+> Sec 1. Kastner -> Kästner
+> 
+> ### References
+> 
+> [1]: Rendel, Tillmann, Jonathan Immanuel Brachthäuser, and Klaus Ostermann.
+>      "From object algebras to attribute grammars." OOPSLA 2014.
+
+===========================================================================
+                          ECOOP 2017 Review #108E
+---------------------------------------------------------------------------
+                   Paper #108: Type-Safe Modular Parsing
+---------------------------------------------------------------------------
+
+                      Overall merit: B. Weak accept
+                 Reviewer expertise: Y. I am knowledgeable in this area,
+                                        but not an expert
+
+                         ===== Paper summary =====
+
+> This paper presents an approach to modular parsing, where the parsing modules
+> can be separately compiled and reused.  The target language must provide support
+> for subtype and parametric polymorphism, and for multiple inheritance.  The authors
+> used Scala.  Object algebras and parsing combinators are used as key methodological
+> ingredients to achieve modularity.  The encountered or potential challenges are
+> described in detail, as well as solutions to overcome them.  As a case study, parsers
+> for 18 toy languages from Pierce's TAPL book are implemented following the proposed
+> approach.  A comparison is made with existing implementations of parsers for these
+> languages, also in Scala and also using the same parsing combinator library.  Results
+> show that the proposed modular approach saves 69% in code size (measured in LOC), but
+> adds 42% runtime overhead due to the additional layers of indirection incurred by
+> object algebras.
+> 
+> Specifically, an object algebra can be seen as a realization or implementation of an
+> AST interface, the same way as, say, a first-order model or Sigma-algebra can be seen
+> as a realization of a first-order logic or algebraic signature.  Thus, the interface
+> of the object algebra, which can be thought of as "the signature", is regarded as the
+> abstract syntax of the language to parse.  Concrete object algebras implementing this
+> interface then become concrete realizations of the language abstract syntax, such as
+> pretty-printers, evaluators, type checkers, etc.  That is, an object algebra says "what
+> do with the syntax", and can be implemented in complete isolation from the parsing
+> technology.  The parsers then include such an algebra (as a field "alg") and use it to
+> process the data extracted while parsing.  Parsing combinators allow for compact parsers,
+> almost in a 1-to-1 relation to the grammar.  To use the parser, one needs to create an
+> object algebra instance and attach it to the parser instance by overriding its "alg" field.
+> 
+> To extend an existing parser with new language constructs, one needs to do the
+> following: 1) extend the object algebra interface with the corresponding abstract syntax
+> entries for the new constructs; 2) extend the object algebra implementations with
+> implementations of the new constructs; 3) extend the parser with new parsing cases
+> for the new syntax.  What is important, and the key contribution of the paper, is that
+> all these can be done using OO multiple inheritance, without touching or having to
+> re-compile the existing code.
+
+                    ===== Points For and Against =====
+
+> + Probably the first approach for statically type-safe separately compilable modular
+> parsing.  Likely will lead to new challenges and avenues for research.
+> 
+> + Interesting use of non-trivial language features (multiple inheritance, 
+> type parameters / generics, parsing combinators).
+> 
+> + Educational paper; I would encourage my students to read this paper to learn.
+> 
+> - Unclear how practical the approach is.  Yes, it saves 69% of the code in a project
+> which yells for modularity and reuse, but it adds 42% runtime overhead.  Even for
+> the first languages, where no code reduction is obtained, the overhead is still 25-30%.
+> 
+> - Not very easy to grasp by beginners or new-comers to a project; for example,
+> one needs to understand almost the entire Scala language (except case classes)
+> to use the approach.  For example, if one wants to implement an interpreter for
+> a language, it is likely that the parser, if done as proposed in this paper, will
+> require the most advanced features of Scala.
+
+                      ===== Comments for author =====
+
+> I really enjoyed reading the paper!  I am not a regular user of Scala, so it was
+> a great opportunity to recall some of its cool features.  I was also impressed
+> with the elegance of parsing combinators and of your use of them.  Also, the use
+> of object algebras was inspiring (I was not familiar with them).
+> 
+> Here are some detailed comments to improve the paper, in no particular order.
+
+> I did not get the point of "we focus on semantic modularity and not just syntactic
+> modularity", because I thought of an actual programming language semantics.  Mosses'
+> Modular SOS attempts to modularize semantics, using funcons, but that is a whole
+> different area.  Please do not use "semantics" for type-safety and separate compilation.
+> Find some other word.
+> 
+> The first time you refer to the TAPL book, add a citation.  I had no idea what you
+> were talking about until I saw the citations.
+
+H: todo
+
+> In Section 2, when you describe your methodology for modular parsing, why are those
+> two aspects (left-recursion and longets match) desirable for modular parsing in particular
+> and not for any kind of parsing in general?  They felt more like limitations rather
+> than a methodology.
+
+> page 5, paragraph before "Longest Match Composition": The situation is even worse
+> than what you are describing, because if one wants to define a semantics to the PL,
+> then one cannot work with the modified grammar, because it is not what one wants to
+> give semantics to.
+
+> page 5: "However, manual reordering for the longest match is inconvenient,"
+> Is it even possible all the time?
+
+H: not sure
+
+> In the paragraph explaining the ExprParser trait on page 7, please 
+> explain better what the pExpr line does.  It only made sense after reading more about
+> the Table 1 constructs on the internet.  Maybe explain ~ and ^^ in a couple of sentences,
+> along their signature in Table 1.
+> 
+> Page 9: "That is new language constructs can be modularly added without changing
+> existing parsing code."
+> Can this really happen in general?  What if the newly added constructs are in conflict
+> with existing constructs?  For example, what your language had an "if_then_else_" construct
+> and now you want to add a "if_then_" construct with a particular disambiguation strategy?
+> How would you deal with that, considering that the situation involves 2 (or more) language
+> constructs.
+> 
+> Page 9: "case Var".  Why not make this, and other similar classes, case classes and then
+> not use "new" in the sequel?
+
+H: ???
+
+> While reading the complications you ran into in section 4.3, the first thought that came
+> was that they are an artifact of the desire to have a "type-safe" parser.  What if you
+> use a language like Smalltalk instead?  Why is this "type-safety" of the parser so
+> important, after all?  Yes, one may have bugs or missing cases in the parser itself, but
+> I would not expect that to be a problem, because one should have tests that cover all
+> the grammar anyway, so it is little likely that the type-safety of the parser itself
+> would bring much practical benefits.
+
+H: to argue
+
+> Related to that, and Scala, it is really ugly that you had to introduce the pE, pT, clones.
+> 
+> Section 5.3 was very illuminating.  I would move it earlier, if possible.
+> 
+> The languages in the TAPL book were a good choice to showcase the advantages of your
+> approach, but one could argue that they are all toy languages.  How about larger
+> languages?  How can you be sure that the combinators' implementation (caching?) will
+> support larger language, say like Java, or even worse, Scala (Scala parsing would be
+> a very convincing application, in particular, because it is so full of special cases
+> and conventions).
+>
+> Fig 5: Explain what lcid is.  (low case identifier?)
+
+H: todo
+
+> In Sec 6.2, why do you use LOC as a measure instead of the actual size of the Scala
+> programs, as number of instructions / AST nodes?  LOC is very vague, and limiting to
+> 120 characters per line is not necessarily fair.
+> 
+> It is only at the end of the paper where you mention the (huge) runtime overhead of
+> 42%.  You should have mentioned it earlier, even in the abstract.  Otherwise the reader
+> feels slightly cheated.
+
+H: true
+
+> How much size (in new LOC) have you added to Mod_CLASS?
+> 
+> "However, it is worth mentioning that because of the memoization technique of Packrat
+> parsers, we are only constant times slower, the algorithmic complexity is still the
+> same."  I am not buying that.  I'd like to see numbers for some large or medium sized
+> language.  Without those, you should weaken the statement.  Memoization can have rather
+> unexpected behaviors.
+> 
+> "Our solution does not require advanced language features."  I disagree.  What advanced
+> language features of Scala it didn't require (case classes and matching are not that
+> advanced, but generics and multiple inheritance are)?
+
+H: add ref; to refactor
+
+> The references are in a bad shape.  Add complete information for technical reports,
+> the conferences and their proceedings / publishers, pages, etc.  Or at least be uniform
+> in conventions.
+
+H: todo
+
