@@ -1,0 +1,75 @@
+
+
+We thank all reviewers for their thoughtful comments. Below we would like to talk about our contributions, and
+some questions raised by reviewers.
+
+As we discussed in the paper, almost all previous attempts on extensible/modular parsing stop at syntactical
+level of modularity for various reasons. We propose a pattern that nicely achieves semantic modularity and
+simplicity for parsing by using standard OO techniques. It’s a notable improvement, since compiling and
+generating the parser again during extension every time is obviously a worse practice.
+
+Our framework is indeed based on existing techniques, because a concrete algorithm is required for parsing.
+In particular, we use Packrat (PEG) parsing and Object Algebras in our Scala implementation. However, we show
+in our case study that they integrate well as expected; the parsing code is elegant and simplified to a great
+extent, as boilerplate would explode along with a series of compositions. As discussed in Section 5.4 of the
+paper, our approach can also be generalized thus not limited to any specific techniques. What we want to propose
+is really a simple, powerful and practical framework, or a flexible platform, instead of a library, to achieve
+easy and type-safe composition.
+
+We are sorry that we missed the material of paper [1], as modular parsing and the pattern is not explained
+in detail in the paper. Their code online seems to be different with ours as well. Based on parser
+combinators, our pattern is more concise and easy to use.
+
+Language components are an important contribution of our work, where we encapsulate a language feature with
+three parts: abstract syntax, parser, and operations; everything is modular. With semantically modular parsing,
+such components are fully type-safe. Just as SugarJ work and so on, we want languages to be small components,
+that can be composed in a flexible way into modular languages again. They are reusable for further composition.
+We don't need to rely on a base language to perform extensions as many extensible compilers do.
+
+Rev B:
+> However, object algebras solve a problem that is orthogonal to parsing...
+
+We think Object Algebras are not a total orthogonal direction from modular parsing.
+Since for parsing, the extension could happen in two cases:
+-    When syntax changed, the parser should be extended easily to cooperate with the new syntax.
+-    When ASTs changed (a new data variant/new operation added), the old parser should produce
+     compatible ASTs without modification.
+Regarding the second type of extension, Object Algebras or similar techniques are needed for
+modular parsing. Our intuition of using Object Algebras, is not only it encodes multiple syntax
+nicely, but also it adds a different dimension to obtain full extensibility of parsing,
+supporting separate compilation.
+
+Rev C:
+> I would have liked to see it used for more realistic programming language grammars.
+
+We agree that it would be better to show a more realistic language for demonstration. Thanks for your suggestion.
+
+Rev C:
+> - Unclear to me if indirect left recursion is supported, which would be needed
+> for practical grammars.
+
+Packrat parsing theoretically supports both direct and indirect left recursion [2],
+although the implementation in Scala’s standard parser combinator library may be buggy
+for some indirect left recursion cases.
+
+Rev C:
+> - Does not provide a sufficiently complete solution to language componentization,
+> since object algebras are too restricted (only support bottom up computations).
+
+Indeed Object Algebras only support bottom-up traversals, but we have known that some
+other researchers have worked out some framework that transforms Object Algebra ASTs
+to different ones, which also supports top-down traversals.
+
+Rev E:
+> Why is this "type-safety" of the parser so important, after all?  Yes, one may have
+> bugs or missing cases in the parser itself, but I would not expect that to be a
+> problem, because one should have tests that cover all the grammar anyway, so it is
+> little likely that the type-safety of the parser itself would bring much practical benefits.
+
+We think type-safe composition and separate compilation really matter, since it is not a good
+idea to modify existing code; we are using OO and want to achieve better code reuse. As mentioned
+before, we hope project code to be modular and easily composable, instead of being compiled and
+generating code for every round of composition. It is better for debugging.
+
+[1]: Rendel, Tillmann, Jonathan Immanuel Brachthäuser, and Klaus Ostermann. From object algebras to attribute grammars. OOPSLA 2014.
+[2]: Alessandro Warth, James R Douglass, and Todd D Millstein. Packrat parsers can support left recursion. PEPM 2008.
