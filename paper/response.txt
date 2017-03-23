@@ -10,7 +10,7 @@ modular parser definitions. To people that know both techniques,
 object algebras and Packrat parsing, it also appears obvious to
 combine the two."
 
-We should also add, on top of the 2 techniques above, there's a third
+We should also add that, on top of the 2 techniques above, there's a third
 thing: *good knowledge of some of Scala's more advanced features.*
 
 Is it true that the paper is essentially combining 2 techniques + good
