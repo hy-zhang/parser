@@ -1,0 +1,196 @@
+\section{Delegation-based Parsing}\label{sec:openandparsing}
+
+The first problem that prevents modularity of parsers built with
+parser combinators is the existence of \emph{hard-coded recursive
+  calls}. To solve this problem, \name employs \emph{open recursion}:
+that is, recursive calls to parsers are parametrized. The resulting
+programming style is similar to object-oriented programming,
+but using delegation instead of class-based inheritance.
+This programming style enables parsing OO-style ASTs, which
+can be naturally extended with new language constructs.
+
+\subsection{Delegation via Open Recursion}\label{subsec:openrecursion}
+
+Open recursion is known as a useful feature that one method body can
+``invoke another method of the same object via a special variable
+called \lstinline{self} or, in some languages,
+\lstinline[keywords={}]{this}'' (by Ralf Hinze)\bruno{this is not how we cite references!}
+\haoyuan{It's a talk by him, I'm not sure how to cite it, see URL: http://www.cs.ox.ac.uk/ralf.hinze/talks/}. The interesting thing
+is that such a variable \lstinline{self} is late-bound, or open to the
+recursion, which means it can integrate some additional features
+defined later, while existing methods that take \lstinline{self} as a
+parameter can simply delegate their known cases to it.
+
+\paragraph{Example of Open Recursion} To illustrate the use and
+usefulness of open recursion, we first consider a standard recursive
+implementation of the Fibonacci function:
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIB
+
+\noindent An alternative implementation using open recursion is:
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIB2
+\bruno{Fix should be replaces by Open. Please coordinate with Huang to
+ensure that your code and his code are coherent (i.e you use same
+names and same conventions),}
+\noindent This alternative implementation has an extra argument
+\lstinline{self}, which serves as an explicit self-reference. In the
+definition of the function, direct recursive calls are replaced by
+calls to the self reference.
+
+\paragraph{Closing the Open Recursion} An implementation of
+ the standard Fibonacci function is recovered by closing
+the open recursion using a \emph{lazy fixpoint combinator}:
+\bruno{definition of fib with fix here.}
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIB_FIX
+
+In Scala the lazy fixpoint combinator is straightforwardly implemented~\cite{} as follows:
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_FIX
+\bruno{can be defined in a single line.}
+\noindent Note that the function \lstinline{f} has a by-name parameter
+of type \lstinline{"=>} \lstinline{T"}. This is necessary to ensure
+termination of well-founded recursive calls. In such cases,
+there are some base cases (like the first two in
+\lstinline{fib2}) which stop the recursion in their branches, and the
+evaluation is finally reduced to those cases.
+
+\begin{comment}
+If we close the recursion on \lstinline{fib2} only, the evaluation of \lstinline{fix(fib2)(2)}, namely the above \lstinline{x2} is processed as follows:
+\begin{lstlisting}[language=Haskell,keywords={}]
+   fix(fib2)(2)
+= lazy val a = fib2(a); a.apply(2)
+= lazy val a = fib2(a); fib2(a)(2)
+= ... (the third case in fib2)
+= lazy val a = fib2(a); a.apply(1) + a.apply(0)
+= lazy val a = fib2(a); fib2(a)(1) + fib2(a)(0)
+= ... (the first two cases in fib2)
+= lazy val a = fib2(a); 1 + 0
+= 1
+\end{lstlisting}
+which behaves similarly as \lstinline{fib(2)}. The process of evaluation will terminate if there are some base cases (like the first two in
+\lstinline{fib2}) which stop the recursion in their branches, and the evaluation is finally reduced to those cases.
+\end{comment}
+
+\bruno{We may want to use a better example than what is next.}
+Suppose now we want to make use of open recursion for additional operations. We first define a combinator which combines the results of two generators in a pair:
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_COMPOSE
+
+Using Scala implicit class, \lstinline{*} can be used as an infix operator for composition in convenience.
+Then we define a generator which prints out a number as a string:
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_SHOW
+
+Now \lstinline{fix(fib2 * show)(2)} results in \lstinline{(1, "2")}. We have seen that both \lstinline{fib2} and \lstinline{show} are integrated in the evaluation.
+
+Next we define a more general combinator \lstinline{merge} for open recursion. It is similar to the \lstinline{*} above, but instead of putting two values in a pair by default, \lstinline{merge} takes a parameter called \lstinline{op}, which tells the associative operation of two results. The definition is straightforward:
+\lstinputlisting[linerange=-]{}% APPLY:linerange=OPENRECURSION_MERGE
+
+%\begin{itemize}
+%\item Fixpoints library + explaining delegation with some examples
+%\item Alternative combinator + others
+%\item Trait Composition to do Language Composition
+%\end{itemize}
+
+%In this section, we will further look into the mechanism behind our modular parsing library.
+%We will first introduce some concepts independently from the process of parsing, including open recursion and Object Algebras,
+%then present how they are integrated in our library.
+%Starting from simple examples, a series of extensions and refactoring will be applied to illustrate
+%how we achieve modularity in a type-safe way.
+
+\subsection{Parsing with Open Recursion}\label{subsec:parsingwithopen}
+
+Open recursion potentially opens the gate of extensibility for
+parsing, as a parser can now be open to additional features in the future.
+
+\bruno{Most of the text below overlaps with what Huang was already
+  written. I think you and Huang need to sit down, look at the text
+both of you wrote to motivate the problem, and rewrite that in the
+Overview Section.}
+
+\bruno{BEGIN: Text to be deleted/moved/rewritten in S2}
+Our exploration starts from a simple example, where a single parser only parses a free variable (i.e., a string). Traditionally, to write
+such a parser, we need to import the library as
+well as defining the datatype for which it produces.
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PVAR
+
+Note that we are omitting lexing and demo code here. And we use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} throughout the paper. Furthermore, we would like the parser to support applications.
+Not only the implementation of that parser is needed, but also its corresponding datatype:
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PAPP
+
+Such a parser \lstinline{pApp} can only parse one-layer applications like \lstinline{"x y"}. Hence we revise it using recursion:
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PAPP2
+
+Note that we are composing \lstinline{pVar} and \lstinline{pApp} using alternative. Alternation is a general operation to compose different parsers, since they represent different grammar rules with the logical relation ``or'' between one another. In this example, both sub-expressions of an application can be either a single variable or again an application. Now \lstinline{pApp} manages to parse an arbitrary number of applications like \lstinline{"x y z ..."} in a right-associative way.
+Nevertheless, even though we are not considering operations but the creation of objects only, such an approach does not turn out to be a modular extension, because if numeric literals are further accepted in our small language, the grammar becomes:
+\begin{lstlisting}
+e ::= x | e ' ' e | n
+\end{lstlisting}
+Besides writing a new parser for literals, we need to rewrite the existing \lstinline{pApp}, since applications can now contain numbers, like \lstinline{"x 3"} and so on.
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PLIT
+\bruno{END: Text to be deleted/moved/rewritten in S2}
+
+\bruno{Now, here you can refer back to the example which is used in S2
+to illustrate the problem. But your \emph{main goal} is to talk about
+the implementation of the combinators that are helpful for Open
+Recursion and parsing OO ASTs. So you need some major rewrite of the
+text that comes next. First, building on open recursion, explain the
+implementation of the new parsing combinators. Then, finish of the
+section with a good example of how to parse OO ASTs, perhaps
+extending the example discussed in S2 a bit more.}
+
+We have observed that \lstinline{pApp} is indeed constructed in a
+non-modular way, because the \lstinline{p} standing for recursive
+parser needs to be updated on every extension. Actually in the
+grammar, the recursive \lstinline{"e"} in the second case should not
+only include all the existing cases like \lstinline{pApp} and
+\lstinline{pVar}, but also take future extensions into account (we can
+have arbitrarily more cases). This is where we are inspired to use
+open recursion. To define \lstinline{pApp} as an ``open'' function, we
+add a parameter \lstinline{p} to it, representing the explicit
+self-reference of our whole parser, open to future extensions. Note
+that \lstinline{p} should be defined as a by-name parameter using
+\lstinline{"=>"}.
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PAPPFIX
+
+Here the type \lstinline{Fix[Parser[Expr]]}, namely \lstinline{(=>} \lstinline{Parser[Expr])} \lstinline{=>} \lstinline{Parser[Expr]} is exactly what we want for a parser. Similarly \lstinline{pVar} is redefined also as a function using the explicit fix-point \lstinline{p}. To be more convenient for composition, we define an auxiliary combinator \lstinline{"|||"} for parsers of type \lstinline{(=>} \lstinline{R)} \lstinline{=>} \lstinline{Parser[E]} with the same \lstinline{R} and \lstinline{E}. It is more general using \lstinline{R} instead of \lstinline{Parser[E]}, because there might be multiple fix-points in the parameter. Such a function is overloaded and can be invoked as an infix operator when defined in an implicit class. It is implemented using the general \lstinline{merge} function in Section~\ref{subsec:openrecursion}.
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_COMBINATOR
+
+Now since \lstinline{pVar} and \lstinline{pApp} are defined independently, we are able to compose them using \lstinline{|||}:
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_PVARAPP
+
+Here \lstinline{pVarApp} is the combination of two parsers. But what we really want is something that has type \lstinline{Parser[Expr]}. One can be soon reminded that in Section~\ref{subsec:openrecursion}, we use \lstinline{fix} to get the fix-point of a function, in this case we write \lstinline{fix(pVarApp)}, which manages to parse an arbitrary number of applications.
+
+This is the magic of open recursion: we can define as many small components as we like, and they are implemented as functions, with the help of explicit self-reference. Whenever we would like to close the recursion, simply use \lstinline{fix} for their combination. Such a process is guaranteed to terminate when we restrict the input for parsing to be finite, and we have some base cases like \lstinline{pVar}, which terminates recursion in their branches, in addition, with the help of Packrat parsers with direct left-recursion support.
+
+Another thing which catches our attention is that, small parsers are combined using the alternative combinator. Hence, parsing failing at any position will try its next alternative, and for each recursion all the parsers are tried successively until one of them succeeds. It reveals its essence as a recursive descent parser. But it is quite easy and modular to use; with further extensions, they can be implemented separately and then appended to the combination of old ones.
+
+Furthermore, in above code we use \lstinline{|||} for alternative instead of \lstinline{|}. As we have mentioned in Section~\ref{sec:packratparsers}, \lstinline{|||} is more powerful with longest matching. Consider if we obtain \lstinline{pVarApp} from \lstinline{pVar | pApp}, the final parser \lstinline{fix(pVarApp)} cannot even parse an application \lstinline{"x y"}, since it succeeds in parsing a variable first and only returns \lstinline{"x"}. With \lstinline{|||}, however, we can put composition in any order and it still works as expected.
+
+But our story does not tend to stop here, as we have observed some limitations of the current approach. Specifically, one is that extensibility of data operations is not guaranteed, though we obtain the extensibility of data variants by defining an arbitrarily large number of new case classes. Suppose we want new operations like pretty-printing on expressions, we may 1) add a method \lstinline{print} to all case classes with their own interpretations; 2) define a single method \lstinline{print} and do pattern-matching on case classes inside. When adding new data variants and operations, both require existing code to be modified, thus affect code reuse and modularity.
+
+Another weakness is that the only little extensibility is just fragile when it comes to grammars with multiple different syntax. For instance, in the beginning we only have variables and applications in \lstinline{Expr}, to have types in our language, the \lstinline{Int} type and lambda expressions with annotation are added. See the grammar below:
+\begin{lstlisting}
+e ::= x | e ' ' e | \x:t.e
+t ::= "Int"
+\end{lstlisting}
+
+We proceed to implement those parsers. An issue is that we need both a \lstinline{Parser[Expr]} and a \lstinline{Parser[Type]} in the fixpoint.
+Hence we use a pair in the parameter:\bruno{I don't think the approach
+below, adding pairs, is very modular: it requires changing your }
+
+\lstinputlisting[linerange=-]{}% APPLY:linerange=PARSING_TYPEDEXPR
+
+Based on the old \lstinline{pVar} and \lstinline{pApp}, we implement \lstinline{pVar2} and \lstinline{pApp2} which take the pair as their fix-points instead.
+In that case the parsers are consistent, and hence can be composed using the combinator \lstinline{|||}.
+The last value \lstinline{pET} integrates the four single parsers defined before, where parsers for expressions and parsers for types are composed respectively. Furthermore, we use \lstinline{fix(p)} to obtain the pair of two parsers we want: one for expressions, the other for types. The parser \lstinline{fix(p)._1} parsers expressions like \lstinline{"\x:Int.x x"} successfully. Yet meanwhile, some drawbacks of this approach come into sight. With different syntax, it
+is necessary to extend the fix-point to contain more parsers, in which case usually some structures like tuples are used,
+making code tedious and less elegant. Moreover, we need to update such a fix-point in the arguments of all previously defined parsers, so as to make parsers consistent for the combinator (things get even worse without that combinator). It introduces more boilerplate code, which highly affects code reuse.
+

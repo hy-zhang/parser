@@ -1,5 +1,5 @@
 %% For double-blind review submission
-\documentclass[sigplan,10pt,review,anonymous]{acmart}\settopmatter{printfolios=true}
+\documentclass[sigplan,10pt,review,anonymous]{acmart}\settopmatter{printfolios=false}
 %% For single-blind review submission
 %\documentclass[sigplan,10pt,review]{acmart}\settopmatter{printfolios=true}
 %% For final camera-ready submission
@@ -16,6 +16,35 @@
 \usepackage{subcaption} %% For complex figures with subfigures/subcaptions
                         %% http://ctan.org/pkg/subcaption
 
+\usepackage{listings}
+\usepackage{syntax}
+\usepackage[T1]{fontenc}
+\usepackage[scaled=0.85]{beramono}
+\usepackage{multirow}
+
+\lstset{
+  language=Scala,                % choose the language of the code
+  columns=flexible,
+  lineskip=-1pt,
+  basicstyle=\ttfamily\small,       % the size of the fonts that are used for the code
+  numbers=none,                   % where to put the line-numbers
+  numberstyle=\ttfamily\tiny,      % the size of the fonts that are used for the line-numbers
+  stepnumber=1,                   % the step between two line-numbers. If it's 1 each line will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  showstringspaces=false,         % underline spaces within strings
+  showtabs=false,                 % show tabs within strings adding particular underscores
+  morekeywords={var, lazy},
+  %  frame=single,                   % adds a frame around the code
+  tabsize=2,                  % sets default tabsize to 2 spaces
+  captionpos=none,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+  title=\lstname,                 % show the filename of files included with \lstinputlisting; also try caption instead of title
+  escapeinside={(**}{**)},          % if you want to add a comment within your code
+  keywordstyle=\ttfamily\bfseries,
+}
 
 \makeatletter\if@ACM@journal\makeatother
 %% Journal information (used by PACMPL format)
@@ -66,19 +95,26 @@
                             %% e.g., \cite{Baker12,Baker14,Baker16}
                             %% rendered as [2,3,4] rather than [2-4].
 
+\lstdefinelanguage{PlainCode}{}
+\newcommand\inlinecode[1]{\lstinline[language=PlainCode]{#1}}
+
+\newcommand{\mynote}[3]{{\color{#2} {#1}: #3}}
+\newcommand\bruno[1]{\mynote{bruno}{red}{#1}}
+\newcommand\huang[1]{\mynote{huang}{blue}{#1}}
+\newcommand\haoyuan[1]{\mynote{haoyuan}{cyan}{#1}}
 
 
 \begin{document}
 
 %% Title information
-\title[Short Title]{Full Title}         %% [Short Title] is optional;
+\title{Type-Safe Modular Parsing}         %% [Short Title] is optional;
                                         %% when present, will be used in
                                         %% header instead of Full Title.
-\titlenote{with title note}             %% \titlenote is optional;
+%%\titlenote{with title note}             %% \titlenote is optional;
                                         %% can be repeated if necessary;
                                         %% contents suppressed with 'anonymous'
-\subtitle{Subtitle}                     %% \subtitle is optional
-\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
+%%\subtitle{Subtitle}                     %% \subtitle is optional
+%%\subtitlenote{with subtitle note}       %% \subtitlenote is optional;
                                         %% can be repeated if necessary;
                                         %% contents suppressed with 'anonymous'
 
@@ -153,7 +189,33 @@
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-Text of abstract \ldots.
+  Over the years a lot of effort has been put on solving
+  extensibility problems, while retaining important software
+  engineering properties such as modular type-safety and
+  separate compilation. Most previous work focused on
+  operations that traverse and process extensible Abstract Syntax Tree
+  (AST) structures. However, there is almost no work on operations that
+  \emph{build} such extensible ASTs, including \emph{parsing}.
+
+  This paper investigates solutions for the problem of \emph{modular
+    parsing}. We focus on \emph{semantic} modularity and not just
+  \emph{syntactic} modularity. That is, the solutions should not only
+  allow complete parsers to be built out of modular parsing
+  components, but also enable the parsing components to be
+  \emph{modularly type-checked} and \emph{separately compiled}. We
+  present a technique based on parser combinators that enables modular
+  parsing. Interestingly, the modularity requirements for modular
+  parsing rule out several existing parser combinator approaches,
+  which rely on some non-modular techniques. We show that Packrat
+  parsing techniques, provide solutions for such modularity problems,
+  and enable reasonable performance in a modular setting.
+  Extensibility is achieved using \emph{multiple inheritance} and
+  \emph{Object Algebras}.  To evaluate
+  the approach we conduct a case study based on the ``Types and
+  Programming Languages'' interpreters. The case study shows the
+  effectiveness at reusing parsing code from existing interpreters,
+  and the total parsing code is 69\% shorter than an existing code
+  base using a non-modular parsing approach.
 \end{abstract}
 
 
@@ -191,9 +253,21 @@ Text of abstract \ldots.
 \maketitle
 
 
-\section{Introduction}
+\input{sections/Introduction.tex}
 
-Text of paper \ldots
+\input{sections/PackratParsing.tex}
+
+\input{sections/Inheritance.tex}
+
+\input{sections/ObjectAlgebras.tex}
+
+\input{sections/Discussion.tex}
+
+\input{sections/CaseStudy.tex}
+
+\input{sections/RelatedWork.tex}
+
+\input{sections/Conclusion.tex}
 
 
 %% Acknowledgments
@@ -215,7 +289,7 @@ Text of paper \ldots
 
 
 %% Bibliography
-%\bibliography{bibfile}
+\bibliography{paper}
 
 
 %% Appendix

@@ -1,0 +1,79 @@
+digraph G {
+    ratio=0.5;
+    //size="7.2,4";
+    nodesep=0.12;
+    margin=0;
+
+    node[fontsize=26, shape=box];
+
+    {
+        node[style=filled, color=lightgray];
+
+        Arith;
+        Untyped;
+        FullUntyped;
+        TyArith;
+        SimpleBool;
+        FullSimple;
+        Bot;
+        FullRef;
+        FullError;
+        RcdSubBot;
+        FullSub;
+        FullEquiRec;
+        FullIsoRec;
+        EquiRec;
+        Recon;
+        FullRecon;
+        FullPoly;
+        FullOmega;
+    }
+
+    Bool, Nat -> Arith;
+
+    VarApp, UntypedAbs -> Untyped;
+
+    Arith, Untyped, Record, FloatString, Let -> FullUntyped;
+
+    Bool -> TypedBool;
+
+    Nat -> TypedNat;
+
+    TypedBool, TypedNat -> TyArith;
+
+    VarApp -> Typed;
+
+    Typed, TypedBool -> SimpleBool;
+
+    Record -> TypedRecord;
+
+    TyArith, Typed, FloatString, Let, TypedRecord, Extension, TypeVar -> Simple;
+
+    Simple, Variant -> FullSimple;
+
+    Top -> TopBot;
+
+    Typed, TopBot -> Bot;
+
+    FullSimple, TopBot, Ref, SourceSink -> FullRef;
+
+    Bot, TypedBool, Error, TypeVar -> FullError;
+
+    Bot, TypedRecord -> RcdSubBot;
+
+    Simple, Top -> FullSub;
+
+    FullSimple, RecType -> FullEquiRec;
+
+    FullEquiRec, Fold -> FullIsoRec;
+
+    Typed, RecType, TypeVar -> EquiRec;
+
+    Typed, TyArith, TypeVar -> Recon;
+
+    Recon, Let -> FullRecon;
+
+    Simple, Pack, Poly -> FullPoly;
+
+    Simple, Ref, Pack, Omega -> FullOmega;
+}

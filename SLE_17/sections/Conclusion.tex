@@ -1,0 +1,40 @@
+\section{Conclusion}\label{sec:conclusion}
+
+This paper presents a solution for type-safe modular parsing. Our solution 
+not only enables parsers to evolve together with the abstract syntax, 
+but also allows parsing code to be modularly type-checked and separately compiled.
+
+Based on parser combinators, we identify algorithmic
+challenges of building modular parsers, and show that Packrat parsing
+is suitable as the underlying parsing technique. Our solution does not
+require advanced language features. We show that with standard OO
+techniques including inheritance and overriding, it is practical to
+build modular parsers for OO ASTs. However, the extensibility issue of
+traditional OO ASTs motivates us to adopt Object Algebras for full
+extensibility and more useful features.
+
+Abstracting language features as reuseable components can be achieved
+based on our solution, which is useful for rapid language prototyping.
+The TAPL case study shows that we can obtain considerable code reuse
+(69\% shorter) compared with a non-modular implementation, using our
+modular parsing approach and language feature abstraction.
+
+There are certainly some aspects that can be improved. We observed that the
+glue code of composition appears to be boilerplate. Such an issue
+is addressed by family polymorphism~\cite{ernst01FP}, and we could solve it by language
+features or meta-programming techniques. Moreover, we can possibly
+adopt the Shy framework~\cite{Zhang2015} and algebra composition
+patterns~\cite{oliveira2013feature}, to improve the usage of Object
+Algebras.
+
+For future work, we want to experiment more with semantically modular
+parsing techniques for functional programming. Since functional
+programming languages like Haskell and ML do not support OO features 
+such as subtyping or inheritance, it will be interesting to see
+whether other functional features can be used instead. 
+Open recursion~\cite{CookThesis} seems to be an alternative to inheritance, and may 
+help in doing extensible parsing in functional languages. 
+%It is also interesting to see that parsing, to some
+%extent, can be viewed as a special example of \textit{unfolds}. So it
+%is worthwhile considering to generalize our approach under certain
+%circumstances.

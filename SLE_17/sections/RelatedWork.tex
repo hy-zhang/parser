@@ -1,0 +1,208 @@
+\section{Related Work}\label{sec:relatedwork}
+
+%- extensible parsing, language workbenches: rats, noa (this one already uses OA), modular semantic actions, (syntactic modularity, no separate compilation, modular type-checking)
+%(read more papers, see if they talk about this issue, some potential solutions)
+%(attribute grammars?)
+%
+%- parser combinators for type-checking, previous work has not shown how to support modularity (ASTs); left-recursion and back-tracking in related techniques
+%
+%- modularity: object algebras, dtc and mrm (problem with parsing, is there any related work? (PB: a paper on unfolds: build the AST))
+%
+%(parsing in Javascript: using delegation, does it support modular AST)
+%
+%noa, shy: shy: only override some interesting cases (transformation is tedious)
+%bruijn indices: parsing + transformation
+
+Our work touches upon several topics including extensible parsing,
+parser combinators and extensibility techniques. However, as far as we
+know there's no work that discusses how to do statically type-safe and
+separately compilable modular parsing.
+
+\begin{comment}
+There has been a
+great amount of related papers on those topics. Some
+inspired us of this paper and encourage us for more exploration. This
+section will try to lead a discussion on what difference we have made.
+\end{comment}
+
+\paragraph{Syntactically Extensible Parsing} Extensible parsing is
+used in many different areas. Extensible parser generator is a
+mainstream area specially designed for modular syntax and
+parsing. Many parser
+generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016} support
+modular grammars. They allow users to create new modules where new
+non-terminals and production rules can be introduced, some can even
+override existing rules in the old grammar modules. For instance,
+\textit{Rats!}~\cite{Grimm2006} constructs its own module system for
+the collection of grammars.  NOA~\cite{Gouseti2014} uses Java
+annotation processing to gather information about grammars in Java
+code. After all information is collected, NOA merges all grammar
+components, produce an ANTLR~\cite{antlr1995} grammar, and generates
+corresponding parsing code from the ANTLR grammar. Those parser
+generators focus on the \textit{syntactic extensibility} of grammars:
+they rely on whole compilation to generate a global parser, even if
+there is only a slight modification in the grammar. Some of those
+parser generators may statically check the correctness and unambiguity
+of grammars. In contrast, because our approach is based on parser
+combinators, there is no support for ambiguity checking.  However, as
+far as we are aware, no extensible parser generators support separate
+compilation or modular type-checking.
+
+Macro systems like the C preprocessor, C++ templates and
+Racket~\cite{Tobin-Hochstadt2011}, and other meta-programming
+techniques are a similar area aiming at syntactic extensibility.
+SugarJ~\cite{Erdweg2011} conveniently introduces syntactic sugar for
+Java using library imports. Composition of syntactic sugar is easy for
+users, but it requires many rounds of parsing and adaption. This
+significantly affects the efficiency of compilation. Since the
+implementation was based on SDF~\cite{Heering1989} and
+Stratego~\cite{Visser2001}, it does not support separate
+compilation. Racket adopts a macro system for library-based language
+extensibility~\cite{Tobin-Hochstadt2011}. This is quite powerful and it uses
+attributed ASTs for contextual
+information. Moreover extensions can be integrated in a modular
+way. However such modularity is not flexible enough for language
+unification, as the syntax is only built from extensions.
+%Moreover,
+%existing macros cannot be further changed after
+%definition. \haoyuan{correct?}
+Extensible
+compilers like JastAdd~\cite{Ekman2007} and
+Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
+is mostly done using parser generators. They focus on the
+extensions to a host language. Our technique is designed for type-safe
+modular language parsers (not just language
+extensions), with very flexible parser composition.
+
+%\bruno{Have you read
+%Languages as Libraries? That is probably an important reference, which
+%I think we should cite.}
+%\haoyuan{what about
+%  metafront? it is a macro system but does it have type safety?}
+%\haoyuan{Extensible syntax with lexical scoping?} \haoyuan{"Extensible
+%  syntax" proposes a system for extensible syntax, where users write
+%  EDSLs in their language with concrete syntax. Users can write rules
+%  for type-based disambiguation. But separate compilation is again not
+%  mentioned. Shall we mention that thesis?} \haoyuan{attribute
+%  grammars?}
+
+\paragraph{Extensible Parsing Algorithm}
+Extensible parsing algorithm is another area that relates to
+separate compilation.
+\textit{Parse table composition}~\cite{bravenboer2008parse}
+is an approach where grammars are compiled to
+modular parse tables. Those parse tables are expressed as DFAs
+or NFAs, and later they can be composed by an algorithm, to provide
+separate compilation for parsing. The generation of parse tables can
+be quite expensive in terms of performance. The approach
+is quite different from ours, since it uses parse
+ tables, whereas we use parser combinators.
+Our approach supports both
+\emph{separate compilation} as well as \emph{modular
+  type-checking}. Moreover, the extensibility of parsing is further
+available at language composition and lexical level.
+
+%\haoyuan{we do not have explicit
+%  correspondence/relationship between abstract syntax and the parser.}
+
+\paragraph{Parser Combinators} Since Burge~\cite{burge1975} firstly
+introduced parser generators, and after Wadler popularized them
+in functional programming~\cite{Wadler1985}, parser combinators have been
+more and more popularly developed and used in the research area of
+parsing. Many parsing libraries produce recursive descent
+parsers by introducing functional monadic
+parser combinators~\cite{nott237}. Parsec~\cite{Leijen2001} is
+perhaps the most popular parser combinator library in this line.
+It is widely used in Haskell (with various ``clones'' in other languages)
+for context-sensitive grammars with infinite lookahead. Nevertheless,
+Parsec users suffer from manual left-recursion elimination,
+high cost for backtracking and longest match composition issues,
+as we discussed in Section~\ref{subsec:challenges}. Those limitations make Parsec
+(and similar parsing techniques) inadequate for modular parsing.
+
+Some more recent work on parser
+combinators~\cite{Ford2002,Might2011,Frost2008} proposed a series of
+novel parsing techniques that address the issue of
+left-recursion. We have selected Packrat parsing for our approach,
+as the combinators are convenient to use in Scala, and
+integrate well with multiple trait inheritance and
+Object Algebras.
+%Also,
+%its support for direct left-recursion is already helpful for designing
+%real-world parsers practically, though~\cite{warth2008} further
+%demonstrated that general left-recursion is supported theoretically.
+Despite our choice of Packrat parsing, as argued in Section~\ref{sec:packrat},
+any parser combinator approach which supports left-recursion, longest
+match composition, and makes the cost of backtracking reasonable,
+should be applicable to modular parsing.
+%Yet we have mentioned that the components used in our approach can
+%have alternatives to achieve better modular parsing.
+
+\paragraph{Extensibility} Various design patterns~\cite{gamma1995design} in multiple
+languages, have been proposed over the years to address extensibility
+problems, such as the Expression Problem~\cite{wadler1998expression}. However, to the best
+of our knowledge, none of the existing extensibility techniques
+address the problem of \emph{modularly
+parsing extensible ASTs}.  There has been
+a lot of work on extensible ASTs, in both functional and
+object-oriented programming.  For instance, the famous ``Datatypes \`a
+la Carte'' (DTC)~\cite{swierstra2008data} approach represents modular ASTs using co-products
+of every two functors, which forms a binary tree structure.
+Several variants of DTC have been later proposed~\cite{Bahr2011,Bahr2014,Oliveira2015}.
+All of that work essentially covers how to traverse and
+consume extensible ASTs.
+Only in Bahr's~\cite{Bahr2011} work a brief mention of \emph{unfolds}
+(which are a class of algorithms that \emph{build} ASTs) are mentioned.
+However Bahr's work does not cover parsing.
+
+In OO languages, there are also many design patterns that achieve
+type-safe extensibility~\cite{torgersen2004expression,odersky2005independently,oliveira2009modular,Oliveira:2012,wang2016expression}. We chose Object Algebras~\cite{Oliveira:2012} because the pattern is
+relatively lightweight and makes good use of existing OO features,
+such as inheritance, generics and subtyping. As seen throughout the paper,
+the parsing code is concise and expressive using Object Algebras.
+In principle our approach is not coupled to the use of Object
+Algebras, and variants of our approach could be used with other
+extensibility techniques. Similarly to the work in functional
+programming, the extensibility techniques in OOP have focused
+on traversing and processing ASTs. We are unware of any work on OOP
+that covers how to do modular parsing for extensible ASTs.
+
+It is worth mentioning that Scala case classes~\cite{emir2007matching} provide a near
+solution to the Expression Problem. Case classes are similar to
+algebraic datatypes but, unlike algebraic datatypes, new cases can be
+modularly added. The reason why case classes are not a complete
+solution to the Expression Problem is that they do not enforce
+exhaustiveness of pattern matching for extensible operations. In other
+words run-time pattern matching errors can happen when writing extensible code with case classes. So that full static type-safety is not ensured. Nevertheless case classes are a pragmatic approach, which is
+widely used in practice. Therefore, modular parsing techniques may be
+of value for extensible code using case classes.  The approach we
+presented in Section~\ref{sec:inheritance} can readily be adapted to case classes:
+all that the users need to do is to use case classes, instead of
+standard OO classes in their code.
+
+\begin{comment}
+Moreover, in~\cite{Oliveira:2012} the authors have discussed the
+composition of algebras. In our parsing approach, a parser consumes an
+algebra, which is delegated to return the results, during its process
+of parsing. Having a set of algebras, it requires multiple parsing
+with several times of invocation, which leads to redundant work.
+Instead, algebras are supposed to be composed into one before the
+invocation of the parser. Bahr et al. lead a similar discussion
+in~\cite{Bahr2011}, where queries (or \textit{catamorphisms}) and
+transformations (or \textit{homomorphisms}) are composable. They have
+also mentioned the dual process of folds, namely
+\textit{anamorphisms}. It is potentially related to our work, as
+parsing is a representative kind of unfolds, whereas they only
+discussed the composition of a cv-coalgebra and a term homomorphism,
+which differs from modular parsing.
+\end{comment}
+
+\begin{comment}
+Another interesting observation from Section~\ref{sec:algebrasandparsing}, is that parsers with
+Object Algebras generate ``implicit objects'', which are actually functions of
+type \lstinline{Alg[E]} \lstinline{=>} \lstinline{E} for generic \lstinline{E}.
+Patterns of operations on such functions are captured by the original paper~\cite{Oliveira:2012}, called
+\textit{queries} and \textit{transformations}, together with the composition of algebras.
+They are quite useful, for instance, we have two operations (like the aforementioned \lstinline{Print} and \lstinline{Eval}) to be fed to the parser. If we feed them separately, it is tedious to parse the same input twice. Instead we can compose them in advance before the feeding. On the other hand, one would think this pattern is too limited to use against objects that traditional parsers generate. For example, there are a lot of transformations (or desugarings) on intermediate ASTs in the design of a compiler. Transformation algebras are helpful in that case. They can even be composed in a linear pipeline-style before a query algebra is delegated. The Shy framework~\cite{Zhang2015} has captured those patterns, and it generates templates for them, so that users only need to override a few interesting cases, conveniently. The idea of overriding existing cases was also
+proposed in MRM~\cite{Oliveira2015}. They are potentially useful to our approach. Regarding overriding, our approach allows existing parsing code to be overridden during inheritance.
+\end{comment}
