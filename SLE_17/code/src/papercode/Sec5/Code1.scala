@@ -76,7 +76,8 @@ object Code1 extends Common {
 trait BaseParser[E] {
   ...
   val alg: ...
-  val pLam: Parser[E] = ("\\" ~> ident) ~ ("." ~> pE) ^^ ...
+  val pLam: Parser[E] =
+    ("\\" ~> ident) ~ ("." ~> pE) ^^ ...
   val pE: Parser[E] = ...
 }
 //END_BASEPARSER_UNTYPEDLAM
@@ -85,7 +86,8 @@ trait BaseParser[E] {
 trait ExtParser[E, T] extends BaseParser[E] {
   ...
   override val alg: ...
-  override val pLam: Parser[E] = ("\\" ~> ident) ~ (":" ~> pT) ~ ("." ~> pE) ^^ ...
+  override val pLam: Parser[E] =
+    ("\\" ~> ident) ~ (":" ~> pT) ~ ("." ~> pE) ^^ ..
   val pT: Parser[T] = ...
 }
 //END_EXTPARSER_TYPEDLAM
@@ -111,22 +113,18 @@ object Code2 extends Common {
 /*
 //BEGIN_LANGUAGE_COMPONENTS_VAREXPR
 object VarExpr {
-  // Abstract syntax
-  trait Alg[E] {
+  trait Alg[E] {    // Abstract syntax
     def lit(n: Int): E
     def add(e1: E, e2: E): E
     def varE(x: String): E
   }
-
-  // Parser
-  trait Parse[E] {
+  trait Parse[E] {   // Parser
     val alg: Alg[E]
     val pE: Parser[E] = ...
     ...
   }
-
-  // Pretty-printer
   trait Print extends Alg[String] {
+    // Pretty-printer
     ...
   }
 }
@@ -134,23 +132,19 @@ object VarExpr {
 
 //BEGIN_LANGUAGE_COMPONENTS_TYPEDLAM
 object TypedLam {
-  // Abstract syntax
-  trait Alg[E, T] {
+  trait Alg[E, T] {    // Abstract syntax
     def intT(): T
     def arrT(t1: T, t2: T): T
     def lam(x: String, t: T, e: E): E
   }
-
-  // Parser
-  trait Parse[E, T] {
+  trait Parse[E, T] {   // Parser
     val alg: Alg[E, T]
     val pE: Parser[E] = ...
     val pT: Parser[T] = ...
     ...
   }
-
-  // Pretty-printer
   trait Print extends Alg[String, String] {
+    // Pretty-printer
     ...
   }
 }
@@ -158,15 +152,16 @@ object TypedLam {
 
 //BEGIN_LANGUAGE_COMPONENTS_VARLAMEXPR
 object VarLamExpr {
-  trait Alg[E, T] extends VarExpr.Alg[E] with TypedLam.Alg[E, T]
-
-  trait Parse[E, T] extends VarExpr.Parse[E] with TypedLam.Parse[E, T] {
+  trait Alg[E, T] extends VarExpr.Alg[E]
+    with TypedLam.Alg[E, T]
+  trait Parse[E, T] extends VarExpr.Parse[E]
+    with TypedLam.Parse[E, T] {
     override val alg: Alg[E, T]
     override val pE: Parser[E] = ...
     ...
   }
-
-  trait Print extends VarExpr.Print with TypedLam.Print
+  trait Print extends VarExpr.Print
+    with TypedLam.Print
 }
 //END_LANGUAGE_COMPONENTS_VARLAMEXPR
 */

@@ -3,7 +3,7 @@ package papercode.Sec4OA
 import papercode.Common
 
 
-object Code3 extends Common {
+trait Code3 extends Common {
 //BEGIN_BASE_OA_PARSER_BAD
 trait Attempt[E] {
   lexical.delimiters += "+"
@@ -38,7 +38,10 @@ trait VarOAParser[E] extends OAParser[E] {
   override val pE: Parser[E] = pVarExpr
 }
 //END_EXT_OA_PARSER
+}
 
+
+object Code30 extends Code3 {
 //BEGIN_EXT_OA_PARSER_CLIENT
 val p = new VarOAParser[String] {
   override val alg = new VarPrint {}
