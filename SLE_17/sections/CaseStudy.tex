@@ -25,7 +25,7 @@ example, the \lstinline{VarApp} component below represents variables and
 function applications, shown in Figure~\ref{fig:casestudy-varapp}.
 
 \begin{figure}[ht]
-\lstinputlisting[linerange=15-33]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_VARAPP
+\lstinputlisting[linerange=15-33]{code/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_VARAPP
 \caption{The \inlinecode{VarApp} component in case study.}\label{fig:casestudy-varapp}
 \end{figure}
 
@@ -36,7 +36,7 @@ expressions, \lstinline{T} represents types and \lstinline{K}
 represents kinds. They are the three sorts of syntax in our case study.
 In the component \lstinline{VarApp} we only have expressions. We use some helper traits for eliminating duplicate definitions, such as \inlinecode{EParser} containing \inlinecode{pE} for parsing expressions.
 
-\lstinputlisting[linerange=9-11]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_EPARSER
+\lstinputlisting[linerange=9-11]{code/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_EPARSER
 
 \paragraph{Composing Language Components}
 Each calculus could be composed directly from components and other
@@ -48,7 +48,7 @@ The code of building \lstinline{Untyped} is presented in Figure~\ref{fig:casestu
 parsing functions accordingly.
 
 \begin{figure}[t]
-\lstinputlisting[linerange=37-64]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_UNTYPED
+\lstinputlisting[linerange=37-64]{code/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_UNTYPED
 \caption{Build the \inlinecode{Untyped} calculus by composing to language components.}\label{fig:casestudy-untyped}
 \end{figure}
 
@@ -57,7 +57,7 @@ We have demo code for every calculus in order to test and evaluate our implement
 We feed the pretty-printing algebra to the parser and print out the result.
 The parsing result can be changed as long as the concrete algebra is available.
 
-\lstinputlisting[linerange=68-78]{../Scala/Parser/src/PaperCode/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_DEMO
+\lstinputlisting[linerange=68-78]{code/Sec6CaseStudy/Code1.scala}% APPLY:linerange=CASESTUDY_DEMO
 
 \paragraph{Dependency Overview}
 Figure \ref{fig:dependency} shows the

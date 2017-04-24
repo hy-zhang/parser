@@ -8,9 +8,9 @@ used by non-modular code using parser combinators.
 To avoid pitfalls related to those algorithmic challenges,
 we propose the following methodology:
 
-\begin{itemize}
+\begin{itemize}[leftmargin=*]
 
-\item \textbf{Modular parsers should be left-recursive;}
+\item \textbf{Modular parsers should support left-recursion.}
 
 \item \textbf{Modular parsers should use a longest match composition operator.}
 
@@ -34,48 +34,49 @@ problematic in a modular setting.
 
 The grammar below represents a simple arithmetic language containing only integers. Its corresponding parser is shown on the right side, written in Parsec.
 
-\huang{todo}
-
-%% \begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
-%% \setlength{\grammarindent}{5em}
-%% \begin{grammar}
-%% <expr> ::= <int>
-%% \end{grammar}
-%% &
-%% \begin{lstlisting}[language=PlainCode]
-%% parseExpr = parseInt
-%% \end{lstlisting}
-%% \end{tabular}
+\begin{minipage}{10em}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int>
+\end{grammar}
+\end{minipage}
+\begin{minipage}{10em}
+\begin{lstlisting}[language=PlainCode]
+parseExpr = parseInt
+\end{lstlisting}
+\end{minipage}
 
 Consider extending the language by adding subtractions to the grammar. If we still write its parser by directly following the grammar structure, the new left-recursive case will get the parser into an infinite loop. Namely, \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
 
-\huang{todo}
-%% \begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
-%% \setlength{\grammarindent}{5em}
-%% \begin{grammar}
-%% <expr> ::= <int> \alt <expr> `-' <int>
-%% \end{grammar}
-%% &
-%% \begin{lstlisting}[language=PlainCode]
-%% parseExpr = parseSub <|> parseInt
-%% parseSub = do
-%%   e <- parseExpr
-%%   ...
-%% \end{lstlisting}
-%% \end{tabular}
+\begin{minipage}{12em}
+\setlength{\grammarindent}{4em}
+\begin{grammar}
+<expr> ::= <int> \alt <expr> `-' <int>
+\end{grammar}
+\end{minipage}
+\begin{minipage}{15em}
+\begin{lstlisting}[language=PlainCode]
+parseExpr =
+  parseSub <|> parseInt
 
-To solve this issue, we have to rewrite the grammar as below to eliminate left-recursion and build the parser based on this new grammar.\\
+parseSub = do
+  e <- parseExpr
+  ...
+\end{lstlisting}
+\end{minipage}
 
-\huang{todo}
-%% \begin{tabular}{m{0.4\linewidth}m{0.5\linewidth}}
-%% \setlength{\grammarindent}{5em}
-%% \begin{grammar}
-%% <expr> ::= <int> <expr'>
+To solve this issue, we have to rewrite the grammar as below to eliminate left-recursion and build the parser based on this new grammar.
 
-%% <expr'> ::= <empty> \alt `-' <int> <expr'>
-%% \end{grammar}
-%% &
-%% \end{tabular}
+\vspace{0.4\baselineskip}
+\begin{minipage}{15em}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> <expr'>
+
+<expr'> ::= <empty> \alt `-' <int> <expr'>
+\end{grammar}
+\end{minipage}
+\vspace{0.4\baselineskip}
 
 After left-recursion elimination, the structure of grammar is changed,
 as well as its corresponding parser. In a modular setting, it is
@@ -168,7 +169,7 @@ For more concise demonstration, we assume that all the Scala code in the rest of
 
 \begin{figure}[t]
 \centering
-\lstinputlisting[linerange=42-53]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_PAPERCODE
+\lstinputlisting[linerange=42-53]{code/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_PAPERCODE
 \caption{Helper object for code demonstration in this paper.}\label{fig:papercode}
 \end{figure}
 
@@ -184,80 +185,46 @@ additions. The concrete syntax is:
 
 It is straightforward to model the abstract syntax by classes. The ASTs support pretty-printing via the \lstinline{print} method.
 
-\lstinputlisting[linerange=9-17]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
+\lstinputlisting[linerange=9-17]{code/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
 
 Then we write corresponding parsers for all cases.
 Note that a parser has type \lstinline{Parser[E]} for some
 \lstinline{E}, which indicates the type of results it produces.
 
-\lstinputlisting[linerange=21-29]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
+\lstinputlisting[linerange=21-29]{code/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
 
 In the trait \lstinline{ExprParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
 \lstinline{pAdd} handles the addition case and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
 recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the longest match alternative combinator \inlinecode{|||}.
 Table~\ref{tab:packrat} shows common parser combinators from the library.
 
-\huang{todo}
-
-%% \begin{table}[t]
-%% \begin{tabular}{l}
-%% \hline
-%% \begin{lstlisting}
-%% def ~[U](q: => Parser[U]): Parser[~[T, U]]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator for sequential composition. \\
-%% \hline
-%% \begin{lstlisting}
-%% def ^^[U](f: (T) => U): Parser[U]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator for function application. \\
-%% \hline
-%% \begin{lstlisting}
-%% def ^^^[U](v: => U): Parser[U]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator that changes a successful result into the specified value. \\
-%% \hline
-%% \begin{lstlisting}
-%% def <~[U](q: => Parser[U]): Parser[T]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator for sequential composition which keeps only the left result. \\
-%% \hline
-%% \begin{lstlisting}
-%% def ~>[U](q: => Parser[U]): Parser[U]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator for sequential composition which keeps only the right result. \\
-%% \hline
-%% \begin{lstlisting}
-%% def repsep[T](p: => Parser[T], q: => Parser[Any]): Parser[List[T]]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser generator for interleaved repetitions. \\
-%% \hline
-%% \begin{lstlisting}
-%% def ident: Parser[String]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser which matches an identifier. \\
-%% \hline
-%% \begin{lstlisting}
-%% def numericLit: Parser[String]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser which matches a numeric literal. \\
-%% \hline
-%% \begin{lstlisting}
-%% def |[U >: T](q: => Parser[U]): Parser[U]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator for alternative composition. \\
-%% \hline
-%% \begin{lstlisting}
-%% def |||[U >: T](q0: => Parser[U]): Parser[U]
-%% \end{lstlisting} \\
-%% \hspace{.2in}- A parser combinator for alternative with longest match composition. \\
-%% \hline \\
-%% \end{tabular}
-%% \caption{Common combinators from the Scala standard parser combinator library.}\label{tab:packrat}
-%% \end{table}
+\begin{table}
+\begin{tabularx}{\linewidth}{X}
+\hline
+\lstinline{def ~[U](q: => Parser[U]): Parser[~[T, U]]} \\
+- A parser combinator for sequential composition. \\ \hline
+\lstinline{def \^\^[U](f: (T) => U): Parser[U]} \\
+- A parser combinator for function application. \\ \hline
+\lstinline{def \^\^\^[U](v: => U): Parser[U]} \\
+- A parser combinator that changes a successful result into the specified value. \\ \hline
+\lstinline{def <~[U](q: => Parser[U]): Parser[T]} \\
+- A parser combinator for sequential composition which keeps only the left result. \\ \hline
+\lstinline{def ~>[U](q: => Parser[U]): Parser[U]} \\
+- A parser combinator for sequential composition which keeps only the right result. \\ \hline
+\lstinline{def ident: Parser[String]} \\
+- A parser which matches an identifier. \\ \hline
+\lstinline{def numericLit: Parser[String]} \\
+- A parser which matches a numeric literal. \\ \hline
+\lstinline{def |[U >: T](q: => Parser[U]): Parser[U]} \\
+- A parser combinator for alternative composition. \\ \hline
+\lstinline{def |||[U >: T](q0: => Parser[U]): Parser[U]} \\
+- A parser combinator for alternative with longest match composition. \\ \hline
+\end{tabularx}
+\caption{Common combinators from the Scala standard parser combinator library.}\label{tab:packrat}
+\end{table}
 
 It is worth mentioning that the grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
 
 The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
 
-\lstinputlisting[linerange=33-33]{../Scala/Parser/src/PaperCode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
+\lstinputlisting[linerange=33-33]{code/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
