@@ -1,6 +1,6 @@
-package PaperCode.Sec6CaseStudy
+package papercode.Sec6CaseStudy
 
-import PaperCode.Common
+import papercode.Common
 
 
 object Code1 extends Common {

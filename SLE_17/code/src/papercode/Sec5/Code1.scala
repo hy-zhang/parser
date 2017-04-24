@@ -1,6 +1,6 @@
-package PaperCode.Sec5
+package papercode.Sec5
 
-import PaperCode.Common
+import papercode.Common
 
 
 object Code1 extends Common {

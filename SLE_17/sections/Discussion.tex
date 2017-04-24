@@ -31,7 +31,7 @@ We use \inlinecode{pTypedLamT} and \inlinecode{pTypedLamE} as copies of current 
 with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are the parsers used for performing recursion.
 
 \begin{figure}[ht]
-\lstinputlisting[linerange=31-59]{code/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\lstinputlisting[linerange=31-59]{code/src/papercode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
 \caption{Code for parsing a language with multi-sorted syntax for types and expressions.}
 \label{fig:multi}
 \end{figure}
@@ -41,7 +41,7 @@ express multiple syntax. The isolation for different syntax
 is guaranteed by the type system. The following illustrates some client code
 for the new parser:
 
-\lstinputlisting[linerange=63-66]{code/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
+\lstinputlisting[linerange=63-66]{code/src/papercode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
 The code works as expected to parse and pretty-print the result.
 
 \subsection{Overriding Existing Rules}\label{subsec:overriding-rules}
@@ -54,7 +54,7 @@ situations, including when conflicts or ambiguities arise when
 composing languages.
 As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
 
-\lstinputlisting[linerange=76-81]{code/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
+\lstinputlisting[linerange=76-81]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
 
 Then we want to replace the untyped lambda abstractions by typed
 lambdas. With inheritance and method overriding, it is easy to only
@@ -63,7 +63,7 @@ The new \inlinecode{pLam} parses a colon and a type in addition,
 between the identifier and the dot. Due to dynamic dispatch, our new
 implementation of lambdas will be different without affecting the other parts of the parser.
 
-\lstinputlisting[linerange=85-90]{code/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
+\lstinputlisting[linerange=85-90]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
 
 
 One can even ``eliminate'' a production rule in the extension, by overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
@@ -101,8 +101,8 @@ language component on the left side of Figure~\ref{fig:lng-components}.
 Then for the extension of types and lambda abstractions in Section~\ref{subsec:differentsyntax}, instead of inheriting from the previous language directly, we define it as another independent language component. The code is presented on the right side of Figure~\ref{fig:lng-components}.
 
 \begin{figure}[t]
-\lstinputlisting[linerange=113-132]{code/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
-\lstinputlisting[linerange=136-156]{code/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+\lstinputlisting[linerange=113-132]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
+\lstinputlisting[linerange=136-156]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
 \caption{Language components \lstinline{VarExpr} (\huang{todo}left) and \lstinline{TypedLam} (right).}\label{fig:lng-components}
 \end{figure}
 
@@ -110,7 +110,7 @@ As shown in Figure~\ref{fig:compose-components}, those two language components c
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
 \begin{figure}[t]
-\lstinputlisting[linerange=160-170]{code/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+\lstinputlisting[linerange=160-170]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
 \caption{Reuse two language components \lstinline{VarExpr} and \lstinline{TypedLam}.}\label{fig:compose-components}
 \end{figure}
 

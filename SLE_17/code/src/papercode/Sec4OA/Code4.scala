@@ -1,6 +1,6 @@
-package PaperCode.Sec4OA
+package papercode.Sec4OA
 
-import PaperCode.Common
+import papercode.Common
 
 
 object Code4 extends Common {
@@ -8,7 +8,7 @@ object Code4 extends Common {
   trait ExprOAParser[E] {
     lexical.delimiters += "+"
 
-    val alg: ExprAlg[E]
+    val alg: Alg[E]
 
     val pLit: Parser[E] = numericLit ^^ { x => alg.lit(x.toInt) }
     val pAdd: Parser[E] = pE ~ ("+" ~> pE) ^^ { case e1 ~ e2 => alg.add(e1, e2) }
@@ -18,7 +18,7 @@ object Code4 extends Common {
   }
 
   trait VarExprOAParser[E] extends ExprOAParser[E] {
-    override val alg: VarExprAlg[E]
+    override val alg: VarAlg[E]
 
     val pVar: Parser[E] = ident ^^ alg.varE
     val pVarExpr: Parser[E] = pExpr ||| pVar
@@ -28,13 +28,13 @@ object Code4 extends Common {
 
 
 //BEGIN_OVERVIEW_OA_MULTI_SYNTAX
-trait TypedLamAlg[E, T] extends VarExprAlg[E] {
+trait TypedLamAlg[E, T] extends VarAlg[E] {
   def intT(): T
   def arrT(t1: T, t2: T): T
   def lam(x: String, t: T, e: E): E
 }
 
-trait TypedLamPrint extends TypedLamAlg[String, String] with VarExprPrint {
+trait TypedLamPrint extends TypedLamAlg[String, String] with VarPrint {
   def intT() = "int"
   def arrT(t1: String, t2: String) = t1 + " -> " + t2
   def lam(x: String, t: String, e: String) = "\\" + x + " : " + t + ". " + e

@@ -169,7 +169,7 @@ For more concise demonstration, we assume that all the Scala code in the rest of
 
 \begin{figure}[t]
 \centering
-\lstinputlisting[linerange=42-53]{code/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_PAPERCODE
+\lstinputlisting[linerange=16-27]{code/src/papercode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_PAPERCODE
 \caption{Helper object for code demonstration in this paper.}\label{fig:papercode}
 \end{figure}
 
@@ -185,15 +185,15 @@ additions. The concrete syntax is:
 
 It is straightforward to model the abstract syntax by classes. The ASTs support pretty-printing via the \lstinline{print} method.
 
-\lstinputlisting[linerange=9-17]{code/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
+\lstinputlisting[linerange=9-17]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
 
 Then we write corresponding parsers for all cases.
 Note that a parser has type \lstinline{Parser[E]} for some
 \lstinline{E}, which indicates the type of results it produces.
 
-\lstinputlisting[linerange=21-29]{code/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
+\lstinputlisting[linerange=21-28]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
 
-In the trait \lstinline{ExprParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
+In the trait \lstinline{AParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
 \lstinline{pAdd} handles the addition case and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
 recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the longest match alternative combinator \inlinecode{|||}.
 Table~\ref{tab:packrat} shows common parser combinators from the library.
@@ -225,6 +225,6 @@ Table~\ref{tab:packrat} shows common parser combinators from the library.
 
 It is worth mentioning that the grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
 
-The last line demonstrates how we parse a valid expression \inlinecode{1 + 2} using our parser.
+The code below demonstrates how to parse a valid expression \inlinecode{1 + 2} using our parser.
 
-\lstinputlisting[linerange=33-33]{code/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
+\lstinputlisting[linerange=6-7]{code/src/papercode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER

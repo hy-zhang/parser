@@ -93,7 +93,7 @@ introduce variables as a new case:
 
 It is easy to extend the corresponding OO AST in a modular way:
 
-\lstinputlisting[linerange=29-31]{code/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_SIMPLE_LAM
+\lstinputlisting[linerange=7-9]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_SIMPLE_LAM
 
 Since we already have the parser for literals and additions, we would
 like to build the new parser by reusing the old one. In Scala we can take advantage of inheritance for such reuse. Specifically,
@@ -102,7 +102,7 @@ the old one. Here one may quickly come up
 with the following attempt, where a new parser is defined for \inlinecode{Var}, then composed
 with \inlinecode{pExpr}:
 
-\lstinputlisting[linerange=35-38]{code/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_BAD_ATTEMPT
+\lstinputlisting[linerange=13-16]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_BAD_ATTEMPT
 
 Unfortunately, this fails to parse some expressions like \inlinecode{"1 + x"}, which are obviously valid in the new grammar.
 The reason is that \inlinecode{pAdd} makes two recursive calls to parse sub-expressions, by using \inlinecode{pExpr}, which
@@ -119,9 +119,9 @@ to redefine an inherited method, such as \inlinecode{pExpr}. We can
 build the new parser which correctly parses \inlinecode{"1 + x"}
 through overriding:
 
-\lstinputlisting[linerange=42-47]{code/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
+\lstinputlisting[linerange=20-26]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
 
-Now \inlinecode{VarExprParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
+Now \inlinecode{VarParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
 method overriding in inheritance. When the input \inlinecode{"1 + x"} is fed to the parser \inlinecode{this.pExpr}, it firstly delegates
 the work to \inlinecode{super.pExpr}, which parses literals and additions. However, the recursive call \inlinecode{pExpr} in \inlinecode{pAdd}
 actually refers to \inlinecode{this.pExpr} again due to dynamic dispatch, and it covers the variable case. Similarly, all recursive calls can be updated to include new extensions if needed.
@@ -137,13 +137,13 @@ from pre-defined languages \inlinecode{LanguageA} and
 \inlinecode{LanguageB} using alternative. The new parser can be built
 by inheriting both parsers at the same time:
 
-\lstinputlisting[linerange=67-73]{code/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
+\lstinputlisting[linerange=46-50]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
 
 The \inlinecode{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method \inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish the methods of the same name. Therefore in the new parser, we use \inlinecode{super} to specify which \inlinecode{pExpr} we are referring to.
 
 As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
 
-\lstinputlisting[linerange=79-95]{code/Sec3Inheritance/Code1.scala}% APPLY:linerange=BOOL_EXAMPLE
+\lstinputlisting[linerange=56-73]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=BOOL_EXAMPLE
 
 \begin{comment}
 \bruno{You can present the abstract example, as you do

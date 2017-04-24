@@ -40,7 +40,7 @@ beginpos = {}
 endpos = {}
 
 
-Dir['code/*/*.scala'].each do |file|
+Dir['code/src/papercode/*/*.scala'].each do |file|
   scan(file, beginpos, endpos, fileloc)
 end
 
