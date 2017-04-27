@@ -96,23 +96,18 @@ For implementation, a language component is represented by a Scala object, and i
     \item \textbf{Object Algebras (optional):} concrete operations on ASTs, such as pretty-printing.
 \end{itemize}
 
-We take the example in Section~\ref{subsec:parsingwithoa} again, which is a language of literals, additions and variables. It is defined as a
-language component on the left side of Figure~\ref{fig:lng-components}.
-Then for the extension of types and lambda abstractions in Section~\ref{subsec:differentsyntax}, instead of inheriting from the previous language directly, we define it as another independent language component. The code is presented on the right side of Figure~\ref{fig:lng-components}.
+We take the example in Section~\ref{subsec:parsingwithoa} again, which is a language of literals, additions and variables. It can be defined as a language component \inlinecode{VarExpr}.
 
-\begin{figure}[t]
 \lstinputlisting[linerange=115-130]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
-\lstinputlisting[linerange=134-150]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
-\caption{Language components \lstinline{VarExpr} (\huang{todo}left) and \lstinline{TypedLam} (right).}\label{fig:lng-components}
-\end{figure}
 
-As shown in Figure~\ref{fig:compose-components}, those two language components can be merged into one to obtain the language we want. Furthermore, the new language is still a modular
+For the extension of types and lambda abstractions in Section~\ref{subsec:differentsyntax}, instead of inheriting from the previous language directly, we can define it as another independent language component \inlinecode{TypedLam}.
+
+\lstinputlisting[linerange=134-150]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+
+The code below shows how we merge those two components together to obtain the language we want. Furthermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
-\begin{figure}[t]
 \lstinputlisting[linerange=154-165]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
-\caption{Reuse two language components \lstinline{VarExpr} and \lstinline{TypedLam}.}\label{fig:compose-components}
-\end{figure}
 
 The only drawback is that the glue code of composition appears to be
 boilerplate. As shown above, we are combining ASTs, parsers and
