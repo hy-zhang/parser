@@ -23,7 +23,10 @@ and support), any other parsing formalism that provides similar
 features should be adequate for modular parsing.
 
 \subsection{Algorithmic Challenges of Modularity}\label{subsec:challenges}
-At a first look, parser combinators are very suitable for modular parsing, because of two reasons. Firstly, they are naturally modular. The manner of using them is to write small parsers and use combinators to compose them together. The construction procedure is explicit and fully controlled by the programmer. Secondly, each parser combinator is represented by a piece of code, and so are the parsers it takes. Thus in a statically typed programming language they can be statically type-checked.
+At a first look, parser combinators are very suitable for modular parsing.
+One reason is that they are naturally modular for parser composition, providing full control to
+the programmer. The other one is that they are implemented by a piece of code, so that it ensures
+type safety in a statically typed programming language.
 Unfortunately many parser combinators have important limitations.
 In particular, several parser combinators including the famous Parsec~\cite{Leijen2001} library, require
 programmers to manually do \textit{left-recursion elimination}, \textit{longest match composition}, and
@@ -46,7 +49,9 @@ parseExpr = parseInt
 \end{lstlisting}
 \end{minipage}
 
-Consider extending the language by adding subtractions to the grammar. If we still write its parser by directly following the grammar structure, the new left-recursive case will get the parser into an infinite loop. Namely, \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
+Consider extending the language by adding subtractions to the grammar.
+If we directly extend the grammar, the new left-recursive case will cause an infinite loop.
+Below, \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
 
 \begin{minipage}{12em}
 \setlength{\grammarindent}{4em}
@@ -65,7 +70,7 @@ parseSub = do
 \end{lstlisting}
 \end{minipage}
 
-To solve this issue, we have to rewrite the grammar as below to eliminate left-recursion and build the parser based on this new grammar.
+Instead, we have to rewrite the grammar as below to eliminate left-recursion.
 
 \vspace{0.4\baselineskip}
 \begin{minipage}{15em}
@@ -101,23 +106,19 @@ Consider the grammar:
 <expr> ::= <int> \alt <int> `+' <expr>
 \end{grammar}
 
-In Parsec, for instance, the parser below will only parse the input \inlinecode{"1 + 2"} to \inlinecode{"1"}, as \inlinecode{parseInt} successfully parses \inlinecode{"1"}
+In Parsec, for instance, the parser \inlinecode{"parseInt <|> parseAdd"} will only parse the input \inlinecode{"1 + 2"} to \inlinecode{"1"}, as \inlinecode{parseInt} successfully parses \inlinecode{"1"}
 and terminates parsing.
 
-\begin{lstlisting}[language=PlainCode]
-parser = parseInt <|> parseAdd
-\end{lstlisting}
-
-Using traditional alternative composition, when a preceding parser successfully parses a prefix of the input, it will finish parsing and return the result, in spite that subsequent parsers may be able to parse the whole input. In contrast with the parser above, \inlinecode{parser = parseAdd <|> parseInt} works as expected with the two cases swapped.
+Traditional alternative composition will only find the first parser that succeeds on a prefix of the input,
+in spite that subsequent parsers may parse the whole input. In contrast with the parser above, \inlinecode{"parseAdd <|> parseInt"} works as expected with the two cases swapped.
 
 In this case, reordering the alternatives ensures that
 the \emph{longest match} is picked among the possible results. However, manual reordering for the longest match is inconvenient, and worst still, it is essentially non-modular. When the grammar is extended with new rules, programmers are supposed to \emph{manually} adjust
 the order of parsers, which requires rewriting previously written code.
 
 \paragraph{Backtracking} The need for backtracking can also be problematic
-in a modular setting. For example, consider a grammar that includes
-``import'' statements including \inlinecode{import..from}.
-Now we want to extend the grammar with an \inlinecode{import..as} case, as shown in the third line of grammar below.
+in a modular setting. Consider a grammar that includes \inlinecode{"import..from"}.
+It is extended with an \inlinecode{"import..as"} case:
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}
@@ -125,33 +126,27 @@ Now we want to extend the grammar with an \inlinecode{import..as} case, as shown
     \alt ...
     \alt `import' <ident> `as' <ident>
 \end{grammar}
-
-Since the \inlinecode{import..from} case shares a prefix with the new case \inlinecode{import..as}, when the former case fails, we must backtrack to the beginning. Take Parsec as an example, its choice
-combinator \inlinecode{<|>} only tries the second alternative if the first fails
-without any token consumption. An auxiliary function \inlinecode{try} is used for explicit backtracking.
-
-\begin{lstlisting}[language=PlainCode]
-oldParser = parseImpFrom <|> parseA <|> parseB <|> ...
-newParser = try parseImpFrom <|> parseA <|> parseB <|> ... <|> parseImpAs
-\end{lstlisting}
-
-Given the full grammar, we can decide where to put \inlinecode{try} for backtracking. However, with modular parsing we are unable to have a global view of the full grammar. Hence the worst case should be considered that all alternatives may share common prefixes with future cases. In that case we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere:
+Since the two cases share a common prefix, when the former fails, we must backtrack to the beginning.
+For example, the choice combinator in Parsec only tries the second alternative if the first fails
+without any token consumption. We have to use \inlinecode{try} for explicit backtracking.
 
 \begin{lstlisting}[language=PlainCode]
-parser = try parseImpFrom <|> try parseA <|> try parseB <|> ... <|> try parseImpAs
+oldParser = parseImpFrom <|> ...
+newParser = try parseImpFrom <|> ... <|> parseImpAs
 \end{lstlisting}
 
-\noindent However, this results in the worst-case exponential time
-complexity in Parsec, because it does not provide optimizations
-for backtracking.
+Similarly, this violates a modular setting because we cannot have a global view of the full grammar.
+Hence the worst case should be considered that all alternatives may share common prefixes with future cases. In that case we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere. However this results in the worst-case exponential time
+complexity.
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}
 Fortunately, some more advanced parsing techniques such as Packrat
 parsing~\cite{Ford2002} have been developed to address limitations of
-simple parser combinators. Packrat parsers use memoization to record
+simple parser combinators. Packrat parsing uses memoization to record
 the result of applying each parser at each position of the input, so
-that repeated computation is eliminated. Moreover, Packrat parsing, in
-theory, supports both direct and indirect left-recursion~\cite{warth2008}. All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique for modular parsing.
+that repeated computation is eliminated. Moreover, it supports both direct left-recursion
+and (in theory) indirect left-recursion~\cite{warth2008}.
+All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique for modular parsing.
 \begin{comment}
 It is worth mentioning that the choice of parser combinators will not
 affect the other parts of our library. One can choose other parser
@@ -160,7 +155,7 @@ of left-recursion are not major concerns. A different library can even build a n
 \name with fancy features or higher efficiency.
 \end{comment}
 Scala has a standard parser combinator library\footnote{https://github.com/scala/scala-parser-combinators}
-\cite{moors2008parser} which implements Packrat parsers.
+\cite{moors2008parser} for Packrat parsers.
 The library provides a number of parser combinators, including the longest match alternative combinator.
 %Below we present an example to illustrate Scala parsers.
 
@@ -223,7 +218,8 @@ Table~\ref{tab:packrat} shows common parser combinators from the library.
 \caption{Common combinators from the Scala standard parser combinator library.}\label{tab:packrat}
 \end{table}
 
-It is worth mentioning that the grammar is left-recursive in the addition case. Since left-recursion is well supported by Packrat parsers, we do not need extra code for it. Our parser also employs longest match composition by using the combinator \lstinline{|||} in the library. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
+It is worth mentioning that the left-recursive grammar above is well supported without extra code.
+ The longest match composition is also employed by using the combinator \lstinline{|||}. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
 
 The code below demonstrates how to parse a valid expression \inlinecode{1 + 2} using our parser.
 

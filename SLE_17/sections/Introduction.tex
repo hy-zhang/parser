@@ -99,12 +99,9 @@ two different classes of challenges: algorithmic challenges; and
 typing/reuse challenges.
 
 \paragraph{Algorithmic Challenges} A first challenge was to do with
-the parsing algorithms themselves. Since many parsing formalisms
-were not designed with extensibility in mind, some of the employed
-techniques were non-modular, or performed poorly in a modular
-setting.  The most widely use tools for parsing are parser
-generators, but most algorithms employed by parser generators
-require full information about the grammar to generate parsing
+the parsing algorithms themselves, since they 
+were usually not designed with extensibility in mind. The most widely used tools for parsing are parser
+generators, but they mostly require full information about the grammar to generate parsing
 code. Moreover, actions associated with grammar productions are
 typically only type-checked after the parser has been
 generated. Both problems go against our goals of semantic
@@ -125,13 +122,9 @@ a modular setting as illustrated in Section~\ref{subsec:challenges}.
 
 To address such algorithmic challenges, we propose a methodology
 for implementing modular parsers built on top of an
-existing Packrat~\cite{Ford2002} parsing library for Scala~\cite{odersky2004overview}. The Packrat parsing library
-directly supports left-recursion, and a \emph{longest-match
-  composition} operator. The direct support for left-recursion
-avoids the need for left-recursion elimination, which is very
-cumbersome is a modular setting. The longest-match composition
-operator avoids the use of priorities, and it provides reasonably
-efficient optimizations for backtracking.
+existing Packrat~\cite{Ford2002} parsing library for Scala~\cite{odersky2004overview}. Such a library
+directly supports left-recursion, memoization, and a \emph{longest-match
+  composition} operator. We will see some examples in Section \ref{subsec:packratparsing}.
 
 \paragraph{Typing and Reusability Challenges} The second class of
 challenges was problems related to modularity, reusability and
@@ -187,8 +180,8 @@ In summary our contributions are:
 
 \end{itemize}
 
-All the code in the paper and the case study is written in Scala. But,
+All the code in the paper and the case study is written in Scala, since its concise and elegant
+syntax gives better presentation. Clearly
 other languages that support some form of multiple inheritance
 (including Java 8 with default methods~\cite{Goetz2012}) could in principle be
-used. Our choice for Scala had to do with the concise and elegant syntax
-of the language which enables a clear presentation of our ideas.
+used.

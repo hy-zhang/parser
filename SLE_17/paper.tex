@@ -24,8 +24,26 @@
 \usepackage{enumitem}
 \usepackage{tabularx}
 
+\lstdefinelanguage{JavaScala}{
+  morekeywords={public,int,interface,implements,default,
+    abstract,case,catch,class,def,static,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,var,while,yield,with,val},
+  otherkeywords={=>,<\%,<:,>:,\#,@},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+
 \lstset{
-  language=Scala,                % choose the language of the code
+  language=JavaScala,                % choose the language of the code
   columns=flexible,
   lineskip=-1pt,
   basicstyle=\ttfamily\small,       % the size of the fonts that are used for the code

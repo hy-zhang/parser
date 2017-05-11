@@ -26,7 +26,7 @@ model multi-sorted languages. If the syntax contains multiple sorts, we can dist
 
 Figure~\ref{fig:multi} illustrates the corresponding Scala code
 that extends the Object Algebra interface, pretty-printing operation and parser. We use two type parameters \inlinecode{E} and \inlinecode{T} for expressions and types. They guarantee that invalid terms such as \inlinecode{int + int} will be rejected by the parser.
-Besides lexing, the trait \inlinecode{TypedLamOAParser} also introduces parsers for types, and the new case for expressions.
+Besides lexing, the trait \inlinecode{LamOAParser} also introduces parsers for types, and the new case for expressions.
 We use \inlinecode{pTypedLamT} and \inlinecode{pTypedLamE} as copies of current \inlinecode{pT} and \inlinecode{pE}, due to the issue
 with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are the parsers used for performing recursion.
 
@@ -38,29 +38,25 @@ with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingw
 
 From the code, we observe that the multi-sorts of Object Algebra interface
 express multiple syntax. The isolation for different syntax
-is guaranteed by the type system. The following illustrates some client code
-for the new parser:
+is guaranteed by the type system. The following client code
 
 \lstinputlisting[linerange=40-43]{code/src/papercode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX_CLIENT
-The code works as expected to parse and pretty-print the result.
+works as expected to parse and pretty-print the result.
 
 \subsection{Overriding Existing Rules}\label{subsec:overriding-rules}
 
 As many syntactically extensible parsers, our approach also supports
-modifying part of existing parsers, but in a type-safe way. We can
-easily update existing parsing rules with new implementations, or
-eliminate them in extended parsers. This can be useful in many
-situations, including when conflicts or ambiguities arise when
-composing languages.
-As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence. Some irrelevant details are omitted.
+modifying part of existing parsers, including updating or eliminating existing rules,
+but in a type-safe way. This can be useful in many
+situations, for instance when conflicts or ambiguities arise upon composing languages.
+As an illustration, suppose we have an untyped lambda abstraction case in a base parser as below. Some irrelevant details are omitted.
 
 \lstinputlisting[linerange=76-82]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=BASEPARSER_UNTYPEDLAM
-
+Here \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence.
 Then we want to replace the untyped lambda abstractions by typed
 lambdas. With inheritance and method overriding, it is easy to only
 change the implementation of \lstinline{pLam} in the extended parser.
-The new \inlinecode{pLam} parses a colon and a type in addition,
-between the identifier and the dot. Due to dynamic dispatch, our new
+Due to dynamic dispatch, our new
 implementation of lambdas will be different without affecting the other parts of the parser.
 
 \lstinputlisting[linerange=86-92]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=EXTPARSER_TYPEDLAM
@@ -91,8 +87,8 @@ be very useful for rapid development of DSLs.
 For implementation, a language component is represented by a Scala object, and it consists of three parts: Object Algebra interface, parser, and Object Algebras.
 
 \begin{itemize}[leftmargin=*]
-    \item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax. The type parameters represent multiple sorts of syntax, and the methods are constructs.
-    \item \textbf{Parser:} corresponding parser of the abstract syntax, written in a modular way as we demonstrated in previous sections.
+    \item \textbf{Object Algebra interface:} defined as a trait for the abstract syntax. The type parameters represent multiple sorts of syntax, and  methods are constructs.
+    \item \textbf{Parser:} corresponding parser of the abstract syntax, written in a modular way as we demonstrated before.
     \item \textbf{Object Algebras (optional):} concrete operations on ASTs, such as pretty-printing.
 \end{itemize}
 
@@ -119,21 +115,21 @@ in Scala, since nested classes/traits have to be manually composed.
 
 \subsection{Alternative Techniques}
 
-Under our modular parsing framework, we use Packrat parsing as the underlying parsing technique, OO inheritance with method overriding for composing and extending parsers, and Object Algebras for parsing extensible ASTs. However, our framework is more general and thus more powerful, because those aspects are orthogonal to each other, and hence can have alternatives.
+Under our modular parsing framework, we use Packrat parsing as the underlying parsing technique, OO inheritance with method overriding for composing and extending parsers, and Object Algebras for parsing extensible ASTs. However, such a pattern is more general and thus more powerful, because those aspects are orthogonal to each other, and hence can have alternatives.
 
 \begin{itemize}[leftmargin=*]
 
 \item {\bf Parsing Technique:}
-Our approach does not depend on a particular parser combinator library
+The pattern does not depend on a particular parser combinator library
 or parsing algorithm. We demonstrated that Packrat parsing has some
 advantages and is suitable in a modular setting. However, under
-certain circumstances or in other programming languages, it may not be
-the best choice. One can use other parser combinator libraries as long
+other circumstances it may not be
+the best choice. One can use other parser combinators as long
 as the guidelines proposed in Section~\ref{sec:packrat} are met.
 
 \item {\bf Composing and Extending Parsers:}
   We use traits to model parsers, OO inheritance to compose them, and
-  method overriding for their extensibility. These language features
+  method overriding for their extensibility. These features
   may not be supported in other programming languages, especially in
   functional languages such as Haskell. Nevertheless, \textit{open
     recursion}~\cite{CookThesis} could be used as an alternative. An explicit
@@ -142,9 +138,9 @@ as the guidelines proposed in Section~\ref{sec:packrat} are met.
 
 \item {\bf Extensible ASTs:}
 Besides Object Algebras, many other techniques including \textit{Data
-  types à la carte} (DTC)~\cite{swierstra2008data} and the Cake pattern~\cite{odersky2005independently} also support extensible data structures. These alternatives could also be adopted to build ASTs and corresponding parsers.
+  types à la carte} (DTC)~\cite{swierstra2008data} and the Cake pattern~\cite{odersky2005independently} also support extensible data structures. These alternatives could also be adopted to build ASTs and their parsers.
 
 \end{itemize}
 
-As we demonstrated, the whole modular parsing framework itself is
-modular, which means it can be customized easily.
+As we demonstrated, such a pattern for modular parsing is 
+modular itself, and can be customized easily.

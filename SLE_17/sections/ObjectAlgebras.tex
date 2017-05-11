@@ -13,8 +13,9 @@ traditional OO ASTs, adding new language constructs is easy, but
 adding new operations is hard. In the last section, we have a simple
 language containing literals, additions and variables. The
 corresponding ASTs are built using classes with a pretty-printing
-operation. Now suppose we want to collect free variables over the
-ASTs. Using a traditional OO approach, one attempt would be extending
+operation.
+To modularly add an operation like collecting free variables, one attempt
+would be extending
 \inlinecode{Expr} with the new operation to obtain a new abstract type
 for ASTs:
 
@@ -26,14 +27,10 @@ approach is problematic in terms of type-safety (but see recent work
 by Wang and Oliveira~\cite{wang2016expression}, which shows a technique that is type-safe
 in many cases). More importantly, a second problem is that
 even if that approach would work, the parsing code would not
-be reusable. \lstinline{VarParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser have type \inlinecode{Parser[Expr]}, which indicates the result has type \inlinecode{Expr}, whereas the type should be \inlinecode{NewExpr} now.
-
-Therefore, in order to generate new AST structures, we have to
-substitute \lstinline{NewExpr}, \lstinline{NewLit},
-\lstinline{NewAdd} and \lstinline{NewVar} for the old
-\lstinline{Expr}, \lstinline{Lit}, \lstinline{Add} and \lstinline{Var}
-correspondingly. Thus we have to either modify existing code or
-use casts. For semantic modularity, we need a different approach for building ASTs.
+be reusable. \lstinline{VarParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser have type \inlinecode{Parser[Expr]},
+which generates ASTs that only support pretty-printing. Now we have to substitute \inlinecode{NewExpr} for \inlinecode{Expr} (the
+same for \inlinecode{Lit}, \inlinecode{Add}, and so on). It requires either modification on existing code or casts.
+The goal of semantic modularity motivates us to find a different approach for building ASTs.
 
 Fortunately, Object Algebras~\cite{Oliveira:2012} enable us to solve
 this problem. Object Algebras separate data variants and
@@ -55,12 +52,12 @@ Essentially, Object Algebras generalize the {\sc Abstract Factory} pattern~\cite
 At first the language only supports literals and additions:
 
 \lstinputlisting[linerange=5-8]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALG
-We have two constructors \inlinecode{lit} and \inlinecode{add}, corresponding to literals and additions. The trait \inlinecode{Alg} is called an \textit{Object Algebra interface}. The trait is parametrized by the type
+Here \inlinecode{Alg} is called an \textit{Object Algebra interface}, parameterized by the type
 \inlinecode{E}, which abstracts over the concrete type of the AST.
 
 \paragraph{Adding New Operations}
 To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
-provides implementations for all cases. Below is an example of pretty-printing an expression:
+provides implementations for all cases. Below is an example of pretty-printing:
 
 \lstinputlisting[linerange=12-16]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
 Here \inlinecode{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
@@ -77,7 +74,7 @@ Now pretty-printing on the new language can be realized without modifying existi
 
 \lstinputlisting[linerange=33-35]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
 An observation is that only the new case is implemented for pretty-printing, and the others have been inherited.
-In other words, existing code was reused and was not modified!
+Thus existing code was reused and was not modified!
 
 To create an expression representing \inlinecode{1 + x}, a generic method is defined as follows:
 
@@ -85,13 +82,12 @@ To create an expression representing \inlinecode{1 + x}, a generic method is def
 
 Note how the construction of the abstract syntax happens through
 the use of factory methods, instead of constructors.
-To pretty-print the expression,
-we pass an instance of \inlinecode{VarPrint} to \inlinecode{makeExp}:
+To pretty-print the expression, the code
 
 \begin{lstlisting}
 makeExp(new VarPrint {})
 \end{lstlisting}
-which results in \inlinecode{"(1 + x)"} as expected.
+results in \inlinecode{"(1 + x)"} as expected.
 
 \subsection{Parsing with Object Algebras}\label{subsec:parsingwithoa}
 
@@ -101,10 +97,9 @@ methods has to be used by the parsing function. Thus, a first attempt
 at defining the parser for the small arithmetic language is:
 
 \lstinputlisting[linerange=8-17]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
-Such a parser looks fine, but it is not extensible. For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]}, where the type of the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This difference prohibits method/field overriding. Scala supports type-refinement of fields if the overriding
-field has a type which is a \emph{subtype} of the original field.
-Unfortunately, in this case, although \inlinecode{VarAlg} is a subtype
-of \inlinecode{Alg}, the function type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]} is a supertype of \inlinecode{Alg[E] =>} \inlinecode{Parser[E]}. Thus it is not possible to have overriding.
+Such a parser looks fine, but it is not extensible. For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]}, which is a \emph{supertype} of the old type \inlinecode{Alg[E] =>} \inlinecode{Parser[E]}, since
+the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This violates
+overriding in Scala.
 
 
 \paragraph{A Solution}
@@ -124,21 +119,19 @@ Now let's try this pattern with the variables extension:
 
 \noindent The type of the Object Algebra field \lstinline{alg} is first refined
 to \lstinline{VarAlg[E]}, to allow calling the additional factory method
-for variables. Note that, unlike the previous attempt, \lstinline{VarAlg[E]}
-is a subtype of \lstinline{Alg[E]}, thus the type-refinement of the
-field is allowed. Now, the code for parsing variables (\lstinline{pVar}) can
+for variables. Unlike the previous attempt, such a type-refinement is allowed.
+Now, the code for parsing variables (\lstinline{pVar}) can
 call \lstinline{alg.varE}. The following code illustrates how to use
 the parser from a client's perspective:
 
 \lstinputlisting[linerange=46-49]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
 
-In the client code shown above, we first need to choose a concrete
-Object Algebra to initialize the \lstinline{alg} field in \lstinline{VarOAParser}. Here we pick the
-pretty-printing algebra \lstinline{VarPrint}, but any other Object
+In the client code above,
+we pick the pretty-printing algebra \lstinline{VarPrint} to initialize the \lstinline{alg} field, but any other Object
 Algebra that implements \lstinline{VarAlg} would work.
 With an instance of \lstinline{VarOAParser} in hand, we can call
 \lstinline{pE} to obtain the parser to feed to the \lstinline{parse} method.
-The result shows that such a pattern provides modular parsing.
+Such a pattern provides modular parsing as expected.
 
-Note that, similar to the approach in Section~\ref{sec:inheritance} independent extensibility is also supported via multiple trait inheritance.
-Since independent extensibility is achieved using essentially the same technique as in Section~\ref{sec:inheritance} we omit that code here.
+Note that, similar to the approach in Section~\ref{sec:inheritance}, independent extensibility is also supported via multiple trait inheritance.
+Since independent extensibility is achieved using essentially the same technique as in Section~\ref{sec:inheritance}, we omit that code here.
