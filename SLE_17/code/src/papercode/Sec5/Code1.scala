@@ -115,17 +115,11 @@ object Code2 extends Common {
 object VarExpr {
   trait Alg[E] {    // Abstract syntax
     def lit(n: Int): E
-    def add(e1: E, e2: E): E
-    def varE(x: String): E
-  }
-  trait Parse[E] {   // Parser
-    val alg: Alg[E]
-    val pE: Parser[E] = ...
     ...
   }
+  trait Parse[E] { ... } // Parser
   trait Print extends Alg[String] {
-    // Pretty-printer
-    ...
+    ... // Pretty-printer
   }
 }
 //END_LANGUAGE_COMPONENTS_VAREXPR
@@ -134,18 +128,11 @@ object VarExpr {
 object TypedLam {
   trait Alg[E, T] {    // Abstract syntax
     def intT(): T
-    def arrT(t1: T, t2: T): T
-    def lam(x: String, t: T, e: E): E
-  }
-  trait Parse[E, T] {   // Parser
-    val alg: Alg[E, T]
-    val pE: Parser[E] = ...
-    val pT: Parser[T] = ...
     ...
   }
+  trait Parse[E, T] { ... } // Parser
   trait Print extends Alg[String, String] {
-    // Pretty-printer
-    ...
+    ... // Pretty-printer
   }
 }
 //END_LANGUAGE_COMPONENTS_TYPEDLAM

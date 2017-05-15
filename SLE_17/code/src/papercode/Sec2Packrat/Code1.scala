@@ -6,9 +6,7 @@ import papercode.Common
 trait Code1 extends Common {
 
 //BEGIN_PACKRAT_OO_AST
-trait Expr {
-  def print: String
-}
+trait Expr { def print: String }
 class Lit(x: Int) extends Expr {
   def print = x.toString
 }

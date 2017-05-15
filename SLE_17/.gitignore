@@ -1,8 +1,12 @@
-footempfile.txt
 paper.pdf
+paper.bbl
+paper.synctex*
+footempfile.txt
 *.aux
-*.log
+*.toc
 *.out
-*.bbl
+*.log
 *.blg
+*.bak
+*.vtc
 *.tex-old

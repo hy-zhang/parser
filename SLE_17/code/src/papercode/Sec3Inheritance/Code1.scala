@@ -57,15 +57,10 @@ class BoolLit(x: Boolean) extends Expr ...
 class If(p: Expr, a: Expr, b: Expr) extends Expr ...
 
 trait BParser {
-  lexical.reserved +=
-    ("true", "false", "if", "then", "else")
-  val pBoolLit: Parser[Expr] =
-    "true" ^^^ new BoolLit(true) |||
-    "false" ^^^ new BoolLit(false)
-  val pIf: Parser[Expr] = ("if" ~> pExpr) ~ ("then" ~> pExpr) ~ ("else" ~> pExpr) ^^
-    { case e1 ~ e2 ~ e3 => new If(e1, e2, e3) }
-  def pExpr: Parser[Expr] =
-    pBoolLit ||| pIf
+  lexical.reserved += ...
+  val pBoolLit: Parser[Expr] = ...
+  val pIf: Parser[Expr] = ...
+  def pExpr: Parser[Expr] = pBoolLit ||| pIf
 }
 trait ArithBoolParser extends AParser with BParser {
   override def pExpr: Parser[Expr] =

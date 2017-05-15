@@ -8,12 +8,10 @@ using Object Algebras~\cite{Oliveira:2012}.
 \subsection{Problem with Traditional OO ASTs}\label{subsec:problemwithoutoa}
 
 The Expression Problem~\cite{wadler1998expression} illustrates the
-difficulty of extending data structures or ASTs in two dimensions. For
-traditional OO ASTs, adding new language constructs is easy, but
-adding new operations is hard. In the last section, we have a simple
-language containing literals, additions and variables. The
-corresponding ASTs are built using classes with a pretty-printing
-operation.
+difficulty of extending data structures or ASTs in two dimensions.
+As we have mentioned in Section~\ref{subsec:mismatch}, the use of traditional ASTs
+makes it hard to add new operations. In the last section we have seen a language
+that supports pretty-printing (in \inlinecode{Expr}).
 To modularly add an operation like collecting free variables, one attempt
 would be extending
 \inlinecode{Expr} with the new operation to obtain a new abstract type
@@ -26,21 +24,22 @@ extended to implement the operation. A first well-known problem is that such
 approach is problematic in terms of type-safety (but see recent work
 by Wang and Oliveira~\cite{wang2016expression}, which shows a technique that is type-safe
 in many cases). More importantly, a second problem is that
-even if that approach would work, the parsing code would not
-be reusable. \lstinline{VarParser} is no longer suitable for parsing the new ASTs! All the methods in the previous parser have type \inlinecode{Parser[Expr]},
-which generates ASTs that only support pretty-printing. Now we have to substitute \inlinecode{NewExpr} for \inlinecode{Expr} (the
-same for \inlinecode{Lit}, \inlinecode{Add}, and so on). It requires either modification on existing code or casts.
+even if that approach would work, the parsing code in \lstinline{VarParser} is no longer reusable!
+The types \inlinecode{Expr, Lit, Add}, and so on, are all old types without the free variables operation.
+To match the new ASTs, we have to substitute \inlinecode{NewExpr} for \inlinecode{Expr} (the
+same for \inlinecode{Lit}, \inlinecode{Add}, ...). It requires either modification on existing code or casts.
 The goal of semantic modularity motivates us to find a different approach for building ASTs.
 
-Fortunately, Object Algebras~\cite{Oliveira:2012} enable us to solve
-this problem. Object Algebras separate data variants and
-operations, and offer high flexibility in the choice of operations to
-be performed over ASTs. The next section provides a brief introduction
-to Object Algebras.
+%Object Algebras separate data variants and
+%operations, and offer high flexibility in the choice of operations to
+%be performed over ASTs. The next section provides a brief introduction
+%to Object Algebras.
 
 \subsection{Object Algebras}\label{subsec:objectalgebras}
 
-Object Algebras capture a design pattern that addresses the Expression
+Fortunately, Object Algebras~\cite{Oliveira:2012} enable us to solve
+this problem.
+They capture a design pattern that addresses the Expression
 Problem, achieving two dimensions of extensibility (language
 constructs and operations) in a modular and type-safe way. The
 definition of data structures is separated from their behaviours, and
@@ -61,9 +60,10 @@ provides implementations for all cases. Below is an example of pretty-printing:
 
 \lstinputlisting[linerange=12-16]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
 Here \inlinecode{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
-One can define evaluation operation as a new trait on this expression language:
+One can also define an evaluation operation as a new trait that extends \inlinecode{Alg[Int]}. Hence adding new operations is modular. We omit that code
+due to space reasons.
 
-\lstinputlisting[linerange=20-23]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
+%\lstinputlisting[linerange=20-23]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
 
 \paragraph{Adding New AST Constructs}
 Furthermore, new language constructs can be added by extending \inlinecode{Alg} and adding new cases only. Now we extend the language
@@ -82,11 +82,7 @@ To create an expression representing \inlinecode{1 + x}, a generic method is def
 
 Note how the construction of the abstract syntax happens through
 the use of factory methods, instead of constructors.
-To pretty-print the expression, the code
-
-\begin{lstlisting}
-makeExp(new VarPrint {})
-\end{lstlisting}
+To pretty-print the expression, the code \inlinecode{"makeExp(new VarPrint \{\})"}
 results in \inlinecode{"(1 + x)"} as expected.
 
 \subsection{Parsing with Object Algebras}\label{subsec:parsingwithoa}
@@ -113,7 +109,7 @@ One important remark is we introduce \inlinecode{pE} for recursive calls.
 The reason why we use an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use methods defined by keyword \inlinecode{def}, but cannot access fields defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
 
 \paragraph{Extensions}
-Now let's try this pattern with the variables extension:
+Now let's try on the variables extension:
 
 \lstinputlisting[linerange=34-39]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
 

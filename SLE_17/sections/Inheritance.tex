@@ -18,15 +18,12 @@ address a simpler problem: how to parse Object-Oriented ASTs. To solve
 this problem we employ multiple inheritance, which is supported in
 Scala via traits.
 
-\subsection{The Mismatch Between OO ASTs and Grammars}
+\subsection{The Mismatch Between OO ASTs and Grammars}\label{subsec:mismatch}
 Object-oriented ASTs are ASTs encoded via standard OO techniques,
 such as the {\sc Composite} or {\sc Interpreter} patterns~\cite{gamma1995design}. Such ASTs
 fix the operations required in the AST, but allow the easy addition of new
-language constructs. This is in contrast with ASTs modelled using
-functional programming algebraic datatypes or OO style Visitors, where
-adding new operations is easy, but adding new language constructs is hard.
-In Section~\ref{subsec:packratparsing} we provide a simple example of OO ASTs. The same abstract syntax could be encoded using algebraic datatypes (or alternatively Visitors)
-as:
+language constructs. We have seen an example of OO ASTs in Section~\ref{subsec:packratparsing}.
+In contrast, ASTs modelled using functional programming algebraic datatypes (or alternatively OO style Visitors) are as follows:
 
 \begin{lstlisting}
 data Exp = Lit Int | Add Exp Exp
@@ -34,11 +31,9 @@ data Exp = Lit Int | Add Exp Exp
 
 Algebraic datatypes and grammars fit well together. Indeed there are
 obvious similarities in declaring a grammar, and declaring an
-algebraic datatype. It is difficult to modularly add new language
-constructs to both grammars and ASTs based on algebraic datatypes. However,
-ASTs modelled with algebraic datatypes naturally allow for the easy
-addition of operations. So using such ASTs at least preserves one
-dimension of extensibility.
+algebraic datatype. Unlike OO ASTs, they naturally allow for the easy
+addition of operations, whereas modularly adding new constructs to grammars
+or ASTs becomes hard. Using this style of ASTs again preserves one dimension of extensibility.
 
 Unfortunately, when parsing OO style ASTs, there are difficulties with
 the two dimensions of extensibility. On the one hand it is naturally hard to
@@ -138,12 +133,11 @@ from pre-defined languages \inlinecode{LanguageA} and
 by inheriting both parsers at the same time:
 
 \lstinputlisting[linerange=46-50]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=MULTIPLE_INHERITANCE
-
 The \inlinecode{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method \inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish the methods of the same name. Therefore in the new parser, we use \inlinecode{super} to specify which \inlinecode{pExpr} we are referring to.
 
-As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
+%As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
 
-\lstinputlisting[linerange=56-73]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=BOOL_EXAMPLE
+%\lstinputlisting[linerange=56-68]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=BOOL_EXAMPLE
 
 \begin{comment}
 \bruno{You can present the abstract example, as you do
@@ -158,9 +152,9 @@ be familiar with scala super calls, you have to explain what the
 syntax does.}
 \end{comment}
 
-Then the new parser, which contains both integer and boolean
-expressions, is able to parse hybrid expressions such as
-\inlinecode{"if true then 1 + 2 else 3 + 4"}.
+%Then the new parser, which contains both integer and boolean
+%expressions, is able to parse hybrid expressions such as
+%\inlinecode{"if true then 1 + 2 else 3 + 4"}.
 
 \paragraph{Conflicts and/or ambiguity} As we demonstrated before, the longest match alternative combinator is useful when composing parsers. However, ambiguous grammars still cause subtle issues in modular parsing. For example, if \inlinecode{parserA} and \inlinecode{parserB} accept a same string but generate different results, then the result of \inlinecode{parserA ||| parserB} really depends on the implementation of the alternative combinator, because the results can not be prioritized by length. Since the composition is handled explicitly by a user, conflicts could be resolved by overriding ambiguous parsing code, using the pattern discussed in Section~\ref{subsec:overriding-rules}.
 
