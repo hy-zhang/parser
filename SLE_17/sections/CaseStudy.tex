@@ -38,7 +38,7 @@ from box A to box B denotes that B includes and thus reuses A.
 
 \begin{figure*}
     \centering
-    \includegraphics[width=\textwidth]{resources/depGraph.pdf}
+    \includegraphics[width=0.8\textwidth]{resources/depGraph.pdf}
     \caption{Dependency graph of all calculi and components. Grey boxes are calculi; white boxes are components.}
     \label{fig:dependency}
 \end{figure*}
@@ -117,6 +117,7 @@ The average execution time of 5 runs excluding reading input file was calculated
 
 \begin{table*}
     \centering
+    \resizebox{0.7\textheight}{!}{
     \begin{tabular}{|l|r|r|r|r|r|r|r|r|r|r|}
       \hline
         \multirow{2}{*}{\bfseries Calculus Name} & \multicolumn{3}{ c| }{\bfseries SLOC} & \multicolumn{7}{ c| }{\bfseries Time (ms)} \\ \cline{2-11}
@@ -125,7 +126,7 @@ The average execution time of 5 runs excluding reading input file was calculated
       \input{resources/CaseStudyTable.tex}
       \hline
       \multicolumn{7}{c}{}
-    \end{tabular}
+    \end{tabular}}
     \caption{Comparison of SLOC and execution time.}
     \label{tab:comparison}
 \end{table*}

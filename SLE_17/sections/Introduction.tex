@@ -34,9 +34,7 @@ such ``\emph{implementation mechanisms lack proper
   compilation}''.
 
 Syntactic modularization techniques have also been applied to the
-problem of \emph{extensible parsing}. There are several approaches
-that enable the development of \emph{syntactically} modular parsers or
-grammars. Many parser
+problem of \emph{extensible parsing}. Many parser
 generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016} support
 modular grammars. For instance, \textit{Rats!}~\cite{Grimm2006} has
 its own module system for the collection of grammars.  Extensible
@@ -45,8 +43,8 @@ Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
 is mostly done ultimately resorting to standard (non-modular) parser
 generators. Various techniques supporting languages that can extend
 their own syntax, such as SugarJ~\cite{Erdweg2011}, also offer a form
-of extensible parsing. However since those approaches are syntactic
-they do not support separate compilation and/or modular type-checking
+of extensible parsing. However those syntactic approaches do not
+support separate compilation and/or modular type-checking
 of parsing code either.
 
 Semantic modularization techniques go one step further in terms of modularity,
@@ -99,7 +97,7 @@ two different classes of challenges: algorithmic challenges; and
 typing/reuse challenges.
 
 \paragraph{Algorithmic Challenges} A first challenge was to do with
-the parsing algorithms themselves, since they 
+the parsing algorithms themselves, since they
 were usually not designed with extensibility in mind. The most widely used tools for parsing are parser
 generators, but they mostly require full information about the grammar to generate parsing
 code. Moreover, actions associated with grammar productions are
