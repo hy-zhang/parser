@@ -131,9 +131,9 @@ in Section~\ref{subsec:language-component} as a nice pattern.
 
 In the above code, we use the \lstinline{super} keyword to refer to the old \inlinecode{pExpr}.
 With multiple inheritance, Scala has a special syntax
-\lstinline{super[T].x}, called \textit{static super reference}. It refers to the type or
-method \inlinecode{x} in the specified parent trait \inlinecode{T}. With this we can reuse
-the old parsers even if they have the same name. 
+\lstinline{super[T].x}, called \textit{static super reference}. It refers to the name
+\inlinecode{x} in the specified parent trait \inlinecode{T}. With this we can reuse
+the old parsers even if they have the same name.
 
 %As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
 

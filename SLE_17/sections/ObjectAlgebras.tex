@@ -9,8 +9,8 @@ using Object Algebras~\cite{Oliveira:2012}.
 
 The Expression Problem~\cite{wadler1998expression} illustrates the
 difficulty of extending data structures or ASTs in two dimensions.
-As we have mentioned in Section~\ref{subsec:mismatch}, the use of traditional ASTs
-makes it hard to add new operations. In the last section we have seen a language
+In brief, it is hard to add new operations with traditional OO ASTs.
+In the last section we have seen a language
 that supports pretty-printing (in \inlinecode{Expr}).
 To modularly add an operation like collecting free variables, one attempt
 would be extending
@@ -99,14 +99,20 @@ overriding in Scala.
 
 
 \paragraph{A Solution}
-A solution to this problem is instead having a field with the Object Algebra
-in \lstinline{OAParser}. This approach supports overriding as well.
-The parsing code is as follows:
+A solution to this problem is to declare a field of Object Algebra interface
+in the parser. Figure~\ref{fig:oa-parser} shows the code of true modular parser,
+whose methods can be overridden for future extension.
 
-\lstinputlisting[linerange=21-30]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
-This is precisely the pattern that we advocate for modular parsing.
+\begin{figure}
+  \lstinputlisting[linerange=21-30]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
+  \caption{Pattern of modular parsing using Object Algebras.}
+  \label{fig:oa-parser}
+  \vspace{-0.2cm}
+\end{figure}
+
+That is precisely the pattern that we advocate for modular parsing.
 One important remark is we introduce \inlinecode{pE} for recursive calls.
-The reason why we use an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use methods defined by keyword \inlinecode{def}, but cannot access fields defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
+The reason why we use it as an extra and seemingly redundant field, is due to a subtle issue caused by Scala language and its parser combinator library. There is a restriction of \inlinecode{super} keyword in Scala that \inlinecode{super} can only use methods defined by keyword \inlinecode{def}, but cannot access fields defined by \inlinecode{val}, while the parser combinator library suggests using \inlinecode{val} to define parsers, especially for left-recursive ones. Our workaround is that we use different synonyms for \inlinecode{pE} in different traits, so that we can directly distinguish them by names without using \inlinecode{super}.
 
 \paragraph{Extensions}
 Now let's try on the variables extension:
@@ -130,4 +136,4 @@ With an instance of \lstinline{VarOAParser} in hand, we can call
 Such a pattern provides modular parsing as expected.
 
 Note that, similar to the approach in Section~\ref{sec:inheritance}, independent extensibility is also supported via multiple trait inheritance.
-Since independent extensibility is achieved using essentially the same technique as in Section~\ref{sec:inheritance}, we omit that code here.
+Since it is achieved using essentially the same technique as in Section~\ref{sec:inheritance}, we omit the code here.

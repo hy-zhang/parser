@@ -64,7 +64,7 @@ unification, as the syntax is only built from extensions.
 %definition. \haoyuan{correct?}
 Extensible
 compilers like JastAdd~\cite{Ekman2007} and
-Polyglot~\cite{Nystrom2003} also support extensible parsing, but this
+Polyglot~\cite{Nystrom2003} also support extensible parsing, but it
 is mostly done using parser generators. They focus on the
 extensions to a host language. Those techniques are short of type safety in a modular
 setting as well.
@@ -110,11 +110,11 @@ high cost for backtracking and longest match composition issues,
 as we discussed in Section~\ref{subsec:challenges}. Those limitations make Parsec
 (and similar parsing techniques) inadequate for modular parsing.
 
-Some more recent work on parser
+Some recent work on parser
 combinators~\cite{Ford2002,Might2011,Frost2008} proposed a series of
 novel parsing techniques that address the issue of
-left-recursion. We have selected Packrat parsing due to its simplicity in Scala,
-but in general it can also have alternatives.
+left-recursion. We chose Packrat parsing due to its simplicity in Scala,
+but in general there are alternatives to it.
 
 \paragraph{Extensibility} Various design patterns~\cite{gamma1995design} in multiple
 languages, have been proposed over the years to address extensibility

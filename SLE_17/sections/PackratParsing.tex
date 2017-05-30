@@ -48,7 +48,7 @@ parseSub = do
   e <- parseExpr ...
 \end{lstlisting}
 \end{minipage}
-Such a left-recursive implementation will cause an infinite loop, since \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.  
+Such a left-recursive implementation will cause an infinite loop, since \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
 A common solution is to rewrite the grammar into an equivalent but non-left-recursive one, called left-recursion elimination:
 
 \vspace{0.4\baselineskip}

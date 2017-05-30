@@ -1,5 +1,6 @@
 %% For double-blind review submission
 \documentclass[sigplan,10pt,review,anonymous]{acmart}\settopmatter{printfolios=false}
+\settopmatter{printacmref=false}
 %% For single-blind review submission
 %\documentclass[sigplan,10pt,review]{acmart}\settopmatter{printfolios=true}
 %% For final camera-ready submission
@@ -23,6 +24,11 @@
 \usepackage{multirow}
 \usepackage{enumitem}
 \usepackage{tabularx}
+
+\setlength{\abovecaptionskip}{1.5mm}
+\setlength{\belowcaptionskip}{1.5mm}
+
+\setlength{\textfloatsep}{2mm}
 
 \lstdefinelanguage{JavaScala}{
   morekeywords={public,int,interface,implements,default,
@@ -199,7 +205,7 @@
 %% similar to a title note or an author note, but not explicitly
 %% associated with a particular element.  It will appear immediately
 %% above the permission/copyright statement.
-\thanks{with paper note}                %% \thanks is optional
+%%\thanks{with paper note}                %% \thanks is optional
                                         %% can be repeated if necesary
                                         %% contents suppressed with 'anonymous'
 
@@ -313,9 +319,9 @@
 
 
 %% Appendix
-\appendix
-\section{Appendix}
+%% \appendix
+%% \section{Appendix}
 
-Text of appendix \ldots
+%% Text of appendix \ldots
 
 \end{document}

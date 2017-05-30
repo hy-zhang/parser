@@ -15,9 +15,11 @@ As illustrated above, using Object Algebras separates data structures from behav
 \end{comment}
 
 Using Object Algebras, it is easy to
-model multi-sorted languages. If the syntax contains multiple sorts, we can distinguish them by different type parameters.
-For instance, now we extend the expression language from the end of Section~\ref{sec:algebrasandparsing}, with a
+model multi-sorted languages. If the syntax has multiple sorts, we can distinguish them by different type parameters.
+For instance, we extend the expression language from the end of Section~\ref{sec:algebrasandparsing}, with a
 primitive type \inlinecode{int} type and typed lambda abstractions:
+
+\vspace{0.8mm}
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}
@@ -26,17 +28,17 @@ primitive type \inlinecode{int} type and typed lambda abstractions:
 <expr> ::=  ... \alt `\\' <ident> `:' <type> `.' <expr>
 \end{grammar}
 
-Figure~\ref{fig:multi} illustrates the corresponding Scala code
-that extends the Object Algebra interface, pretty-printing operation and parser. We use two type parameters \inlinecode{E} and \inlinecode{T} for expressions and types. The type system guarantees that invalid terms such as \inlinecode{int + int} will be rejected.
+\vspace{0.8mm}
+
+The code below illustrates the corresponding Scala code
+that extends the Object Algebra interface, pretty-printing operation and parser.
+
+\lstinputlisting[linerange=7-23]{code/src/papercode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+
+We use two type parameters \inlinecode{E} and \inlinecode{T} for expressions and types. The type system guarantees that invalid terms such as \inlinecode{int + int} will be rejected.
 Besides lexing, the trait \inlinecode{LamOAParser} also introduces parsers for types, and the new case for expressions.
 We use \inlinecode{pTypedLamT} and \inlinecode{pTypedLamE} as copies of current \inlinecode{pT} and \inlinecode{pE}, due to the issue
-with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are the parsers used for performing recursion.
-
-\begin{figure}[ht]
-\lstinputlisting[linerange=7-23]{code/src/papercode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
-\caption{Code for parsing a language with multi-sorted syntax for types and expressions.}
-\label{fig:multi}
-\end{figure}
+with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are used for recursion.
 
 \subsection{Overriding Existing Rules}\label{subsec:overriding-rules}
 
