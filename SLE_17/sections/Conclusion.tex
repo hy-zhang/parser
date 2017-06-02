@@ -1,0 +1,26 @@
+\section{Conclusion}\label{sec:conclusion}
+
+This paper presents a solution for type-safe modular parsing. Our solution
+not only enables parsers to evolve together with the abstract syntax,
+but also allows parsing code to be modularly type-checked and separately compiled.
+
+We identify the algorithmic challenges of building modular parsers,
+and use standard OO techniques including inheritance and overriding
+for our goal. However, the extensibility issue of
+traditional OO ASTs motivates us to adopt Object Algebras for full
+extensibility and more useful features. Then language feature abstraction further enhances code reuse and modularity.
+The TAPL case study demonstrates that a lot of boilerplate can be reduced by
+modular parsing.
+
+There are certainly some aspects that can be improved. We observed that the
+glue code of composition appears to be boilerplate, for which family polymorphism~\cite{ernst01FP}
+is a potential solution. Moreover, we can possibly
+adopt the Shy framework~\cite{Zhang2015} and algebra composition
+patterns~\cite{oliveira2013feature}, to improve the usage of Object
+Algebras. For future work, it will be interesting to see how modular parsing
+appears in functional programming languages, as they usually do not support subtyping
+or inheritance. Potentially open recursion~\cite{CookThesis} can contribute.
+%It is also interesting to see that parsing, to some
+%extent, can be viewed as a special example of \textit{unfolds}. So it
+%is worthwhile considering to generalize our approach under certain
+%circumstances.

@@ -1,0 +1,205 @@
+\section{Packrat Parsing for Modularity}\label{sec:packrat}
+
+This section discusses the algorithmic challenges introduced by
+modular parsing and argues that Packrat parser combinators~\cite{Ford2002}
+are suitable to address them. The algorithmic challenges
+are important because they rule out various common techniques
+used by non-modular code using parser combinators.
+To avoid pitfalls related to those algorithmic challenges,
+we propose the following methodology:
+
+\begin{itemize}[leftmargin=*]
+
+\item \textbf{Modular parsers should support left-recursion.}
+
+\item \textbf{Modular parsers should use a longest match composition operator.}
+
+\end{itemize}
+
+Moreover, the underlying parsing formalism should make backtracking
+cheap, since \emph{backtracking is pervasive in modular parsing}.
+Although we chose Packrat parsing (due to its immediate availability
+and support), any other parsing formalism that provides similar
+features should be adequate for modular parsing.
+
+\subsection{Algorithmic Challenges of Modularity}\label{subsec:challenges}
+For the goal of modular parsing, parser combinators seem suitable because they are
+naturally modular for parser composition, but also they ensure type safety.
+Unfortunately many parser combinators have important limitations.
+In particular, several parser combinators including the famous Parsec~\cite{Leijen2001} library, require
+programmers to manually do \textit{left-recursion elimination}, \textit{longest match composition}, and
+require significant amounts of \textit{backtracking}. All of those are
+problematic in a modular setting.
+
+\paragraph{Left-Recursion Elimination} The top-down, recursive descent parsing strategy adopted by those parser combinator libraries cannot support left-recursive grammars directly. For instance, we start with a simple arithmetic language containing only integers and subtractions. The
+grammar with concrete syntax and part of the parsing code in Parsec are presented below:
+
+\begin{minipage}{12em}
+\setlength{\grammarindent}{4em}
+\begin{grammar}
+<expr> ::= <int> \alt <expr> `-' <int>
+\end{grammar}
+\end{minipage}
+\begin{minipage}{15em}
+\begin{lstlisting}[language=PlainCode]
+parseExpr =
+  parseSub <|> parseInt
+parseSub = do
+  e <- parseExpr ...
+\end{lstlisting}
+\end{minipage}
+Such a left-recursive implementation will cause an infinite loop, since \inlinecode{parseExpr} and \inlinecode{parseSub} call each other and never stop.
+A common solution is to rewrite the grammar into an equivalent but non-left-recursive one, called left-recursion elimination:
+
+\vspace{0.4\baselineskip}
+\begin{minipage}{15em}
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> <expr'>
+
+<expr'> ::= <empty> \alt `-' <int> <expr'>
+\end{grammar}
+\end{minipage}
+\vspace{0.4\baselineskip}
+
+\noindent After left-recursion elimination, the structure of grammar is changed,
+as well as its corresponding parser. In a modular setting, it is
+possible but unnecessarily complicated to analyse the grammar and
+rewrite it when doing extensions. Anticipating that every non-terminal
+has left-recursive rules is helpful for extensibility but overkill,
+since it is inconvenient and introduces extra complexity for
+representation of grammars and implementation of parsers.
+
+Another issue of left-recursion elimination is that it requires extra
+bookkeeping work to retain the original semantics. For example, the
+expression $1-2-3$ is parsed as $(1-2)-3$ in the left-recursive
+grammar, but after rewrite the information of left-associativity is lost. The parse tree
+must be transformed to recover the correct syntactic structure.
+
+\paragraph{Longest Match Composition} Another problematic issue
+in parser combinator libraries is the need for manually prioritizing/ordering
+alternatives in a grammar.
+Consider the grammar:
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int> \alt <int> `+' <expr>
+\end{grammar}
+
+In Parsec, for instance, the parser \inlinecode{"parseInt <|> parseAdd"} will only parse the input \inlinecode{"1 + 2"} to \inlinecode{"1"}, as \inlinecode{parseInt} successfully parses \inlinecode{"1"}
+and terminates parsing.
+
+Traditional alternative composition will only find the first parser that succeeds on a prefix of the input,
+in spite that subsequent parsers may parse the whole input. In contrast with the parser above, \inlinecode{"parseAdd <|> parseInt"} works as expected with the two cases swapped.
+
+In this case, reordering the alternatives ensures that
+the \emph{longest match} is picked among the possible results. However, manual reordering for the longest match is inconvenient, and worst still, it is essentially non-modular. When the grammar is extended with new rules, programmers are supposed to \emph{manually} adjust
+the order of parsers, by rewriting previously written code.
+
+\paragraph{Backtracking} The need for backtracking can also be problematic
+in a modular setting. Consider a grammar that includes \inlinecode{"import..from"}.
+It is extended with an \inlinecode{"import..as"} case:
+
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<stmt> ::= `import' <ident> `from' <ident>
+    \alt ...
+    \alt `import' <ident> `as' <ident>
+\end{grammar}
+Since the two cases share a common prefix, when the former fails, we must backtrack to the beginning.
+For example, the choice combinator in Parsec only tries the second alternative if the first fails
+without any token consumption. We have to use \inlinecode{try} for explicit backtracking.
+
+\begin{lstlisting}[language=PlainCode]
+oldParser = parseImpFrom <|> ...
+newParser = try parseImpFrom <|> ... <|> parseImpAs
+\end{lstlisting}
+
+Similarly, this violates a modular setting because it also requires a global view of the full grammar.
+Hence the worst case should be considered that all alternatives may share common prefixes with future cases. In that case we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere. However this results in the worst-case exponential time
+complexity.
+
+\subsection{Packrat Parsing}\label{subsec:packratparsing}
+Fortunately, some more advanced parsing techniques such as Packrat
+parsing~\cite{Ford2002} have been developed to address limitations of
+simple parser combinators. Packrat parsing uses memoization to record
+the result of applying each parser at each position of the input, so
+that repeated computation is eliminated. Moreover, it supports both direct left-recursion
+and (in theory) indirect left-recursion~\cite{warth2008}.
+All of these properties are very suitable for modularity, thus we decided to use Packrat parsers as the underlying parsing technique for modular parsing.
+\begin{comment}
+It is worth mentioning that the choice of parser combinators will not
+affect the other parts of our library. One can choose other parser
+combinators like Parsec, in cases that the performance and supporting
+of left-recursion are not major concerns. A different library can even build a new
+\name with fancy features or higher efficiency.
+\end{comment}
+Scala has a standard parser combinator library\footnote{https://github.com/scala/scala-parser-combinators}
+\cite{moors2008parser} for Packrat parsers.
+The library provides a number of parser combinators, including the longest match alternative combinator.
+%Below we present an example to illustrate Scala parsers.
+
+\paragraph{Code Demonstration}
+For more concise demonstration, we assume that all the Scala code in the rest of this paper are in the object \inlinecode{Code}, as shown in Figure~\ref{fig:papercode}. It extends traits \inlinecode{StandardTokenParsers} and \inlinecode{PackratParsers} from the Scala parser combinator library. Furthermore, we will use \lstinline{Parser} as a type synonym for \lstinline{PackratParser} and a generic \inlinecode{parse} function for testing.
+
+\begin{figure}[t]
+\centering
+\lstinputlisting[linerange=16-27]{code/src/papercode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_PAPERCODE
+\caption{Helper object for code demonstration in this paper.}\label{fig:papercode}
+\end{figure}
+
+\paragraph{Parsing a Simple Arithmetic Language}
+Suppose we want to parse a simple language with literals and
+additions. The concrete syntax is:
+
+\setlength{\grammarindent}{5em}
+\begin{grammar}
+<expr> ::= <int>
+    \alt <expr> `+' <expr>
+\end{grammar}
+
+It is straightforward to model the abstract syntax by classes. The ASTs support pretty-printing via the \lstinline{print} method.
+
+\lstinputlisting[linerange=9-15]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
+
+Then we write corresponding parsers for all cases.
+Note that a parser has type \lstinline{Parser[E]} for some
+\lstinline{E}, which indicates the type of results it produces.
+
+\lstinputlisting[linerange=19-26]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
+
+In the trait \lstinline{AParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
+\lstinline{pAdd} handles the addition case and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
+recursively. Finally \lstinline{pExpr} composes \lstinline{pLit} and \lstinline{pAdd} using the longest match alternative combinator \inlinecode{|||}.
+Table~\ref{tab:packrat} shows common parser combinators from the library.
+
+\begin{table}
+\begin{tabularx}{\linewidth}{X}
+\hline
+\lstinline{def ~[U](q: => Parser[U]): Parser[~[T, U]]} \\
+- A parser combinator for sequential composition. \\ \hline
+\lstinline{def \^\^[U](f: (T) => U): Parser[U]} \\
+- A parser combinator for function application. \\ \hline
+%\lstinline{def \^\^\^[U](v: => U): Parser[U]} \\
+%- A parser combinator that changes a successful result into the specified value. \\ \hline
+\lstinline{def <~[U](q: => Parser[U]): Parser[T]} \\
+- A parser combinator for sequential composition which keeps only the left result. \\ \hline
+\lstinline{def ~>[U](q: => Parser[U]): Parser[U]} \\
+- A parser combinator for sequential composition which keeps only the right result. \\ \hline
+\lstinline{def ident: Parser[String]} \\
+- A parser which matches an identifier. \\ \hline
+\lstinline{def numericLit: Parser[String]} \\
+- A parser which matches a numeric literal. \\ \hline
+\lstinline{def |[U >: T](q: => Parser[U]): Parser[U]} \\
+- A parser combinator for alternative composition. \\ \hline
+\lstinline{def |||[U >: T](q0: => Parser[U]): Parser[U]} \\
+- A parser combinator for alternative with longest match composition. \\ \hline
+\end{tabularx}
+\caption{Common combinators from the Scala standard parser combinator library.}\label{tab:packrat}
+\end{table}
+
+It is worth mentioning that the left-recursive grammar above is well supported without extra code.
+ The longest match composition is also employed by using the combinator \lstinline{|||}. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
+
+The code below demonstrates how to parse a valid expression \inlinecode{1 + 2} using our parser.
+
+\lstinputlisting[linerange=6-7]{code/src/papercode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER

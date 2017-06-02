@@ -1,0 +1,167 @@
+\begin{comment}
+Basically, \name consists of four parts: underlying parsing technique, delegation mechanism encoded by open recursion, Object Algebras, and glue code of new combinators and utility functions. We start from Section \ref{subsec:overview-parsing}, which discusses the choice of parsing technique and how it affects modularity of parsers. Section \ref{subsec:overview-problem} demonstrates the goal of extending parsers together with ASTs in a semantic modular way, with both separate compilation and type-safe code reuse. Then we will see traditional parser combinators fail to achieve it because of hard-coded recursive calls. In Section \ref{subsec:overview-delegation}, we show how delegation can solve this problem and allow us to build extensible parsers. Finally, Section \ref{subsec:overview-oa} gives examples of using Object Algebras for more extensibility, including extension of operations and parsing multiple sorts of syntax.\haoyuan{TODO}
+\end{comment}
+
+\begin{comment}
+It is worth mentioning that the choice of parser combinators will not
+affect the other parts of our library. One can choose other parser
+combinators like Parsec, in cases that the performance and supporting
+of left-recursion are not major concerns. A different library can even build a new
+\name with fancy features or higher efficiency.
+\end{comment}
+
+
+\section{Parsing OO ASTs with Multiple Inheritance}\label{sec:inheritance}
+
+Before we address the problem of full modular parsing, we first
+address a simpler problem: how to parse Object-Oriented ASTs. To solve
+this problem we employ multiple inheritance, which is supported in
+Scala via traits.
+
+\begin{comment}
+
+\subsection{The Mismatch Between OO ASTs and Grammars}\label{subsec:mismatch}
+Object-oriented ASTs are ASTs encoded via standard OO techniques,
+such as the {\sc Composite} or {\sc Interpreter} patterns~\cite{gamma1995design}. Such ASTs
+fix the operations required in the AST, but allow the easy addition of new
+language constructs. We have seen an example of OO ASTs in Section~\ref{subsec:packratparsing}.
+In contrast, ASTs modelled using functional programming algebraic datatypes (or alternatively OO style Visitors) are as follows:
+
+\begin{lstlisting}
+data Exp = Lit Int | Add Exp Exp
+\end{lstlisting}
+
+Algebraic datatypes and grammars fit well together. Indeed there are
+obvious similarities in declaring a grammar, and declaring an
+algebraic datatype. Unlike OO ASTs, they naturally allow for the easy
+addition of operations, whereas modularly adding new constructs to grammars
+or ASTs becomes hard. Using this style of ASTs again preserves one dimension of extensibility.
+
+Unfortunately, when parsing OO style ASTs, there are difficulties with
+the two dimensions of extensibility. On the one hand it is naturally hard to
+add new operations to the AST, as usual in the OO
+style~\cite{wadler1998expression}. On the other hand
+grammars are not modularly extensible, thus the addition of new
+language constructs is problematic. Therefore,
+it is perhaps not a surprise that parser generators also generate
+AST code (such as ANTLR~\cite{antlr1995}), normally the generated code is based on
+visitors. Clearly this seems a better choice since generating code
+based on the {\sc Interpreter} or {\sc Composite} pattern would
+simply be too inflexible, due to the dual limitation on extensibility.
+
+In the remainder of this section we show a technique for
+defining \emph{extensible} parsing code. That is new
+language constructs can be modularly added without changing
+existing parsing code. The technique employs standard OO
+style mechanisms such as subtyping and inheritance, as well as,
+Packrat parser combinators, and enables a better integration between
+parsing and OO ASTs.
+
+\end{comment}
+
+
+\begin{comment}
+This section introduces the problem of semantic modular parsing which motivates our work, and an initial solution using only standard inheritance in OO.
+
+\subsection{Modular Parsing Problem}\label{subsec:parsingproblem}
+\huang{or "Parsing Extensible ASTs" ?}
+The extensibility issues of AST structures and operations that process them, can be illustrated by the famous Expression Problem~\cite{wadler1998expression}. There are two dimensions of extensibility:
+
+\begin{itemize}
+\item \textbf{Extension 1}: adding a new data variant (or rather, a new constructor of ASTs).
+\item \textbf{Extension 2}: adding a new operation over ASTs.
+\end{itemize}
+
+We already have solutions such Object Algebras~\cite{Oliveira:2012} for this problem. However, when ASTs evolve, the corresponding parsers which produce such structures should also change accordingly. Our motivation is to build modular parsers, which can be extended together with ASTs. Futhermore, we focus on semantic modularity, that means we expect parsers to be modularly type-checked and separately compiled.
+
+In the rest of Section~\ref{sec:inheritance}, we will introduce an solution for modular parsing with Extension 1 above, using only standard inheritance in OO. Extension 2 will be discussed in Section~\ref{sec:algebrasandparsing}.
+\end{comment}
+
+\subsection{Extensible Parsing via Inheritance}
+
+Part of the modular parsing problem is how to obtain an extensible parser. It
+is natural to make use of OO ASTs because adding new data constructs is cheap for
+them. Hence we have used OO traits and inheritance to represent the AST in the last
+section. Furthermore, we would like to write extensible parsing code on extensions of
+a grammar. That is to say, new extensions would not require modification on the existing code,
+and we can even reuse the old code.
+
+To illustrate such extensibility, we continue with the old
+example, and introduce variables as a new case.
+It is easy to extend the corresponding OO AST in a modular way:
+
+\lstinputlisting[linerange=7-9]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_SIMPLE_LAM
+
+For code reuse, we want to define a new parser that extends
+the old one. Here one may quickly come up
+with the following attempt, where a new parser is defined for \inlinecode{Var}, then composed
+with \inlinecode{pExpr}:
+
+\lstinputlisting[linerange=13-16]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_BAD_ATTEMPT
+
+Unfortunately, this fails to parse some expressions like \inlinecode{"1 + x"}, which are obviously valid in the new grammar.
+The reason is that \inlinecode{pAdd} makes two recursive calls to parse sub-expressions, by using \inlinecode{pExpr}, which
+covers both cases in the old grammar. But the newly added case \inlinecode{pVar} is not observed by the recursive \inlinecode{pExpr},
+hence the parser does not work as expected. It is possible to build the correct parser by replacing the recursive call in \inlinecode{pAdd} with \inlinecode{pVarExpr}.
+However, modification on existing code sacrifices separate compilation, and hence breaks semantic modularity.
+
+\subsection{Overriding for Extensibility}\label{subsec:overriding}
+
+It is actually quite simple to let \inlinecode{pExpr} cover the newly
+extended case without modifying existing code. Method overriding is a
+standard feature which often comes with inheritance, and it allows us
+to redefine an inherited method, such as \inlinecode{pExpr}. We can
+build the new parser which correctly parses \inlinecode{"1 + x"}
+through overriding:
+
+\lstinputlisting[linerange=20-26]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
+
+Now \inlinecode{VarParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
+method overriding in inheritance. When the input \inlinecode{"1 + x"} is fed to the parser \inlinecode{this.pExpr}, it firstly delegates
+the work to \inlinecode{super.pExpr}, which parses literals and additions. However, the recursive call \inlinecode{pExpr} in \inlinecode{pAdd}
+actually refers to \inlinecode{this.pExpr} again due to dynamic dispatch, and it covers the variable case. Similarly, all recursive calls can be updated to include new extensions if needed.
+
+\vspace{-.05in}
+\paragraph{Independent Extensibility}
+A nice feature of Scala is its support for the linearized-style multiple
+inheritance on traits~\cite{odersky2004overview}. This can be very helpful when
+composing several languages, and to achieve independent
+extensibility~\cite{odersky2005independently}. Later we introduce language components
+in Section~\ref{subsec:language-component} as a nice pattern.
+
+In the above code, we use the \lstinline{super} keyword to refer to the old \inlinecode{pExpr}.
+With multiple inheritance, Scala has a special syntax
+\lstinline{super[T].x}, called \textit{static super reference}. It refers to the name
+\inlinecode{x} in the specified parent trait \inlinecode{T}. With this we can reuse
+the old parsers even if they have the same name.
+
+%As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
+
+%\lstinputlisting[linerange=56-68]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=BOOL_EXAMPLE
+
+\begin{comment}
+\bruno{You can present the abstract example, as you do
+  here, but you should also present a concrete example. You
+already have Var, maybe you can add another language extension for
+boolean literals. Show the code for the boolean literals parsing as
+well as the composition code.}
+
+Interestingly note that, due to the use of multiple inheritance, we
+need two different super calls.\bruno{expand here. People may not
+be familiar with scala super calls, you have to explain what the
+syntax does.}
+\end{comment}
+
+%Then the new parser, which contains both integer and boolean
+%expressions, is able to parse hybrid expressions such as
+%\inlinecode{"if true then 1 + 2 else 3 + 4"}.
+
+\vspace{-.05in}
+\paragraph{Conflicts and/or ambiguity} In a modular setting, conflicts and
+ambiguity could be introduced to the grammar. In that case, the help parser combinators
+can offer is quite restricted. Yet users can override those problematic methods to resolve
+such conflicts, and rely on dynamic dispatch. We will discuss it in Section~\ref{subsec:overriding-rules}.
+
+As demonstrated, inheritance with method overriding is the key
+technique to obtain semantic modularity.  It enables type-safe code
+reuse and separate compilation for parsing OO style ASTs.
