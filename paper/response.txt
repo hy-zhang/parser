@@ -51,7 +51,7 @@ not in that set). Although we knew Object Algebras and Scala
 well, we were not well-versed with Packrat parsing. We spent quite
 a bit of time playing with other parsing combinator libraries, and
 getting into trouble before we tried Packrat parsing and solved the
-issues we encountered. 
+issues we encountered.
 
 Finally, language components and our case study are important
 contributions of our work. Language components
