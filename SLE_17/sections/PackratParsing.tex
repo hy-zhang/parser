@@ -89,15 +89,14 @@ In Parsec, for instance, the parser \inlinecode{"parseInt <|> parseAdd"} will on
 and terminates parsing.
 
 Traditional alternative composition will only find the first parser that succeeds on a prefix of the input,
-in spite that subsequent parsers may parse the whole input. In contrast with the parser above, \inlinecode{"parseAdd <|> parseInt"} works as expected with the two cases swapped.
-
+even if subsequent parsers may parse the whole input. In contrast to the previous parser, \inlinecode{"parseAdd <|> parseInt"} works as expected with because the two cases are swapped.
 In this case, reordering the alternatives ensures that
-the \emph{longest match} is picked among the possible results. However, manual reordering for the longest match is inconvenient, and worst still, it is essentially non-modular. When the grammar is extended with new rules, programmers are supposed to \emph{manually} adjust
+the \emph{longest match} is picked among the possible results. However, manual reordering for the longest match is inconvenient, and worst still, it is essentially non-modular. When the grammar is extended with new rules, programmers should \emph{manually} adjust
 the order of parsers, by rewriting previously written code.
 
 \paragraph{Backtracking} The need for backtracking can also be problematic
-in a modular setting. Consider a grammar that includes \inlinecode{"import..from"}.
-It is extended with an \inlinecode{"import..as"} case:
+in a modular setting. Consider a grammar that includes \inlinecode{"import..from"}, 
+and is extended with an \inlinecode{"import..as"} case:
 
 \setlength{\grammarindent}{5em}
 \begin{grammar}
@@ -115,7 +114,8 @@ newParser = try parseImpFrom <|> ... <|> parseImpAs
 \end{lstlisting}
 
 Similarly, this violates a modular setting because it also requires a global view of the full grammar.
-Hence the worst case should be considered that all alternatives may share common prefixes with future cases. In that case we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere. However this results in the worst-case exponential time
+Hence the worst case where all alternatives may share common prefixes with future cases
+should always be antecipated. Therefore we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere. However this results in the worst-case exponential time
 complexity.
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}
@@ -198,7 +198,7 @@ Table~\ref{tab:packrat} shows common parser combinators from the library.
 \end{table}
 
 It is worth mentioning that the left-recursive grammar above is well supported without extra code.
- The longest match composition is also employed by using the combinator \lstinline{|||}. Furthermore, it does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
+ The longest match composition is also employed by using the combinator \lstinline{|||}. Furthermore, the parser does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
 
 The code below demonstrates how to parse a valid expression \inlinecode{1 + 2} using our parser.
 

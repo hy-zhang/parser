@@ -11,7 +11,7 @@ of left-recursion are not major concerns. A different library can even build a n
 \end{comment}
 
 
-\section{Parsing OO ASTs with Multiple Inheritance}\label{sec:inheritance}
+\section{\hspace{-10pt}OO AST Parsing with Multiple Inheritance}\label{sec:inheritance}
 
 Before we address the problem of full modular parsing, we first
 address a simpler problem: how to parse Object-Oriented ASTs. To solve
@@ -83,7 +83,7 @@ Part of the modular parsing problem is how to obtain an extensible parser. It
 is natural to make use of OO ASTs because adding new data constructs is cheap for
 them. Hence we have used OO traits and inheritance to represent the AST in the last
 section. Furthermore, we would like to write extensible parsing code on extensions of
-a grammar. That is to say, new extensions would not require modification on the existing code,
+a grammar. That is to say, new extensions would not require modifying the existing code,
 and we can even reuse the old code.
 
 To illustrate such extensibility, we continue with the old
@@ -103,7 +103,7 @@ Unfortunately, this fails to parse some expressions like \inlinecode{"1 + x"}, w
 The reason is that \inlinecode{pAdd} makes two recursive calls to parse sub-expressions, by using \inlinecode{pExpr}, which
 covers both cases in the old grammar. But the newly added case \inlinecode{pVar} is not observed by the recursive \inlinecode{pExpr},
 hence the parser does not work as expected. It is possible to build the correct parser by replacing the recursive call in \inlinecode{pAdd} with \inlinecode{pVarExpr}.
-However, modification on existing code sacrifices separate compilation, and hence breaks semantic modularity.
+However, modifying existing code sacrifices separate compilation, and hence breaks semantic modularity.
 
 \subsection{Overriding for Extensibility}\label{subsec:overriding}
 
@@ -134,6 +134,10 @@ With multiple inheritance, Scala has a special syntax
 \lstinline{super[T].x}, called \textit{static super reference}. It refers to the name
 \inlinecode{x} in the specified parent trait \inlinecode{T}. With this we can reuse
 the old parsers even if they have the same name.
+\bruno{Independent extensibility cannot be explained like this. 
+We need to see some code here! You need to expand the explanation. 
+I suggest instead cutting on the ``wrong'' attempt in the beggining of this section, and instead 
+have some brief discussion in the \emph{correct} code where we need to be careful.}
 
 %As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
 
