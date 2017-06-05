@@ -147,11 +147,11 @@ In particular, the calculi \inlinecode{EquiRec} and some others are only 22 line
 in our implementation, because we only compose existing codes.
 
 To discover the reasons of slower execution time, we made experiments
-on two possible factors, which are Object Algebra and the longest match alternative combinator.
-We use Object Algebra for ASTs and the longest match alternative combinator \inlinecode{|||} for parsing,
+on two possible factors, which are Object Algebras and the longest match alternative combinator.
+We use Object Algebras for ASTs and the longest match alternative combinator \inlinecode{|||} for parsing,
 while \ilyaimpl{} uses case class and the ordinary alternative combinator.
 Therefore, we implemented two more versions. One is a modified version of our implementation,
-named \ourclass{}, with object algebra replaced by case class for the ASTs.
+named \ourclass{}, with Object Algebras replaced by case class for the ASTs.
 The other is a modified version of \ilyaimpl{}, named \ilyalongest{},
 using the longest match alternative combinator instead of the ordinary one.
 
@@ -193,7 +193,7 @@ using the longest match alternative combinator instead of the ordinary one.
 %% \end{table*}
 
 The right part of table \ref{tab:comparison} suggests that the difference of running time between
-using object algebra and class is little, roughly 1\%.
+using Object Algebras and class is little, roughly 1\%.
 The usage of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
 more intermediate function calls and method overriding. However, it is worth mentioning that
