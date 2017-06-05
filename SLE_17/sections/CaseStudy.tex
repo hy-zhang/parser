@@ -1,7 +1,10 @@
 \section{Case Study}\label{sec:casestudy}
 
 To demonstrate the utility of our modular parsing approach, we
-implemented parsers of the first 18 calculi from book \textit{Types and Programming Languages} (TAPL) \cite{pierce2002types}. We compared our implementation with a non-modular implementation
+implemented parsers of the first 18 calculi~\footnote{There are some more calculi in the book,
+  but they are either not ported by the implementation we compare with, or just repeating the syntax of former ones.}
+from book \textit{Types and Programming Languages} (TAPL) \cite{pierce2002types}.
+We compared our implementation with a non-modular implementation
 we found online, which is also written in Scala and uses the same Packrat parsing library.
 We counted source lines of code (SLOC) and measured execution time for both implementations.
 The result suggests that our implementation saves 69\% code comparing with that non-modular one.
