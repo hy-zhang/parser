@@ -77,8 +77,6 @@ We already have solutions such Object Algebras~\cite{Oliveira:2012} for this pro
 In the rest of Section~\ref{sec:inheritance}, we will introduce an solution for modular parsing with Extension 1 above, using only standard inheritance in OO. Extension 2 will be discussed in Section~\ref{sec:algebrasandparsing}.
 \end{comment}
 
-\subsection{Extensible Parsing via Inheritance}
-
 Part of the modular parsing problem is how to obtain an extensible parser. It
 is natural to make use of OO ASTs because adding new data constructs is cheap for
 them. Hence we have used OO traits and inheritance to represent the AST in the last
@@ -88,25 +86,21 @@ and we can even reuse the old code.
 
 To illustrate such extensibility, we continue with the old
 example, and introduce variables as a new case.
-It is easy to extend the corresponding OO AST in a modular way:
+It is easy to extend the corresponding OO AST together with its parser in a modular way:
 
-\lstinputlisting[linerange=7-9]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_SIMPLE_LAM
+\begin{lstlisting}
+class Var(x: String) extends Expr {
+  def print = x
+}
+\end{lstlisting}
+Here one may quickly define a new parser \lstinline|pVar| in \lstinline|AParser| for variables, and parse new expressions
+with \lstinline{"pExpr ||| pVar"}.
+Unfortunately, even \inlinecode{"1 + x"} cannot be parsed, which is obviously valid in the new grammar.
+The reason is that \inlinecode{pAdd} makes two recursive calls to \lstinline|pExpr| for parsing sub-expressions, whereas the newly added \inlinecode{pVar} is not observed, unless we replace all the occurrences of \lstinline|pExpr| with \lstinline{"pExpr ||| pVar"}.
+Yet modifying existing code breaks semantic modularity.
 
-For code reuse, we want to define a new parser that extends
-the old one. Here one may quickly come up
-with the following attempt, where a new parser is defined for \inlinecode{Var}, then composed
-with \inlinecode{pExpr}:
-
-\lstinputlisting[linerange=13-16]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_BAD_ATTEMPT
-
-Unfortunately, this fails to parse some expressions like \inlinecode{"1 + x"}, which are obviously valid in the new grammar.
-The reason is that \inlinecode{pAdd} makes two recursive calls to parse sub-expressions, by using \inlinecode{pExpr}, which
-covers both cases in the old grammar. But the newly added case \inlinecode{pVar} is not observed by the recursive \inlinecode{pExpr},
-hence the parser does not work as expected. It is possible to build the correct parser by replacing the recursive call in \inlinecode{pAdd} with \inlinecode{pVarExpr}.
-However, modifying existing code sacrifices separate compilation, and hence breaks semantic modularity.
-
-\subsection{Overriding for Extensibility}\label{subsec:overriding}
-
+\vspace{-.05in}
+\paragraph{Overriding for Extensibility}
 It is actually quite simple to let \inlinecode{pExpr} cover the newly
 extended case without modifying existing code. Method overriding is a
 standard feature which often comes with inheritance, and it allows us
@@ -126,18 +120,21 @@ actually refers to \inlinecode{this.pExpr} again due to dynamic dispatch, and it
 A nice feature of Scala is its support for the linearized-style multiple
 inheritance on traits~\cite{odersky2004overview}. This can be very helpful when
 composing several languages, and to achieve independent
-extensibility~\cite{odersky2005independently}. Later we introduce language components
-in Section~\ref{subsec:language-component} as a nice pattern.
+extensibility~\cite{odersky2005independently}. Suppose now we want to compose the parsers
+for expressions from pre-defined languages \lstinline|LanguageA| and \lstinline|LanguageB| using alternative.
+The new parser can be built by inheriting both parsers at the same time:
+\begin{lstlisting}
+trait LanguageA {...}
+trait LanguageB {...}
+trait LanguageC extends LanguageA with LanguageB {
+  override def pExpr = super[LanguageA].pExpr ||| super[LanguageB].pExpr
+}
+\end{lstlisting}
 
-In the above code, we use the \lstinline{super} keyword to refer to the old \inlinecode{pExpr}.
-With multiple inheritance, Scala has a special syntax
-\lstinline{super[T].x}, called \textit{static super reference}. It refers to the name
-\inlinecode{x} in the specified parent trait \inlinecode{T}. With this we can reuse
-the old parsers even if they have the same name.
-\bruno{Independent extensibility cannot be explained like this. 
-We need to see some code here! You need to expand the explanation. 
-I suggest instead cutting on the ``wrong'' attempt in the beggining of this section, and instead 
-have some brief discussion in the \emph{correct} code where we need to be careful.}
+The \lstinline{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method
+\inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish
+the methods of the same name. Therefore in the new parser, we use \lstinline{super} to specify which
+\lstinline{pExpr} we are referring to.
 
 %As a concrete example, we compose the language of integers and additions with a language of boolean values and if-then-else expressions, to build a new language.
 
@@ -161,7 +158,7 @@ syntax does.}
 %\inlinecode{"if true then 1 + 2 else 3 + 4"}.
 
 \vspace{-.05in}
-\paragraph{Conflicts and/or ambiguity} In a modular setting, conflicts and
+\paragraph{Conflicts and/or Ambiguity} In a modular setting, conflicts and
 ambiguity could be introduced to the grammar. In that case, the help parser combinators
 can offer is quite restricted. Yet users can override those problematic methods to resolve
 such conflicts, and rely on dynamic dispatch. We will discuss it in Section~\ref{subsec:overriding-rules}.
