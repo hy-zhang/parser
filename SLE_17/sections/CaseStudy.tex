@@ -1,13 +1,15 @@
 \section{Case Study}\label{sec:casestudy}
 
 To demonstrate the utility of our modular parsing approach, we
-implemented parsers of the first 18 calculi~\footnote{There are some more calculi in the book,
-  but they are either not ported by the implementation we compare with, or just repeating the syntax of former ones.}
-from book \textit{Types and Programming Languages} (TAPL) \cite{pierce2002types}.
+implemented parsers for the first 18 calculi~\footnote{There are some more calculi in the book,
+  but they are either not ported by the implementation we compare with, or just repeats the syntax of former ones.}
+from the \textit{Types and Programming Languages} (TAPL)
+\cite{pierce2002types} book.
 We compared our implementation with a non-modular implementation
-we found online, which is also written in Scala and uses the same Packrat parsing library.
+available online, which is also written in Scala and uses the same Packrat parsing library.
 We counted source lines of code (SLOC) and measured execution time for both implementations.
-The result suggests that our implementation saves 69\% code comparing with that non-modular one.
+The result suggests that our implementation saves 69\% code comparing
+with that non-modular one, but there is a 43\% slowdown due to code modularity.
 
 \subsection{Implementation}\label{subsec:implementation}
 
@@ -92,9 +94,11 @@ We compared our implementation (named \ourimpl{}) with an implementation
 available online\footnote{https://github.com/ilya-klyuchnikov/tapl-scala/} (named \ilyaimpl{}).
 \ilyaimpl{} is suitable for comparison, because it is also
 written in Scala using the same parser combinator library.
-Furthermore, it includes parsers of all the 18 calculi we have, but
-written in a non-modular way. Thus it is not able to reuse existing
+\ilyaimpl{} implements parsers 18 calculi in TAPL in a non-modular
+way. Thus \ilyaimpl{} is not able to reuse existing
 code when those calculi share common features.
+\ourimpl{} implements the same 18 calculi, but reuse 
+is possible due to modularity.
 
 The comparison is made from two aspects. First, we want to discover
 the amount of code reuse using our modular parsing approach.
@@ -137,17 +141,17 @@ The average execution time of 5 runs excluding reading input file was calculated
 
 \paragraph{Comparison Results}
 Table \ref{tab:comparison} shows results of the comparison.
-Let's only check \ourimpl{} and \ilyaimpl{} for now.
+Let us only check \ourimpl{} and \ilyaimpl{} for now.
 The overall result is that 69.2\% of code is reduced using our
 approach, and our implementation is 42.7\% slower.
 
 The good SLOC result is because of that the code of common language features
-are reused lots of times in the whole case study. We can see that in the first two calculi
+are reused many times in the whole case study. We can see that in the first two calculi
 \lstinline{Arith} and \lstinline{Untyped} we are not better than \ilyaimpl{},
 because in such two cases we do not reuse anything.
 However in the following 16 calculi, we indeed reuse language components.
 In particular, the calculi \inlinecode{EquiRec} and some others are only 22 lines
-in our implementation, because we only compose existing codes.
+in our implementation, because we only compose existing code.
 
 To discover the reasons of slower execution time, we made experiments
 on two possible factors, which are Object Algebras and the longest match alternative combinator.
@@ -202,3 +206,7 @@ execution time may be the overall structure of the modular parsing approach, bec
 more intermediate function calls and method overriding. However, it is worth mentioning that
 because of the memoization technique of Packrat parsers, we are only constant times
 slower, the algorithmic complexity is still the same.
+Since the slowdown seems to be caused by extra method
+dispatching, in future work we wish to investigate techniques such as 
+partial evaluation or meta-programming to eliminate such cost. The
+work by B{\'e}guet and Manohar~\cite{Beguet:2014} is an interesting starting point.

@@ -93,7 +93,7 @@ methods has to be used by the parsing function. Thus, a first attempt
 at defining the parser for the small arithmetic language is:
 
 \lstinputlisting[linerange=8-17]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
-Such a parser looks fine, but it is not extensible. For example, we have demonstrated in Section~\ref{subsec:overriding} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]}, which is a \emph{supertype} of the old type \inlinecode{Alg[E] =>} \inlinecode{Parser[E]}, since
+Such a parser looks fine, but it is not extensible. For example, we have demonstrated in Section~\ref{sec:inheritance} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]}, which is a \emph{supertype} of the old type \inlinecode{Alg[E] =>} \inlinecode{Parser[E]}, since
 the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This violates
 overriding in Scala.
 
