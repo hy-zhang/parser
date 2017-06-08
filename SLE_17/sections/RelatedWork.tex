@@ -26,7 +26,7 @@ section will try to lead a discussion on what difference we have made.
 \end{comment}
 
 \paragraph{Syntactically Extensible Parsing}
-Extensible parser generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016}
+Extensible parser generators~\cite{antlr1995,Grimm2006,Gouseti2014,Viera2012,Warth2016}
 are a mainstream area of modular syntax and parsing. They allow users to write
 modular grammars, where new
 non-terminals and production rules can be introduced, some can even
@@ -42,7 +42,12 @@ parser generators may statically check the correctness and unambiguity
 of grammars. In contrast, because our approach is based on parser
 combinators, there is no support for ambiguity checking.  However, as
 far as we are aware, no extensible parser generators support separate
-compilation or modular type-checking.
+compilation or modular type-checking. It is worth mentioning that in~\cite{Viera2012}, users can define
+grammar fragments as typed Haskell values, and combine them on the fly. Later they are processed
+by a typed parser generator. Nevertheless, it only support separate compilation
+on grammar fragments; a whole compilation is still needed for an extended grammar. And it requires
+a lot of advanced language features, making client code less expressive. Our approach is simple from a
+straightforward use of OO programming, and makes parsing code directly reusable.
 
 Macro systems like the C preprocessor, C++ templates and
 Racket~\cite{Tobin-Hochstadt2011}, and other meta-programming
