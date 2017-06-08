@@ -35,6 +35,7 @@ such ``\emph{implementation mechanisms lack proper
   interfaces and support neither modular type checking nor separate
   compilation}''.
 
+\begin{comment}
 Syntactic modularization techniques have also been applied to the
 problem of \emph{extensible parsing}. Many parser
 generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016} support
@@ -48,6 +49,7 @@ their own syntax, such as SugarJ~\cite{Erdweg2011}, also offer a form
 of extensible parsing. However those syntactic approaches do not
 support separate compilation and/or modular type-checking
 of parsing code either.
+\end{comment}
 
 Semantic modularization techniques go one step further in terms of modularity,
 and also enable components or features to be modularly type-checked
@@ -79,7 +81,7 @@ semantic modularization techniques focus on modularizing various
 aspects of PL implementations.  However, as far as we know, there is
 little work on operations that build/produce ASTs.  In particular the
 problem of how to modularize parsing has not been studied in semantic
-modularization approaches. At best, techniques such as NOA~\cite{Gouseti2014}
+modularization approaches. Techniques such as NOA~\cite{Gouseti2014}
 employ a syntactic modularity approach for parsing in combination with
 a semantic modularity approach for defining operations
 that traverse or process ASTs. This is a shame because parsing is a
