@@ -27,7 +27,7 @@ in many cases). More importantly, a second problem is that
 even if that approach would work, the parsing code in \lstinline{VarParser} is no longer reusable!
 The types \inlinecode{Expr, Lit, Add}, and so on, are all old types without the free variables operation.
 To match the new ASTs, we have to substitute \inlinecode{NewExpr} for \inlinecode{Expr} (the
-same for \inlinecode{Lit}, \inlinecode{Add}, ...). It requires either modification on existing code or casts.
+same for \inlinecode{Lit}, \inlinecode{Add}, ...). This requires either code modification or type casts.
 The goal of semantic modularity motivates us to find a different approach for building ASTs.
 
 %Object Algebras separate data variants and

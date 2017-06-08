@@ -9,12 +9,12 @@ class Var(x: String) extends Expr {
 }
 //END_INHERITANCE_SIMPLE_LAM
 
-//BEGIN_INHERITANCE_BAD_ATTEMPT
 trait Attempt extends AParser {
-  val pVar: Parser[Expr] = ident ^^ (new Var(_))
-  val pVarExpr: Parser[Expr] = pExpr ||| pVar
-}
+//BEGIN_INHERITANCE_BAD_ATTEMPT
+val pVar: Parser[Expr] = ident ^^ (new Var(_))
 //END_INHERITANCE_BAD_ATTEMPT
+val pVarExpr: Parser[Expr] = pExpr ||| pVar
+}
 
 //BEGIN_INHERITANCE_APPROACH
 trait VarParser extends AParser {

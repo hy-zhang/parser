@@ -23,10 +23,12 @@ Examples include many tools for developing Feature-Oriented Software-Product
 Lines (SPLs)~\cite{AK:JOT09,Kastner11road}, some Language Workbenches~\cite{Erdweg201524}, or extensible parser
 generators~\cite{antlr1995,Grimm2006,Gouseti2014,Warth2016}.  Most syntactic approaches employ textual
 composition techniques such as \emph{superimposition}~\cite{AK:JOT09} to
-enable the development modular program features. Such
-composition techniques collect the code for multiple features and
-merge them together when a concrete combination of features is needed
-for a particular program. As Kastner et. al~\cite{Kastner11road} note,
+enable the development modular program features.
+%Such
+%composition techniques collect the code for multiple features and
+%merge them together when a concrete combination of features is needed
+%for a particular program.
+As Kastner et. al~\cite{Kastner11road} note,
 a typical drawback of feature-oriented SPL implementations, which
 more generally applies to syntactic modularity approaches, is that
 such ``\emph{implementation mechanisms lack proper
@@ -173,13 +175,11 @@ In summary our contributions are:
   from the TAPL book. The case study show the effectiveness of modular
   parsing in terms of reuse. The TAPL case study is available online
   at:
-  \url{http://}\footnote{\textbf{Note to Reviewers:} Please find the URL in the
-    supplementary material for the submission.}
+  \url{https://github.com/lihuanglx/modular-parsing}
 
 \end{itemize}
 
 All the code in the paper and the case study is written in Scala, since its concise and elegant
-syntax gives better presentation. Clearly
-other languages that support some form of multiple inheritance
-(including Java 8 with default methods~\cite{Goetz2012}) could in principle be
+syntax gives better presentation. Other languages that support some form of multiple inheritance
+(including C++ or Java 8 with default methods~\cite{Goetz2012}) could in principle be
 used.
