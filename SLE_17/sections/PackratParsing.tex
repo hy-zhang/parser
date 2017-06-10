@@ -16,11 +16,10 @@ we propose the following methodology:
 
 \end{itemize}
 
-Moreover, the underlying parsing formalism should make backtracking
-cheap, since \emph{backtracking is pervasive in modular parsing}.
-Although we chose Packrat parsing (due to its immediate availability
-and support), any other parsing formalism that provides similar
-features should be adequate for modular parsing.
+Moreover, the underlying parsing formalism should make \emph{backtracking
+cheap}, due to its pervasiveness in modular parsing.
+Although we chose Packrat parsing, any other parsing formalism that provides similar
+features should be ok.
 
 \subsection{Algorithmic Challenges of Modularity}\label{subsec:challenges}
 For the goal of modular parsing, parser combinators seem suitable because they are
