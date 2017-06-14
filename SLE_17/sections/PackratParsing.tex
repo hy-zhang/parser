@@ -94,7 +94,7 @@ the \emph{longest match} is picked among the possible results. However, manual r
 the order of parsers, by rewriting previously written code.
 
 \paragraph{Backtracking} The need for backtracking can also be problematic
-in a modular setting. Consider a grammar that includes \inlinecode{"import..from"}, 
+in a modular setting. Consider a grammar that includes \inlinecode{"import..from"},
 and is extended with an \inlinecode{"import..as"} case:
 
 \setlength{\grammarindent}{5em}
@@ -114,13 +114,13 @@ newParser = try parseImpFrom <|> ... <|> parseImpAs
 
 Similarly, this violates a modular setting because it also requires a global view of the full grammar.
 Hence the worst case where all alternatives may share common prefixes with future cases
-should always be antecipated. Therefore we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere. However this results in the worst-case exponential time
+should always be anticipated. Therefore we need to backtrack for all the branches. To avoid failures in the future, we have to add \inlinecode{try} everywhere. However this results in the worst-case exponential time
 complexity.
 
 \subsection{Packrat Parsing}\label{subsec:packratparsing}
 Fortunately, some more advanced parsing techniques such as Packrat
 parsing~\cite{Ford2002} have been developed to address limitations of
-simple parser combinators. Packrat parsing uses memoization to record
+simple parser combinators. Packrat parsing uses memorization to record
 the result of applying each parser at each position of the input, so
 that repeated computation is eliminated. Moreover, it supports both direct left-recursion
 and (in theory) indirect left-recursion~\cite{warth2008}.
@@ -197,7 +197,7 @@ Table~\ref{tab:packrat} shows common parser combinators from the library.
 \end{table}
 
 It is worth mentioning that the left-recursive grammar above is well supported without extra code.
- The longest match composition is also employed by using the combinator \lstinline{|||}. Furthermore, the parser does not suffer from the backtracking problem, as the memoization technique of Packrat parsing guarantees reasonable efficiency.
+ The longest match composition is also employed by using the combinator \lstinline{|||}. Furthermore, the parser does not suffer from the backtracking problem, as the memorization technique of Packrat parsing guarantees reasonable efficiency.
 
 The code below demonstrates how to parse a valid expression \inlinecode{1 + 2} using our parser.
 
