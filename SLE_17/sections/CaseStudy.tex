@@ -97,7 +97,7 @@ written in Scala using the same parser combinator library.
 \ilyaimpl{} implements parsers 18 calculi in TAPL in a non-modular
 way. Thus \ilyaimpl{} is not able to reuse existing
 code when those calculi share common features.
-\ourimpl{} implements the same 18 calculi, but reuse
+\ourimpl{} implements the same 18 calculi, but reuse 
 is possible due to modularity.
 
 The comparison is made from two aspects. First, we want to discover
@@ -199,14 +199,14 @@ using the longest match alternative combinator instead of the ordinary one.
 %%     \label{tab:ext-comparison}
 %% \end{table*}
 
-The right part of table \ref{tab:comparison} suggests that the difference of running time between
+The right part of Table \ref{tab:comparison} suggests that the difference of running time between
 using Object Algebras and class is little, roughly 1\%.
 The usage of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
 more intermediate function calls and method overriding. However, it is worth mentioning that
-because of the memorization technique of Packrat parsers, we are only constant times
+because of the memoization technique of Packrat parsers, we are only constant times
 slower, the algorithmic complexity is still the same.
 Since the slowdown seems to be caused by extra method
-dispatching, in future work we wish to investigate techniques such as
+dispatching, in future work we wish to investigate techniques such as 
 partial evaluation or meta-programming to eliminate such cost. The
 work by B{\'e}guet and Manohar~\cite{Beguet:2014} is an interesting starting point.
