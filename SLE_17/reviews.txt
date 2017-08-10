@@ -1,0 +1,221 @@
+> ===========================================================================
+>                             SLE 2017 Review #3A
+> ---------------------------------------------------------------------------
+>                     Paper #3: Type-Safe Modular Parsing
+> ---------------------------------------------------------------------------
+> 
+>                       Overall merit: 5. Strong accept
+>                  Reviewer expertise: 2. Some familiarity
+> 
+>                          ===== Paper summary =====
+> 
+> This paper presents a new method for constructing modular,
+> extensible parsers based on parser combinators. The paper
+> makes several unique and reusable contributions: 1) It presents
+> a technique for modular parsing. 2) It presents an alteration
+> to the technique that enables parsing OO ASTs. 3) It presents
+> guidelines to constructing modular parsers and finally 4) it
+> validates the parsers with a TAPL interpreter case study. The
+> paper describes in detail the construction and challenges in
+> creating a modular-extensible parser. It succeeds in doing so
+> and finds that its extensible-modular parsers generally consist
+> of shorter source code - due to code reuse - while resulting in
+> slower parsers - because of repeated, and more complex method
+> dispatches.
+> 
+>                       ===== Comments for author =====
+> 
+> This paper is upfront, clear, concise and well resourced. It
+> makes a compelling case for its research contributions and
+> methodology. The authors explain their design choices in
+> detail, offer a methodology for their main contribution and
+> provide a cogent case study. These qualities lead to a research
+> contribution that is novel, reusable, actionable, and with
+> lots of potential for future work. The paper is a clear accept.
+> 
+> The contributions in this paper are novel and a good example
+> of mixing techniques/thoughts in sub-domains PL research to
+> create something interesting. As evinced by Section 5 the
+> contributions are substantial enough to spawn a good amount of
+> future work.
+> 
+> Sections 3 and 4: the sections that present the main contributions,
+> are particularly strong. That the author's explain the algorithmic
+> challenges for modular parsing and the resultant methodology makes
+> the contributions in this paper transferable to non-OOP methods.
+> Both sections are good examples of crisp, clean presentations. The
+> code snippets are digestible, to the point and terse. The code
+> snippets are also actionable, it would take little effort to
+> implement and start experimenting with the contributions in this paper.
+> 
+> The case study's methodology and experimental setup is clearly
+> expressed and reasonable. The case study is, perhaps, as close as
+> one can get to an objective evaluation of the contributions in the
+> paper and it is makes a strong case for the contributions this
+> paper makes.
+> 
+> This work touches on several areas that are not wholly inter-related.
+> As such I was pleased to see that the related work section is well
+> sourced and fleshed out. Everything that one would expect to relate
+> to the contributions in this paper are represented and discussed.
+> 
+> ===========================================================================
+>                             SLE 2017 Review #3B
+> ---------------------------------------------------------------------------
+>                     Paper #3: Type-Safe Modular Parsing
+> ---------------------------------------------------------------------------
+> 
+>                       Overall merit: 3. Weak accept
+>                  Reviewer expertise: 3. Knowledgeable
+> 
+>                          ===== Paper summary =====
+> 
+> This described an extension to Packrat-style parsing combinators to
+> support what the authors call "semantic modularity".  Many
+> parsing systems support "syntactic modularity" - meaning that one
+> first combines modular specifications of concrete syntax (grammar
+> rules for example) into on big specification (one big grammar) and
+> then type checking and code/parser generation occurs on that combined
+> specification.
+> 
+> Semantic modularity is where the type checking and compilation is done
+> on each individual component.  This work shows how parser combinators
+> can be specified and composed in a way that supports semantic
+> modularity.
+> 
+> The paper also shows how to use object algebras to support modular
+> extension of the ASTs so that new language constructs and new
+> operations over them can be added and supports semantic modularity.
+> This is primarily an applications of the author's previous work. Also
+> it doesn't seem so related to parsing - which is what the paper is
+> apparently about.
+> 
+> Dealing with ambiguities is possible, but it seems this works best
+> when the composed parsing fragments to not overlap or otherwise
+> introduce ambiguities.
+> 
+> The paper provides a nice case study of applying the techniques to the
+> many small languages in Pierce's Types and Programming Languages
+> book.  This is a nice case study.  The approach is successful in that
+> many language specifications from smaller languages are reused in
+> larger languages.  These comparisons are made against another
+> implementation (not written by the authors) of parsing combinators for
+> the languages in TAPL.  Unfortunately there is a serious speed penalty
+> to be paid for this modulary with an increase in time of around 40%.
+> 
+>                       ===== Comments for author =====
+> 
+> The paper presents a nice result. Semantic modularity in parsing seems
+> like an important goal and the paper does show that it can be done.
+>
+ 
+A potential problem with this approach is that it seems to rely on
+several rather subtle aspects of Scala and I suspect that it is rather
+easy to make mistakes in the expressing the grammars and grammar
+composition operations in Scala like this.  The paper doesn't have any
+comment on this.  I would have liked to read about the kinds of error
+messages on gets when mistakes are made.  A bigger concern is that
+errors would not be reported and one would simply end up with a parser
+that doesn't accept the language one wants.
+
+H: Error messages are thrown by packrat parsers like "(token) not expected".
+Do we need to handle this issue? I think modularity is exactly what we made
+to try to avoid such errors, since one can define small parsers and individual
+tests, and then apply the composition.
+
+> 
+> Another concern is that the paper misses some very related work and
+> doesn't do a satisfactory job describing some of the related work it
+> does cover.  I found the description of Bravenboer and Visser to be
+> lacking.  They show how to compose parse tables and this seems like
+> a solution to separate compilation.  Do they not have separate type
+> checking too?  They work on scannerless GLR parsers and so ambiguity is
+> a problem there, just like in the approach of this paper.  Since they
+> are scannerless then I think they handle composition of scanners as
+> well.  The comments in the paper about there work is not clear on
+> these issues.
+> 
+> The paper also misses modular parsing as done in Wyvern - an
+> extensible language by Omar and Aldrich, in ECOOP 14 called Safely
+> Composable Type-Specific Languages.  They use special "generalized
+> forms" that limit the interaction of parsers that are composed.  But
+> it is "safe" and support separate type checking.
+> 
+> The paper also misses work by Schwerdfeger and Van Wyk on modular
+> parsing.  Their work in PLDI '09 shows how to restrict grammars
+> extending a language in a way that ensure the composition of any
+> grammars in this restricted form will be composed into a LALR(1)
+> grammar.  This give separate type checking and separate checks for
+> determinism (that is being LALR(1).  It is syntactic composition of
+> grammars however.  They also do parse table composition, to get
+> separate compilation, in their SLE 2009 paper.
+
+H: (TODO) add these references and discussions.
+
+> One small comment, the phrase "parsing OO ASTs" appears in a few
+> places and I find it confusing.  I believe that you mean your parsers
+> generate OO ASTs as a result of their semantic actions. One could read
+> "parsing OO ASTs" as trying to parse not text files but ASTs written
+> in a OO style.  Or it could be interpreted to mean that these OO ASTs
+> can parse.
+
+H: TODO
+
+> 
+> ===========================================================================
+>                             SLE 2017 Review #3C
+> ---------------------------------------------------------------------------
+>                     Paper #3: Type-Safe Modular Parsing
+> ---------------------------------------------------------------------------
+> 
+>                       Overall merit: 3. Weak accept
+>                  Reviewer expertise: 4. Expert
+> 
+>                          ===== Paper summary =====
+> 
+> This paper presents an approach for writing modular parsers using
+> combinators. The aim is for components that can be separately
+> type-checked and compiled. The approach is devised as a Scala parsing
+> library and uses standard Scala features for component-based
+> programming. A case study is described where parsers associated with
+> the Types and Programming Languages text book were specified using
+> this kind of module.
+> 
+>                       ===== Comments for author =====
+> 
+> The approach uses object algebras and fairly standard overriding to
+> encode the reusable modules and to obtain extensible ASTs. As such
+> there is not a lot of new technical contribution in this paper. The
+> descriptions are good and the examples well chosen, but it reads more
+> like a tutorial into the use of these techniques than a presentation
+> of new research results.
+> 
+> The paper more of an application of previously existing techniques to
+> this problem, but is probably of interest to SLE attendees since these
+> techniques are not in widespread use.
+> 
+> An assumption is made that a longest match combinator should be used
+> when specifying alternatives which means that parsers from separate
+> modules can be combined without any extra work. But is this the only
+> kind of module composition that you would want? What if we want a
+> shorter match from one module to take precedence over a longer one
+> from another module?
+
+H: for combinators we rely on the parsing library. I think that is an
+orthogonal issue to our work.
+
+> 
+> The evaluation using TAPL examples is reasonable and demonstrates the
+> expected code reduction, although it should be pointed out that the
+> TAPL code base probably wasn't trying to keep lines of code down, so
+> the goals of the two code bases were different. On the downside, the
+> approach from this paper is much slower, so the potential practical
+> impact is tempered.
+> 
+> The paper "Oberon-0 in Kiama" by Sloane and Roberts from the LDTA Tool
+> Challenge would seem to be relevant but is not cited. It demonstrates
+> language implementation extensibility in Scala for that non-trivial case
+> study, including extending parser combinators using a similar technique
+> to the one in this paper.
+
+H: also add this work
