@@ -27,7 +27,7 @@ section will try to lead a discussion on what difference we have made.
 \end{comment}
 
 \paragraph{Syntactically Extensible Parsing}
-Extensible parser generators~\cite{antlr1995,Grimm2006,Gouseti2014,Viera2012,Warth2016}
+Extensible parser generators~\cite{antlr1995,Grimm2006,Gouseti2014,Viera2012,Warth2016,schwerdfeger09}
 are a mainstream area of modular syntax and parsing. They allow users to write
 modular grammars, where new
 non-terminals and production rules can be introduced, some can even
@@ -75,6 +75,14 @@ is mostly done using parser generators. They focus on the
 extensions to a host language. Those techniques are short of type safety in a modular
 setting as well.
 
+Besides, type-specific languages~\cite{omar14} do support
+separate compilation and type safety. The modularity of parsing is incorporated in its type
+system, which allows users to introduce new syntax for parsing. Whereas in our approach, parsing 
+strategy is an orthogonal issue since we rely on an external parsing library.
+Our approach does not rely on an elaborated semantics extension, but simply uses a pattern
+that is applicable in mainstream OO languages, where the type system helps ensure
+type safety.
+
 %\bruno{Have you read
 %Languages as Libraries? That is probably an important reference, which
 %I think we should cite.}
@@ -88,7 +96,7 @@ setting as well.
 %  grammars?}
 
 \paragraph{Extensible Parsing Algorithms}
-\textit{Parse table composition}~\cite{bravenboer2008parse}
+\textit{Parse table composition}~\cite{bravenboer2008parse, schwerdfeger2010}
 is an approach where grammars are compiled to
 modular parse tables. Those parse tables are expressed as DFAs
 or NFAs, and later they can be composed by an algorithm, to provide
@@ -98,8 +106,8 @@ is quite different from ours, since it uses parse
  tables, whereas we use parser combinators.
 Our approach supports both
 \emph{separate compilation} as well as \emph{modular
-  type-checking}. Moreover, the extensibility of parsing is further
-available at language composition and lexical level.
+  type-checking}, and is applied in common OO languages. Moreover, the extensibility of parsing is further
+available at language composition.
 
 %\haoyuan{we do not have explicit
 %  correspondence/relationship between abstract syntax and the parser.}

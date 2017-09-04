@@ -1,15 +1,13 @@
 %% For double-blind review submission
 %% \documentclass[sigplan,10pt,review,anonymous]{acmart}\settopmatter{printfolios=false}
 %% For single-blind review submission
-\documentclass[sigplan,10pt,review]{acmart}\settopmatter{printfolios=true}
+\documentclass[sigplan,screen]{acmart}\settopmatter{}
 %% For final camera-ready submission
 %\documentclass[sigplan,10pt]{acmart}\settopmatter{}
 
 %% Note: Authors migrating a paper from traditional SIGPLAN
 %% proceedings format to PACMPL format should change 'sigplan,10pt' to
 %% 'acmlarge'.
-
-\settopmatter{printacmref=false}
 
 %% Some recommended packages.
 \usepackage{booktabs}   %% For formal tables:
@@ -72,36 +70,19 @@
   keywordstyle=\ttfamily\bfseries,
 }
 
-\makeatletter\if@ACM@journal\makeatother
-%% Journal information (used by PACMPL format)
-%% Supplied to authors by publisher for camera-ready submission
-\acmJournal{PACMPL}
-\acmVolume{1}
-\acmNumber{1}
-\acmArticle{1}
-\acmYear{2017}
-\acmMonth{1}
-\acmDOI{10.1145/nnnnnnn.nnnnnnn}
-\startPage{1}
-\else\makeatother
-%% Conference information (used by SIGPLAN proceedings format)
-%% Supplied to authors by publisher for camera-ready submission
-\acmConference[PL'17]{ACM SIGPLAN Conference on Programming Languages}{January 01--03, 2017}{New York, NY, USA}
-\acmYear{2017}
-\acmISBN{978-x-xxxx-xxxx-x/YY/MM}
-\acmDOI{10.1145/nnnnnnn.nnnnnnn}
-\startPage{1}
-\fi
 
-
-%% Copyright information
-%% Supplied to authors (based on authors' rights management selection;
-%% see authors.acm.org) by publisher for camera-ready submission
-\setcopyright{none}             %% For review submission
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-%\setcopyright{rightsretained}
-%\copyrightyear{2017}           %% If different from \acmYear
+%%% The following is specific to SLE'17 and the paper
+%%% 'Type-Safe Modular Parsing'
+%%% by Haoyuan Zhang, Huang Li, and Bruno C. d. S. Oliveira.
+%%%
+%\setcopyright{ACMCT}
+\setcopyright{acmcopyright}
+\acmPrice{15.00}
+\acmDOI{10.1145/3136014.3136016}
+\acmYear{2017}
+\copyrightyear{2017}
+\acmISBN{978-1-4503-5525-4/17/10}
+\acmConference[SLE'17]{2017 ACM SIGPLAN International Conference on Software Language Engineering}{October 23--24, 2017}{Vancouver, Canada}
 
 
 %% Bibliography style
@@ -263,28 +244,27 @@
 %% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
 
 \begin{CCSXML}
-<ccs2012>
-<concept>
-<concept_id>10011007.10011006.10011008</concept_id>
-<concept_desc>Software and its engineering~General programming languages</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10003456.10003457.10003521.10003525</concept_id>
-<concept_desc>Social and professional topics~History of programming languages</concept_desc>
-<concept_significance>300</concept_significance>
-</concept>
-</ccs2012>
+	<ccs2012>
+	<concept>
+	<concept_id>10011007.10011006.10011008.10011009.10011011</concept_id>
+	<concept_desc>Software and its engineering~Object oriented languages</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	<concept>
+	<concept_id>10003752.10010124.10010125.10010128</concept_id>
+	<concept_desc>Theory of computation~Object oriented constructs</concept_desc>
+	<concept_significance>300</concept_significance>
+	</concept>
+	</ccs2012>
 \end{CCSXML}
 
-%\ccsdesc[500]{Software and its engineering~General programming languages}
-%\ccsdesc[300]{Social and professional topics~History of programming languages}
-%% End of generated code
+\ccsdesc[500]{Software and its engineering~Object oriented languages}
+\ccsdesc[300]{Theory of computation~Object oriented constructs}
 
 
 %% Keywords
 %% comma separated list
-%\keywords{keyword1, keyword2, keyword3}  %% \keywords is optional
+\keywords{modular parsing, object algebras, semantic modularity}  %% \keywords is optional
 
 
 %% \maketitle
@@ -310,6 +290,8 @@
 
 \input{sections/Conclusion.tex}
 
+\section*{Acknowledgements}
+We would like to thank the anonymous reviewers for their helpful comments. This work has been sponsored by the Hong Kong Research Grant Council projects number 27200514 and 17258816.
 
 %% Bibliography
 \bibliography{paper}
