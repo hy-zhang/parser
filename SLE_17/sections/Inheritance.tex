@@ -88,11 +88,14 @@ To illustrate such extensibility, we continue with the old
 example, and introduce variables as a new case.
 It is easy to extend the corresponding OO AST together with its parser in a modular way:
 
+\vspace{-4pt}
 \begin{lstlisting}
 class Var(x: String) extends Expr {
   def print = x
 }
 \end{lstlisting}
+\vspace{-4pt}
+
 Here one may quickly define a new parser \lstinline|pVar| in \lstinline|AParser| for variables, and parse new expressions
 with \lstinline{"pExpr ||| pVar"}.
 Unfortunately, even \inlinecode{"1 + x"} cannot be parsed, which is obviously valid in the new grammar.
@@ -108,7 +111,9 @@ to redefine an inherited method, such as \inlinecode{pExpr}. We can
 build the new parser which correctly parses \inlinecode{"1 + x"}
 through overriding:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=20-26]{code/src/papercode/Sec3Inheritance/Code1.scala}% APPLY:linerange=INHERITANCE_APPROACH
+\vspace{-4pt}
 
 Now \inlinecode{VarParser} successfully represents the parser for the extended language, because Scala uses dynamic dispatch for
 method overriding in inheritance. When the input \inlinecode{"1 + x"} is fed to the parser \inlinecode{this.pExpr}, it firstly delegates
@@ -123,13 +128,14 @@ composing several languages, and to achieve independent
 extensibility~\cite{odersky2005independently}. Suppose now we want to compose the parsers
 for expressions from pre-defined languages \lstinline|LanguageA| and \lstinline|LanguageB| using alternative.
 The new parser can be built by inheriting both parsers at the same time:
+\vspace{-4pt}
 \begin{lstlisting}
 trait LanguageA {...}
 trait LanguageB {...}
 trait LanguageC extends LanguageA with LanguageB {
   override def pExpr = super[LanguageA].pExpr ||| super[LanguageB].pExpr
 }
-\end{lstlisting}
+\end{lstlisting}\vspace{-4pt}
 
 The \lstinline{super[T].x} syntax in Scala, so called \textit{static super reference}, refers to the type or method
 \inlinecode{x} in the parent trait \inlinecode{T}. Under multiple inheritance, it can be used to distinguish

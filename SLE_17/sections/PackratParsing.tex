@@ -1,3 +1,4 @@
+\vspace{-2pt}
 \section{Packrat Parsing for Modularity}\label{sec:packrat}
 
 This section discusses the algorithmic challenges introduced by
@@ -79,10 +80,12 @@ must be transformed to recover the correct syntactic structure.
 in parser combinator libraries is the need for manually prioritizing/ordering
 alternatives in a grammar.
 Consider the grammar:
+\vspace{-2pt}
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <expr> ::= <int> \alt <int> `+' <expr>
 \end{grammar}
+\vspace{-2pt}
 
 In Parsec, for instance, the parser \inlinecode{"parseInt <|> parseAdd"} will only parse the input \inlinecode{"1 + 2"} to \inlinecode{"1"}, as \inlinecode{parseInt} successfully parses \inlinecode{"1"}
 and terminates parsing.
@@ -94,23 +97,27 @@ the \emph{longest match} is picked among the possible results. However, manual r
 the order of parsers, by rewriting previously written code.
 
 \paragraph{Backtracking} The need for backtracking can also be problematic
-in a modular setting. Consider a grammar that includes \inlinecode{"import..from"}, 
+in a modular setting. Consider a grammar with \inlinecode{"import..from"}, 
 and is extended with an \inlinecode{"import..as"} case:
 
+\vspace{-2pt}
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <stmt> ::= `import' <ident> `from' <ident>
     \alt ...
     \alt `import' <ident> `as' <ident>
 \end{grammar}
+\vspace{-2pt}
 Since the two cases share a common prefix, when the former fails, we must backtrack to the beginning.
 For example, the choice combinator in Parsec only tries the second alternative if the first fails
 without any token consumption. We have to use \inlinecode{try} for explicit backtracking.
 
+\vspace{-4pt}
 \begin{lstlisting}[language=PlainCode]
 oldParser = parseImpFrom <|> ...
 newParser = try parseImpFrom <|> ... <|> parseImpAs
 \end{lstlisting}
+\vspace{-4pt}
 
 Similarly, this violates a modular setting because it also requires a global view of the full grammar.
 Hence the worst case where all alternatives may share common prefixes with future cases
@@ -158,13 +165,17 @@ additions. The concrete syntax is:
 
 It is straightforward to model the abstract syntax by classes. The ASTs support pretty-printing via the \lstinline{print} method.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=9-15]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
+\vspace{-4pt}
 
 Then we write corresponding parsers for all cases.
 Note that a parser has type \lstinline{Parser[E]} for some
 \lstinline{E}, which indicates the type of results it produces.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=19-26]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
+\vspace{-4pt}
 
 In the trait \lstinline{AParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.
 \lstinline{pAdd} handles the addition case and creates an object of \lstinline{Add}. It parses two sub-expressions by calling \lstinline{pExpr}
@@ -201,4 +212,6 @@ It is worth mentioning that the left-recursive grammar above is well supported w
 
 The code below demonstrates how to parse a valid expression \inlinecode{1 + 2} using our parser.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=6-7]{code/src/papercode/Sec2Packrat/Code2.scala}% APPLY:linerange=PACKRAT_RUNPARSER
+\vspace{-10pt}

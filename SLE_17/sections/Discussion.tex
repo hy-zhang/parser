@@ -1,3 +1,4 @@
+\vspace{-3pt}
 \section{More Features}
 
 The use of inheritance-based approach and Object Algebras enables us
@@ -19,21 +20,21 @@ model multi-sorted languages. If the syntax has multiple sorts, we can distingui
 For instance, we extend the expression language from the end of Section~\ref{sec:algebrasandparsing}, with a
 primitive type \inlinecode{int} type and typed lambda abstractions:
 
-\vspace{0.8mm}
-
+\vspace{-2pt}
 \setlength{\grammarindent}{5em}
 \begin{grammar}
 <type> ::= `int'
 
 <expr> ::=  ... \alt `\\' <ident> `:' <type> `.' <expr>
 \end{grammar}
-
-\vspace{0.8mm}
+\vspace{-2pt}
 
 The code below illustrates the corresponding Scala code
 that extends the Object Algebra interface, pretty-printing operation and parser.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=7-23]{code/src/papercode/Sec4OA/Code4.scala}% APPLY:linerange=OVERVIEW_OA_MULTI_SYNTAX
+\vspace{-4pt}
 
 We use two type parameters \inlinecode{E} and \inlinecode{T} for expressions and types. The type system guarantees that invalid terms such as \inlinecode{int + int} will be rejected.
 Besides lexing, the trait \inlinecode{LamOAParser} also introduces parsers for types, and the new case for expressions.
@@ -47,10 +48,12 @@ modifying part of existing parsers, including updating or eliminating existing r
 but in a type-safe way. This can be useful in many
 situations, for instance when conflicts or ambiguities arise upon composing languages.
 As an illustration, suppose we have an untyped lambda abstraction case in a base parser, defined as a value:
+\vspace{-4pt}
 \begin{lstlisting}
 val pLam: Parser[E] =
   ("\\" ~> ident) ~ ("." ~> pE) ^^ ...
 \end{lstlisting}
+\vspace{-4pt}
 Here \inlinecode{pLam} parses a lambda symbol, an identifier, a dot and an expression in sequence.
 Then we want to replace the untyped lambda abstractions by typed
 lambdas. With inheritance and method overriding, it is easy to only
@@ -96,7 +99,9 @@ For implementation, a language component is represented by a Scala object, and i
 We take the example in Section~\ref{subsec:parsingwithoa} again. It can be defined as a language component \inlinecode{VarExpr}.
 For space reasons we omit some detailed code.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=115-124]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VAREXPR
+\vspace{-4pt}
 
 For the extension of types and lambda abstractions in Section~\ref{subsec:differentsyntax}, instead of inheriting from the previous language directly, we can define it as another independent language component \inlinecode{TypedLam}.
 

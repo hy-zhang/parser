@@ -17,7 +17,9 @@ would be extending
 \inlinecode{Expr} with the new operation to obtain a new abstract type
 for ASTs:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=23-23]{code/src/papercode/Sec4OA/Code1.scala}% APPLY:linerange=FVARSEXPR
+\vspace{-4pt}
 
 \noindent Then all classes representing language constructs could be
 extended to implement the operation. A first well-known problem is that such
@@ -50,7 +52,9 @@ Using Object Algebras in Scala, ASTs as recursive data structures are defined by
 Essentially, Object Algebras generalize the {\sc Abstract Factory} pattern~\cite{gamma1995design}, and promote the use of factory methods, instead of constructors, for instantiating objects. The example from Section~\ref{subsec:packratparsing} is used here again for illustration.
 At first the language only supports literals and additions:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=5-8]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALG
+\vspace{-4pt}
 Here \inlinecode{Alg} is called an \textit{Object Algebra interface}, parameterized by the type
 \inlinecode{E}, which abstracts over the concrete type of the AST.
 
@@ -58,7 +62,9 @@ Here \inlinecode{Alg} is called an \textit{Object Algebra interface}, parameteri
 To realize an operation on expressions, we simply instantiate the type parameter by a concrete type and
 provides implementations for all cases. Below is an example of pretty-printing:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=12-16]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
+\vspace{-4pt}
 Here \inlinecode{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
 One can also define an evaluation operation as a new trait that extends \inlinecode{Alg[Int]}. Hence adding new operations is modular. We omit that code
 due to space reasons.
@@ -69,16 +75,22 @@ due to space reasons.
 Furthermore, new language constructs can be added by extending \inlinecode{Alg} and adding new cases only. Now we extend the language
 with variables. A new Object Algebra interface \inlinecode{VarAlg} is defined as follows:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=27-29]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
+\vspace{-4pt}
 Now pretty-printing on the new language can be realized without modifying existing code:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=33-35]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
+\vspace{-4pt}
 An observation is that only the new case is implemented for pretty-printing, and the others have been inherited.
 Thus existing code was reused and was not modified!
 
 To create an expression representing \inlinecode{1 + x}, a generic method is defined as follows:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=42-43]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
+\vspace{-4pt}
 
 Note how the construction of the abstract syntax happens through
 the use of factory methods, instead of constructors.
@@ -92,7 +104,9 @@ to build ASTs, an Object Algebra containing the constructor/factory
 methods has to be used by the parsing function. Thus, a first attempt
 at defining the parser for the small arithmetic language is:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=8-17]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
+\vspace{-4pt}
 Such a parser looks fine, but it is not extensible. For example, we have demonstrated in Section~\ref{sec:inheritance} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]}, which is a \emph{supertype} of the old type \inlinecode{Alg[E] =>} \inlinecode{Parser[E]}, since
 the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This violates
 overriding in Scala.
@@ -117,7 +131,9 @@ The reason why we use it as an extra and seemingly redundant field, is due to a 
 \paragraph{Extensions}
 Now let's try on the variables extension:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=34-39]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
+\vspace{-4pt}
 
 \noindent The type of the Object Algebra field \lstinline{alg} is first refined
 to \lstinline{VarAlg[E]}, to allow calling the additional factory method
@@ -126,7 +142,9 @@ Now, the code for parsing variables (\lstinline{pVar}) can
 call \lstinline{alg.varE}. The following code illustrates how to use
 the parser from a client's perspective:
 
+\vspace{-4pt}
 \lstinputlisting[linerange=46-49]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
+\vspace{-4pt}
 
 In the client code above,
 we pick the pretty-printing algebra \lstinline{VarPrint} to initialize the \lstinline{alg} field, but any other Object

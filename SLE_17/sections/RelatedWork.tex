@@ -1,3 +1,4 @@
+\vspace{-3pt}
 \section{Related Work}\label{sec:relatedwork}
 
 %- extensible parsing, language workbenches: rats, noa (this one already uses OA), modular semantic actions, (syntactic modularity, no separate compilation, modular type-checking)
@@ -78,9 +79,9 @@ setting as well.
 Besides, type-specific languages~\cite{omar14} do support
 separate compilation and type safety. The modularity of parsing is incorporated in its type
 system, which allows users to introduce new syntax for parsing. Whereas in our approach, parsing 
-strategy is an orthogonal issue since we rely on an external parsing library.
+strategy is based on an external parsing library.
 Our approach does not rely on an elaborated semantics extension, but simply uses a pattern
-that is applicable in mainstream OO languages, where the type system helps ensure
+that is applicable in mainstream OO languages, where the type system ensures
 type safety.
 
 %\bruno{Have you read
@@ -95,6 +96,7 @@ type safety.
 %  mentioned. Shall we mention that thesis?} \haoyuan{attribute
 %  grammars?}
 
+\vspace{-6pt}
 \paragraph{Extensible Parsing Algorithms}
 \textit{Parse table composition}~\cite{bravenboer2008parse, schwerdfeger2010}
 is an approach where grammars are compiled to
@@ -106,12 +108,13 @@ is quite different from ours, since it uses parse
  tables, whereas we use parser combinators.
 Our approach supports both
 \emph{separate compilation} as well as \emph{modular
-  type-checking}, and is applied in common OO languages. Moreover, the extensibility of parsing is further
+  type-checking}, and is commonly applicable OO languages. Moreover, the extensibility of parsing is further
 available at language composition.
 
 %\haoyuan{we do not have explicit
 %  correspondence/relationship between abstract syntax and the parser.}
 
+\vspace{-3pt}
 \paragraph{Parser Combinators} Parser combinators have become more and more
 popular since~\cite{burge1975,Wadler1985}. Many parsing libraries produce recursive descent
 parsers by introducing functional monadic
@@ -130,6 +133,7 @@ novel parsing techniques that address the issue of
 left-recursion. We chose Packrat parsing due to its simplicity in Scala,
 but in general there are alternatives to it.
 
+\vspace{-3pt}
 \paragraph{Extensibility} Various design patterns~\cite{gamma1995design} in multiple
 languages, have been proposed over the years to address extensibility
 problems, such as the Expression Problem~\cite{wadler1998expression}.
@@ -160,6 +164,7 @@ of value for extensible code using case classes.  The approach we
 presented in Section~\ref{sec:inheritance} can readily be adapted to case classes:
 all that the users need to do is to use case classes, instead of
 standard OO classes in their code.
+\vspace{-5pt}
 
 \begin{comment}
 Moreover, in~\cite{Oliveira:2012} the authors have discussed the
