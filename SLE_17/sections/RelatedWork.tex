@@ -27,6 +27,7 @@ inspired us of this paper and encourage us for more exploration. This
 section will try to lead a discussion on what difference we have made.
 \end{comment}
 
+\vspace{-4pt}
 \paragraph{Syntactically Extensible Parsing}
 Extensible parser generators~\cite{antlr1995,Grimm2006,Gouseti2014,Viera2012,Warth2016,schwerdfeger09}
 are a mainstream area of modular syntax and parsing. They allow users to write
@@ -77,10 +78,8 @@ extensions to a host language. Those techniques are short of type safety in a mo
 setting as well.
 
 Besides, type-specific languages~\cite{omar14} do support
-separate compilation and type safety. The modularity of parsing is incorporated in its type
-system, which allows users to introduce new syntax for parsing. Whereas in our approach, parsing 
-strategy is based on an external parsing library.
-Our approach does not rely on an elaborated semantics extension, but simply uses a pattern
+separate compilation and type safety. The modularity of parsing is incorporated in its elaborated type
+system. Whereas our approach does not rely on an extension to semantics, but simply uses a pattern
 that is applicable in mainstream OO languages, where the type system ensures
 type safety.
 
@@ -114,7 +113,7 @@ available at language composition.
 %\haoyuan{we do not have explicit
 %  correspondence/relationship between abstract syntax and the parser.}
 
-\vspace{-3pt}
+\vspace{-5pt}
 \paragraph{Parser Combinators} Parser combinators have become more and more
 popular since~\cite{burge1975,Wadler1985}. Many parsing libraries produce recursive descent
 parsers by introducing functional monadic
@@ -133,7 +132,7 @@ novel parsing techniques that address the issue of
 left-recursion. We chose Packrat parsing due to its simplicity in Scala,
 but in general there are alternatives to it.
 
-\vspace{-3pt}
+\vspace{-5pt}
 \paragraph{Extensibility} Various design patterns~\cite{gamma1995design} in multiple
 languages, have been proposed over the years to address extensibility
 problems, such as the Expression Problem~\cite{wadler1998expression}.
@@ -164,7 +163,7 @@ of value for extensible code using case classes.  The approach we
 presented in Section~\ref{sec:inheritance} can readily be adapted to case classes:
 all that the users need to do is to use case classes, instead of
 standard OO classes in their code.
-\vspace{-5pt}
+\vspace{-7pt}
 
 \begin{comment}
 Moreover, in~\cite{Oliveira:2012} the authors have discussed the

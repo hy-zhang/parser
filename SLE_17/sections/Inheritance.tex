@@ -88,13 +88,13 @@ To illustrate such extensibility, we continue with the old
 example, and introduce variables as a new case.
 It is easy to extend the corresponding OO AST together with its parser in a modular way:
 
-\vspace{-4pt}
+\vspace{-5pt}
 \begin{lstlisting}
 class Var(x: String) extends Expr {
   def print = x
 }
 \end{lstlisting}
-\vspace{-4pt}
+\vspace{-5pt}
 
 Here one may quickly define a new parser \lstinline|pVar| in \lstinline|AParser| for variables, and parse new expressions
 with \lstinline{"pExpr ||| pVar"}.

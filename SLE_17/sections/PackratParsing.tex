@@ -9,6 +9,7 @@ used by non-modular code using parser combinators.
 To avoid pitfalls related to those algorithmic challenges,
 we propose the following methodology:
 
+\vspace{-2pt}
 \begin{itemize}[leftmargin=*]
 
 \item \textbf{Modular parsers should support left-recursion.}
@@ -16,6 +17,7 @@ we propose the following methodology:
 \item \textbf{Modular parsers should use a longest match composition operator.}
 
 \end{itemize}
+\vspace{-2pt}
 
 Moreover, the underlying parsing formalism should make \emph{backtracking
 cheap}, due to its pervasiveness in modular parsing.
@@ -197,8 +199,6 @@ Table~\ref{tab:packrat} shows common parser combinators from the library.
 - A parser combinator for sequential composition which keeps only the right result. \\ \hline
 \lstinline{def ident: Parser[String]} \\
 - A parser which matches an identifier. \\ \hline
-\lstinline{def numericLit: Parser[String]} \\
-- A parser which matches a numeric literal. \\ \hline
 \lstinline{def |[U >: T](q: => Parser[U]): Parser[U]} \\
 - A parser combinator for alternative composition. \\ \hline
 \lstinline{def |||[U >: T](q0: => Parser[U]): Parser[U]} \\

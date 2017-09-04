@@ -11,6 +11,7 @@ We counted source lines of code (SLOC) and measured execution time for both impl
 The result suggests that our implementation saves 69\% code comparing
 with that non-modular one, but there is a 43\% slowdown due to code modularity.
 
+\vspace{-3pt}
 \subsection{Implementation}\label{subsec:implementation}
 
 TAPL introduces several calculi from simple to complex, by gradually adding new features to syntax.
@@ -83,6 +84,7 @@ calculus \lstinline{FullSimple}.
 %% lots of calculi. Such reuse could shorten the code considerably.
 %% Next subsection examines amount of code as well as performance.
 
+\vspace{-3pt}
 \subsection{Comparison}\label{subsec:cs-comparison}
 
 \newcommand\ourimpl{$\texttt{Mod}_{\texttt{OA}}$}
@@ -107,11 +109,11 @@ Second, we are interested to assess the performance penalty caused by modularity
 Thus we compared the execution time of parsing random expressions between two implementations.
 
 \paragraph{Standard of Comparison}
-In the SLOC comparison, all blank lines and comments are excluded,
-and we formatted the code of both implementations to guarantee that
+In terms of SLOC, all blank lines and comments are excluded,
+and we formatted the code of both implementations to ensure that
 the length of each line does not exceed 120 characters. Furthermore,
-because \ilyaimpl{} has extra code such as semantics,
-we removed all irrelevant code and only keep abstract
+because \ilyaimpl{} has extra code like semantics,
+we removed all irrelevant code, only kept abstract
 syntax definition, parser and pretty-printer for each calculus, to
 ensure a fair comparison.
 
@@ -134,11 +136,13 @@ The average execution time of 5 runs excluding reading input file was calculated
       \hline
       \multicolumn{7}{c}{}
     \end{tabular}}
+ 	\vspace{-5pt}
     \caption{Comparison of SLOC and execution time.}
     \label{tab:comparison}
     \vspace{-0.3cm}
 \end{table*}
 
+\vspace{-4pt}
 \paragraph{Comparison Results}
 Table \ref{tab:comparison} shows results of the comparison.
 Let us only check \ourimpl{} and \ilyaimpl{} for now.
@@ -201,12 +205,12 @@ using the longest match alternative combinator instead of the ordinary one.
 
 The right part of Table \ref{tab:comparison} suggests that the difference of running time between
 using Object Algebras and class is little, roughly 1\%.
-The usage of longest match combinator slows the performance by 7\%. The main reason of slower
+The use of longest match combinator slows the performance by 7\%. The main reason of slower
 execution time may be the overall structure of the modular parsing approach, because we indeed have
 more intermediate function calls and method overriding. However, it is worth mentioning that
 because of the memoization technique of Packrat parsers, we are only constant times
 slower, the algorithmic complexity is still the same.
 Since the slowdown seems to be caused by extra method
-dispatching, in future work we wish to investigate techniques such as 
+dispatching, in future work we wish to investigate techniques like
 partial evaluation or meta-programming to eliminate such cost. The
 work by B{\'e}guet and Manohar~\cite{Beguet:2014} is an interesting starting point.

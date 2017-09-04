@@ -8,6 +8,7 @@ parsing multi-sorted syntax, overriding existing parsing rules,
 language components for abstracting language features, and alternative
 techniques under the whole framework.
 
+\vspace{-2pt}
 \subsection{Parsing Multi-Sorted Syntax}\label{subsec:differentsyntax}
 
 \begin{comment}
@@ -41,6 +42,7 @@ Besides lexing, the trait \inlinecode{LamOAParser} also introduces parsers for t
 We use \inlinecode{pTypedLamT} and \inlinecode{pTypedLamE} as copies of current \inlinecode{pT} and \inlinecode{pE}, due to the issue
 with \inlinecode{super} in Scala (see discussion in Section~\ref{subsec:parsingwithoa}). \inlinecode{pT} and \inlinecode{pE} are used for recursion.
 
+\vspace{-2pt}
 \subsection{Overriding Existing Rules}\label{subsec:overriding-rules}
 
 As many syntactically extensible parsers, our approach also supports
@@ -60,11 +62,12 @@ lambdas. With inheritance and method overriding, it is easy to only
 change the implementation of \lstinline{pLam} in the extended parser.
 Due to dynamic dispatch, our new
 implementation of lambdas will be different without affecting the other parts of the parser.
+\vspace{-4pt}
 \begin{lstlisting}
 override val pLam: Parser[E] =
   ("\\" ~> ident) ~ (":" ~> pT) ~ ("." ~> pE) ^^ ...
 \end{lstlisting}
-
+\vspace{-4pt}
 
 One can even ``eliminate'' a production rule in the extension, by overriding it with a failure parser. The lexer can also be updated, since keywords and delimiters are represented by sets of strings.
 
@@ -105,12 +108,16 @@ For space reasons we omit some detailed code.
 
 For the extension of types and lambda abstractions in Section~\ref{subsec:differentsyntax}, instead of inheriting from the previous language directly, we can define it as another independent language component \inlinecode{TypedLam}.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=128-137]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_TYPEDLAM
+\vspace{-4pt}
 
 The code below shows how we merge those two components together to obtain the language we want. Furthermore, the new language is still a modular
 component ready for future composition. In that case modularity is realized over higher-order hierarchies.
 
+\vspace{-4pt}
 \lstinputlisting[linerange=141-152]{code/src/papercode/Sec5/Code1.scala}% APPLY:linerange=LANGUAGE_COMPONENTS_VARLAMEXPR
+\vspace{-4pt}
 
 The only drawback is that the glue code of composition appears to be
 boilerplate. As shown above, we are combining ASTs, parsers and
