@@ -13,8 +13,7 @@ trait Attempt[E] {
     pExpr(alg) ~ ("+" ~> pExpr(alg)) ^^
       { case e1 ~ e2 => alg.add(e1, e2) }
   val pExpr: Alg[E] => Parser[E] = alg =>
-    pLit(alg) ||| pAdd(alg)
-}
+    pLit(alg) ||| pAdd(alg) }
 //END_BASE_OA_PARSER_BAD
 
 //BEGIN_BASE_OA_PARSER
@@ -26,8 +25,7 @@ trait OAParser[E] {
   val pAdd: Parser[E] = pE ~ ("+" ~> pE) ^^
     { case e1 ~ e2 => alg.add(e1, e2) }
   val pExpr: Parser[E] = pLit ||| pAdd
-  val pE: Parser[E] = pExpr
-}
+  val pE: Parser[E] = pExpr }
 //END_BASE_OA_PARSER
 
 //BEGIN_EXT_OA_PARSER
@@ -35,8 +33,7 @@ trait VarOAParser[E] extends OAParser[E] {
   override val alg: VarAlg[E]
   val pVar: Parser[E] = ident ^^ alg.varE
   val pVarExpr: Parser[E] = pExpr ||| pVar
-  override val pE: Parser[E] = pVarExpr
-}
+  override val pE: Parser[E] = pVarExpr }
 //END_EXT_OA_PARSER
 }
 
