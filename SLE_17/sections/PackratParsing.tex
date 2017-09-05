@@ -168,7 +168,7 @@ additions. The concrete syntax is:
 It is straightforward to model the abstract syntax by classes. The ASTs support pretty-printing via the \lstinline{print} method.
 
 \vspace{-4pt}
-\lstinputlisting[linerange=9-13]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
+\lstinputlisting[linerange=9-15]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_OO_AST
 \vspace{-4pt}
 
 Then we write corresponding parsers for all cases.
@@ -176,7 +176,7 @@ Note that a parser has type \lstinline{Parser[E]} for some
 \lstinline{E}, which indicates the type of results it produces.
 
 \vspace{-4pt}
-\lstinputlisting[linerange=17-24]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
+\lstinputlisting[linerange=19-26]{code/src/papercode/Sec2Packrat/Code1.scala}% APPLY:linerange=PACKRAT_SIMPLE_EXPR
 \vspace{-4pt}
 
 In the trait \lstinline{AParser}, \lstinline{lexical} is used for lexing. \lstinline{pLit} parses an integer for the literal case.

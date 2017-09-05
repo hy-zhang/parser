@@ -53,7 +53,7 @@ Essentially, Object Algebras generalize the {\sc Abstract Factory} pattern~\cite
 At first the language only supports literals and additions:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=5-7]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALG
+\lstinputlisting[linerange=5-8]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALG
 \vspace{-4pt}
 Here \inlinecode{Alg} is called an \textit{Object Algebra interface}, parameterized by the type
 \inlinecode{E}, which abstracts over the concrete type of the AST.
@@ -63,25 +63,25 @@ To realize an operation on expressions, we simply instantiate the type parameter
 provides implementations for all cases. Below is an example of pretty-printing:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=11-14]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
+\lstinputlisting[linerange=12-16]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_PRINT
 \vspace{-4pt}
 Here \inlinecode{Print} is called an \textit{Object Algebra}. It traverses an expression bottom-up, and returns a string as the result.
 One can also define an evaluation operation as a new trait that extends \inlinecode{Alg[Int]}. Hence adding new operations is modular. We omit that code
 due to space reasons.
 
-%\lstinputlisting[linerange=18-20]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
+%\lstinputlisting[linerange=20-23]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EVAL
 
 \paragraph{Adding New AST Constructs}
 Furthermore, new language constructs can be added by extending \inlinecode{Alg} and adding new cases only. Now we extend the language
 with variables. A new Object Algebra interface \inlinecode{VarAlg} is defined as follows:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=24-25]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
+\lstinputlisting[linerange=27-29]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_ALGEXT
 \vspace{-4pt}
 Now pretty-printing on the new language can be realized without modifying existing code:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=29-30]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
+\lstinputlisting[linerange=33-35]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_EXTPRINT
 \vspace{-4pt}
 An observation is that only the new case is implemented for pretty-printing, and the others have been inherited.
 Thus existing code was reused and was not modified!
@@ -89,7 +89,7 @@ Thus existing code was reused and was not modified!
 To create an expression representing \inlinecode{1 + x}, a generic method is defined as follows:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=37-38]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
+\lstinputlisting[linerange=42-43]{code/src/papercode/Sec4OA/Code2.scala}% APPLY:linerange=OVERVIEW_OA_MAKEEXP
 \vspace{-4pt}
 
 Note how the construction of the abstract syntax happens through
@@ -105,7 +105,7 @@ methods has to be used by the parsing function. Thus, a first attempt
 at defining the parser for the small arithmetic language is:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=8-16]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
+\lstinputlisting[linerange=8-17]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER_BAD
 \vspace{-4pt}
 Such a parser looks fine, but it is not extensible. For example, we have demonstrated in Section~\ref{sec:inheritance} that method overriding is essential to update \inlinecode{pExpr} for an extended syntax. However, trying to do a similar method overriding for \inlinecode{pExpr} would require a type \inlinecode{VarAlg[E] =>} \inlinecode{Parser[E]}, which is a \emph{supertype} of the old type \inlinecode{Alg[E] =>} \inlinecode{Parser[E]}, since
 the \emph{extended} Object Algebra interface appears in \emph{contravariant} position. This violates
@@ -118,7 +118,7 @@ in the parser. Figure~\ref{fig:oa-parser} shows the code of true modular parser,
 whose methods can be overridden for future extension.
 
 \begin{figure}
-  \lstinputlisting[linerange=20-28]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
+  \lstinputlisting[linerange=21-30]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=BASE_OA_PARSER
   \caption{Pattern of modular parsing using Object Algebras.}
   \label{fig:oa-parser}
   \vspace{-0.2cm}
@@ -132,7 +132,7 @@ The reason why we use it as an extra and seemingly redundant field, is due to a 
 Now let's try on the variables extension:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=32-36]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
+\lstinputlisting[linerange=34-39]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER
 \vspace{-4pt}
 
 \noindent The type of the Object Algebra field \lstinline{alg} is first refined
@@ -143,7 +143,7 @@ call \lstinline{alg.varE}. The following code illustrates how to use
 the parser from a client's perspective:
 
 \vspace{-4pt}
-\lstinputlisting[linerange=43-46]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
+\lstinputlisting[linerange=46-49]{code/src/papercode/Sec4OA/Code3.scala}% APPLY:linerange=EXT_OA_PARSER_CLIENT
 \vspace{-4pt}
 
 In the client code above,
