@@ -27,6 +27,27 @@ inspired us of this paper and encourage us for more exploration. This
 section will try to lead a discussion on what difference we have made.
 \end{comment}
 
+\paragraph{Safely Composable Type-Specific Languages} There is almost no work on 
+semantically modular parsing. A notable exception is the work 
+on safely composable type-specific languages~\cite{omar14}. In this
+work the extensible language Wyvern supports the addition of new
+syntax and semantics, while preserving type-safety and separate
+compilation. However this approach and our work have different goals: 
+their approach is aimed at supporting extensibility of Wyvern with
+new syntax; whereas our approach is a general technique aimed at 
+modular parsing of any languages. In contrast to their modular parsing 
+approach, which is directly built-in to the Wyvern language, our approach is 
+library-based and can be used by many  mainstream OO languages.
+
+
+\begin{comment}
+Besides, type-specific languages do support
+separate compilation and type safety. The modularity of parsing is incorporated in its elaborated type
+system, allowing users to introduce new syntax. Whereas our approach does not rely on an extension to semantics, but simply uses a pattern
+that is applicable in mainstream OO languages, where the type system ensures
+type safety.
+\end{comment}
+
 \vspace{-4pt}
 \paragraph{Syntactically Extensible Parsing}
 Extensible parser generators~\cite{antlr1995,Grimm2006,Gouseti2014,Viera2012,Warth2016,schwerdfeger09}
@@ -76,12 +97,6 @@ Polyglot~\cite{Nystrom2003} also support extensible parsing, but it
 is mostly done using parser generators. They focus on the
 extensions to a host language. Those techniques are short of type safety in a modular
 setting as well.
-
-Besides, type-specific languages~\cite{omar14} do support
-separate compilation and type safety. The modularity of parsing is incorporated in its elaborated type
-system, allowing users to introduce new syntax. Whereas our approach does not rely on an extension to semantics, but simply uses a pattern
-that is applicable in mainstream OO languages, where the type system ensures
-type safety.
 
 %\bruno{Have you read
 %Languages as Libraries? That is probably an important reference, which
