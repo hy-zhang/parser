@@ -27,7 +27,21 @@ inspired us of this paper and encourage us for more exploration. This
 section will try to lead a discussion on what difference we have made.
 \end{comment}
 
-\paragraph{Safely Composable Type-Specific Languages} There is almost no work on 
+\paragraph{Modular Parsing with Case Classes}
+
+Our work is close to~\cite{SLOANE201520}, in the sense that they also make use of Packrat parsers
+and standard OO inheritance achieving modular parsing. The difference is that case
+classes are used in their work for extensibility. Case classes~\cite{emir2007matching} provide a near solution
+to the Expression Problem since they can be modular added, and hence are widely used in
+practice, but they do not enforce exhaustiveness
+of pattern matching for extensible operations. In other words run-time pattern matching errors
+can happen when writing extensible code with case classes, so that full static type-safety is not
+ensured. Our work uses Object Algebras for full extensibility and type safety, and we have well
+studied the algorithmic challenges of parsing in a modular setting.
+
+\paragraph{Safely Composable Type-Specific Languages} 
+
+There is almost no work on 
 semantically modular parsing. A notable exception is the work 
 on safely composable type-specific languages~\cite{omar14}. In this
 work the extensible language Wyvern supports the addition of new
@@ -165,19 +179,6 @@ type-safe extensibility~\cite{torgersen2004expression,odersky2005independently,o
 relatively lightweight and makes good use of existing OO features,
 such as inheritance, generics and subtyping. As seen throughout the paper,
 the parsing code is concise and expressive using Object Algebras.
-On the other hand we are unware of any work on OOP
-that has covered how to do modular parsing for extensible ASTs.
-
-It is worth mentioning that Scala case classes~\cite{emir2007matching} provide a near
-solution to the Expression Problem. Case classes can be
-modularly added, but they do not enforce
-exhaustiveness of pattern matching for extensible operations. In other
-words run-time pattern matching errors can happen when writing extensible code with case classes. So that full static type-safety is not ensured. Nevertheless case classes are a pragmatic approach, which is
-widely used in practice. Therefore, modular parsing techniques may be
-of value for extensible code using case classes.  The approach we
-presented in Section~\ref{sec:inheritance} can readily be adapted to case classes:
-all that the users need to do is to use case classes, instead of
-standard OO classes in their code.
 \vspace{-7pt}
 
 \begin{comment}

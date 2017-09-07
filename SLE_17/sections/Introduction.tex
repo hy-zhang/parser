@@ -79,9 +79,12 @@ operations that \emph{traverse} or \emph{process} extensible
 data structures, such as ASTs. Indeed many documented applications of
 semantic modularization techniques focus on modularizing various
 aspects of PL implementations.  However, as far as we know, there is
-little work on operations that build/produce ASTs.  In particular the
-problem of how to modularize parsing has not been studied in semantic
-modularization approaches. Techniques such as NOA~\cite{Gouseti2014}
+little work on operations that build/produce ASTs. \cite{SLOANE201520}
+provides a near solution to modular parsing by using case classes, but
+it could be potentially unsafe since exhaustiveness of pattern matching
+is not guaranteed. In particular the
+problem of how to modularize parsing, including its algorithmic challenges,
+has not been studied in other approaches. Techniques such as NOA~\cite{Gouseti2014}
 employ a syntactic modularity approach for parsing in combination with
 a semantic modularity approach for defining operations
 that traverse or process ASTs. This is a shame because parsing is a
@@ -163,10 +166,6 @@ In summary our contributions are:
   We present a technique that allows the development of semantically modular parsers.
   The technique relies on the combination of Packrat parsing, multiple inheritance
   and Object Algebras.
-
-\item \textbf{A Parsing Technique for OO ASTs:} A simplified version of
-  our technique also enables parsing OO-style ASTs, where new language
-  constructs can be easily added.
 
 \item \textbf{A Methodology for Writing Modular Parsers:} We
   identify possible pitfalls using parser combinators. To avoid such
