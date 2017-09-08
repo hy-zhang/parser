@@ -79,16 +79,19 @@ operations that \emph{traverse} or \emph{process} extensible
 data structures, such as ASTs. Indeed many documented applications of
 semantic modularization techniques focus on modularizing various
 aspects of PL implementations.  However, as far as we know, there is
-little work on operations that build/produce ASTs. \cite{SLOANE201520}
-provides a near solution to modular parsing by using case classes, but
-it could be potentially unsafe since exhaustiveness of pattern matching
-is not guaranteed. In particular the
+little work on operations that build/produce extensible ASTs, and
+guarantee type-safety. 
+Sloane and Roberts~\cite{SLOANE201520}
+briefly mention a near solution to modular parsing by using case classes. However
+the solution could be potentially unsafe since exhaustiveness of
+pattern matching for extensible case classes
+is not guaranteed. The
 problem of how to modularize parsing, including its algorithmic challenges,
-has not been studied in other approaches. Techniques such as NOA~\cite{Gouseti2014}
+has not been studied well-studied yet. Other techniques, such as NOA~\cite{Gouseti2014},
 employ a syntactic modularity approach for parsing in combination with
 a semantic modularity approach for defining operations
-that traverse or process ASTs. This is a shame because parsing is a
-fundamental part of PL implementations, and it ought to be made
+that traverse or process ASTs. Because parsing is a
+fundamental part of PL implementations, it ought to be made
 semantically modular as well, so that the full benefits of semantic
 modularity apply.
 

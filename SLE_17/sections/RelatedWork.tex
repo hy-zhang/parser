@@ -27,18 +27,6 @@ inspired us of this paper and encourage us for more exploration. This
 section will try to lead a discussion on what difference we have made.
 \end{comment}
 
-\paragraph{Modular Parsing with Case Classes}
-
-Our work is close to~\cite{SLOANE201520}, in the sense that they also make use of Packrat parsers
-and standard OO inheritance achieving modular parsing. The difference is that case
-classes are used in their work for extensibility. Case classes~\cite{emir2007matching} provide a near solution
-to the Expression Problem since they can be modular added, and hence are widely used in
-practice, but they do not enforce exhaustiveness
-of pattern matching for extensible operations. In other words run-time pattern matching errors
-can happen when writing extensible code with case classes, so that full static type-safety is not
-ensured. Our work uses Object Algebras for full extensibility and type safety, and we have well
-studied the algorithmic challenges of parsing in a modular setting.
-
 \paragraph{Safely Composable Type-Specific Languages} 
 
 There is almost no work on 
@@ -179,6 +167,19 @@ type-safe extensibility~\cite{torgersen2004expression,odersky2005independently,o
 relatively lightweight and makes good use of existing OO features,
 such as inheritance, generics and subtyping. As seen throughout the paper,
 the parsing code is concise and expressive using Object Algebras.
+
+Case classes in Scala can encode algebraic datatypes that allow the
+addition of new constructors. However such ``open'' case classes 
+do not enforce  exhaustiveness
+of pattern matching for extensible operations, and thus do not provide 
+a full solution to the Expression Problem. Nevertheless case classes 
+are widely used in practice, and a solution for parsing open case
+classes (and composing such parsers) is quite relevant in practice. 
+The techniques in Section~\ref{sec:inheritance} can be readily adapted to work with case classes. 
+The work by Sloane and Roberts~\cite{SLOANE201520} on a modular Oberon 
+compiler applied similar techniques with packrat parsers and case classes.
+In our work we use Object Algebras for full extensibility and type safety, and we have well
+studied the algorithmic challenges of parsing in a modular setting.
 \vspace{-7pt}
 
 \begin{comment}
